@@ -33,10 +33,10 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);}
-
+ 
 /* ── NOISE ── */
 body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.5;}
-
+ 
 /* ── AUTH ── */
 .auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(ellipse at 50% 0%,rgba(240,192,64,.08) 0%,transparent 60%);}
 .auth-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:40px;width:100%;max-width:420px;}
@@ -55,7 +55,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .auth-divider{display:flex;align-items:center;gap:12px;margin:20px 0;}
 .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border);}
 .auth-divider span{font-size:11px;color:var(--dim);font-family:var(--mono);}
-
+ 
 /* ── APP SHELL ── */
 #app{display:none;flex-direction:column;min-height:100vh;}
 .topbar{height:56px;background:rgba(8,8,8,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:100;}
@@ -68,13 +68,13 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .user-pill{font-size:11px;color:var(--muted);font-family:var(--mono);padding:4px 10px;border:1px solid var(--border);border-radius:20px;}
 .signout-btn{font-family:var(--font);font-size:11px;padding:5px 12px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;}
 .signout-btn:hover{border-color:var(--red);color:var(--red);}
-
+ 
 /* ── MAIN ── */
 .main{flex:1;max-width:1100px;margin:0 auto;width:100%;padding:24px 20px;}
 .page{display:none;animation:fadeUp .2s ease;}
 .page.on{display:block;}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-
+ 
 /* ── DASHBOARD ── */
 .dash-header{margin-bottom:28px;}
 .dash-greeting{font-size:28px;font-weight:800;color:var(--text);margin-bottom:4px;}
@@ -94,7 +94,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .btn.solid{background:var(--gold);color:#000;border-color:var(--gold);}
 .btn.solid:hover{background:var(--gold2);}
 .btn:disabled{opacity:.4;cursor:not-allowed;}
-
+ 
 /* ── PROPERTY CARDS ── */
 .props-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
 .prop-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;cursor:pointer;transition:all .2s;}
@@ -114,7 +114,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .add-prop-card:hover{border-color:var(--gold);background:var(--gold-dim);}
 .add-prop-icon{font-size:32px;}
 .add-prop-text{font-size:13px;color:var(--muted);font-weight:600;}
-
+ 
 /* ── MODAL ── */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
 .modal{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
@@ -124,7 +124,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .form-input:focus{border-color:var(--gold);}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 .modal-btns{display:flex;gap:10px;margin-top:22px;justify-content:flex-end;}
-
+ 
 /* ── PROPERTY DETAIL ── */
 .prop-detail-header{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px;margin-bottom:20px;display:grid;grid-template-columns:90px 1fr auto;gap:18px;align-items:start;}
 .pdh-thumb{width:90px;height:68px;border-radius:var(--r);background:var(--s2);border:1px dashed var(--dim);display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;overflow:hidden;position:relative;flex-shrink:0;}
@@ -143,13 +143,13 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .kpi-v.b{color:var(--cyan);}
 .kpi-v.y{color:var(--gold);}
 .kpi-l{font-size:10px;color:var(--muted);font-family:var(--mono);}
-
+ 
 /* ── PROP TABS ── */
 .prop-tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;}
 .ptab{font-family:var(--font);font-size:12px;font-weight:600;padding:8px 16px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
 .ptab.on{color:var(--gold);border-bottom-color:var(--gold);}
 .ptab:hover:not(.on){color:var(--text);}
-
+ 
 /* ── ROOMS ── */
 .rooms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
 .room-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;transition:border-color .2s;}
@@ -184,9 +184,18 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .task-row.done .task-lbl{text-decoration:line-through;color:var(--dim);}
 .task-cost{font-size:10px;color:var(--amber);font-weight:500;white-space:nowrap;font-family:var(--mono);}
 .task-d{font-size:10px;color:var(--muted);font-family:var(--mono);margin-left:3px;}
-.room-foot{display:flex;justify-content:space-between;padding-top:8px;margin-top:4px;border-top:1px solid var(--border);}
+.room-foot{display:flex;justify-content:space-between;align-items:center;padding-top:8px;margin-top:4px;border-top:1px solid var(--border);}
 .rf-lbl{font-size:11px;color:var(--muted);font-family:var(--mono);}
 .rf-val{font-size:13px;font-weight:700;color:var(--gold);}
+.add-task-row{display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);}
+.add-task-in{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:5px 9px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;}
+.add-task-in:focus{border-color:var(--gold);}
+.add-task-cost{width:58px;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:5px 7px;color:var(--amber);font-family:var(--mono);font-size:11px;outline:none;}
+.add-task-cost:focus{border-color:var(--gold);}
+.add-task-btn{background:var(--gold);border:none;border-radius:6px;padding:5px 10px;color:#000;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;}
+.add-task-btn:hover{background:var(--gold2);}
+.task-del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:11px;padding:0 2px;margin-left:2px;transition:color .15s;flex-shrink:0;}
+.task-del:hover{color:var(--red);}
 .ai-box{background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);padding:11px;margin-bottom:10px;}
 .ai-box-title{font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;font-family:var(--mono);}
 .ai-txt{font-size:11px;line-height:1.55;color:var(--text);font-family:var(--mono);}
@@ -195,7 +204,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .tag-urgent{background:#200808;color:var(--red);border:1px solid #400808;}
 .tag-important{background:#201008;color:var(--amber);border:1px solid #402008;}
 .tag-cosmetic{background:#082008;color:var(--green);border:1px solid #0a400a;}
-
+ 
 /* ── MATERIALS TABLE ── */
 .tbl-wrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:20px;}
 .tbl-wrap table{width:100%;border-collapse:collapse;}
@@ -219,7 +228,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:13px;padding:0 3px;}
 .del:hover{color:var(--red);}
 .tbl-foot{padding:10px 14px;display:flex;justify-content:flex-end;gap:10px;border-top:1px solid var(--border);background:var(--s2);font-family:var(--mono);}
-
+ 
 /* ── TIMELINE ── */
 .tl-controls{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
 .ctrl{display:flex;flex-direction:column;gap:4px;}
@@ -238,7 +247,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .tls-item{text-align:center;}
 .tls-v{font-size:24px;font-weight:800;color:var(--gold);}
 .tls-l{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
-
+ 
 /* ── SUMMARY ── */
 .sum-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:12px;margin-bottom:20px;}
 .sum-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:15px 16px;}
@@ -249,7 +258,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .sc-val.b{color:var(--cyan);}
 .sc-val.y{color:var(--gold);}
 .sc-sub{font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--mono);}
-
+ 
 /* ── CHECKLIST ── */
 .cl-list{display:flex;flex-direction:column;gap:6px;}
 .cl-item{display:flex;align-items:center;gap:10px;padding:9px 13px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;transition:all .15s;}
@@ -257,23 +266,23 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .cl-item input{width:14px;height:14px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;}
 .cl-text{font-size:12px;flex:1;font-family:var(--mono);}
 .cl-item.done .cl-text{text-decoration:line-through;color:var(--dim);}
-
+ 
 /* ── NOTE BOX ── */
 .note-box{background:var(--gold-dim);border:1px dashed var(--gold-border);border-radius:var(--r);padding:11px 14px;font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:16px;font-family:var(--mono);}
 .note-box strong{color:var(--gold);}
-
+ 
 /* ── LOADING ── */
 .loading{display:flex;align-items:center;justify-content:center;min-height:200px;flex-direction:column;gap:12px;}
 .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-txt{font-size:13px;color:var(--muted);font-family:var(--mono);}
-
+ 
 /* ── EMPTY STATE ── */
 .empty{text-align:center;padding:48px 20px;color:var(--muted);}
 .empty-icon{font-size:40px;margin-bottom:12px;}
 .empty-txt{font-size:14px;font-weight:600;margin-bottom:6px;color:var(--text);}
 .empty-sub{font-size:12px;font-family:var(--mono);}
-
+ 
 /* ── MOBILE ── */
 @media(max-width:640px){
   .topbar{padding:0 14px;}
@@ -291,13 +300,13 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 </style>
 </head>
 <body>
-
+ 
 <!-- AUTH PAGE -->
 <div id="authWrap" class="auth-wrap">
   <div class="auth-card">
     <div class="auth-logo">AURUM</div>
     <div class="auth-tagline">// brrr property intelligence</div>
-
+ 
     <div id="authSignIn">
       <label class="auth-label">Email</label>
       <input class="auth-input" id="siEmail" type="email" placeholder="you@email.com" onkeydown="if(event.key==='Enter')signIn()">
@@ -307,7 +316,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
       <div class="auth-err" id="siErr"></div>
       <div class="auth-switch">Don't have an account? <span onclick="toggleAuth()">Create one free</span></div>
     </div>
-
+ 
     <div id="authSignUp" style="display:none">
       <label class="auth-label">Full Name</label>
       <input class="auth-input" id="suName" type="text" placeholder="Your name">
@@ -321,7 +330,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
     </div>
   </div>
 </div>
-
+ 
 <!-- APP -->
 <div id="app">
   <div class="topbar">
@@ -335,9 +344,9 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
       <button class="signout-btn" onclick="signOut()">Sign out</button>
     </div>
   </div>
-
+ 
   <div class="main">
-
+ 
     <!-- ═══ DASHBOARD ═══ -->
     <div class="page on" id="page-dashboard">
       <div class="dash-header">
@@ -352,7 +361,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
         <div class="loading"><div class="spinner"></div><div class="loading-txt">Loading...</div></div>
       </div>
     </div>
-
+ 
     <!-- ═══ PROPERTY DETAIL ═══ -->
     <div class="page" id="page-property">
       <div id="propDetailHeader"></div>
@@ -362,7 +371,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
         <button class="ptab" onclick="propTab('timeline',this)">📅 Timeline</button>
         <button class="ptab" onclick="propTab('summary',this)">💰 Summary</button>
       </div>
-
+ 
       <!-- ROOMS TAB -->
       <div id="ptab-rooms" class="ptab-content">
         <div class="sh">
@@ -372,7 +381,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
         <div class="note-box">📸 <strong>Upload a photo</strong> of each room → <strong>Analyse with AI</strong> → Claude identifies exactly what needs doing, with costs + urgency. Add your <strong>Anthropic API key</strong> in the top-right ⚙️ to enable AI.</div>
         <div class="rooms-grid" id="roomsGrid"></div>
       </div>
-
+ 
       <!-- MATERIALS TAB -->
       <div id="ptab-materials" class="ptab-content" style="display:none">
         <div class="sh">
@@ -390,7 +399,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
           </div>
         </div>
       </div>
-
+ 
       <!-- TIMELINE TAB -->
       <div id="ptab-timeline" class="ptab-content" style="display:none">
         <div class="sh"><div class="sh-title">Build <span>Programme</span></div></div>
@@ -404,7 +413,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
         </div>
         <div class="note-box">⚡ <strong>Sequence locked:</strong> First fix → Plaster → DRY 7-10 days (non-negotiable) → Second fix → Tiling → Kitchen → Floors → Decorate → Snag.</div>
       </div>
-
+ 
       <!-- SUMMARY TAB -->
       <div id="ptab-summary" class="ptab-content" style="display:none">
         <div class="sh"><div class="sh-title">Deal <span>Summary</span></div></div>
@@ -413,10 +422,10 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
         <div class="cl-list" id="clList"></div>
       </div>
     </div>
-
+ 
   </div>
 </div>
-
+ 
 <!-- ADD PROPERTY MODAL -->
 <div class="modal-bg" id="addPropModal" style="display:none">
   <div class="modal">
@@ -449,7 +458,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
     </div>
   </div>
 </div>
-
+ 
 <!-- ADD ROOM MODAL -->
 <div class="modal-bg" id="addRoomModal" style="display:none">
   <div class="modal">
@@ -474,7 +483,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
     </div>
   </div>
 </div>
-
+ 
 <!-- API KEY MODAL -->
 <div class="modal-bg" id="apiModal" style="display:none">
   <div class="modal">
@@ -489,7 +498,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
     </div>
   </div>
 </div>
-
+ 
 <script>
 // ══════════════════════════════════════════════
 // SUPABASE INIT
@@ -497,7 +506,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 const SUPA_URL = 'https://kxiftobazbjkorpeeufo.supabase.co';
 const SUPA_KEY = 'sb_publishable_9FcGt7Mf5JiX3uYfZh6Fhg_-7CIV0mt';
 const sb = supabase.createClient(SUPA_URL, SUPA_KEY);
-
+ 
 // ══════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════
@@ -505,7 +514,7 @@ let currentUser = null;
 let currentProp = null;
 let rooms = [];
 let materials = [];
-
+ 
 const PHASES = [
   {id:'strip',name:'1. Strip Out + Skip',days:3,w:2,col:'#f04040',before:'—'},
   {id:'damp',name:'2. Damp / Roof / Structure',days:4,w:2,col:'#f09040',before:'Phase 1'},
@@ -522,7 +531,7 @@ const PHASES = [
   {id:'decor',name:'13. Decorating',days:3,w:2,col:'#f0c040',before:'Phase 12'},
   {id:'snag',name:'14. Snag + Deep Clean',days:2,w:2,col:'#40e0d0',before:'Phase 13'},
 ];
-
+ 
 const DEFAULT_MATERIALS = [
   {category:'electrical',item:'Consumer unit replacement',quantity:1,unit:'unit',unit_cost:400,priority:'high',supplier:'Screwfix / Electrician'},
   {category:'electrical',item:'Full rewire 1st fix',quantity:1,unit:'job',unit_cost:1800,priority:'high',supplier:'Electrical contractor'},
@@ -546,7 +555,7 @@ const DEFAULT_MATERIALS = [
   {category:'other',item:'EICR electrical certificate',quantity:1,unit:'unit',unit_cost:150,priority:'high',supplier:'Electrician'},
   {category:'other',item:'Contingency 10%',quantity:1,unit:'lump',unit_cost:3500,priority:'high',supplier:'—'},
 ];
-
+ 
 const DEFAULT_ROOMS = [
   {name:'Living Room',icon:'🛋',length_m:4.5,width_m:3.8},
   {name:'Kitchen',icon:'🍳',length_m:3.2,width_m:2.8},
@@ -555,7 +564,7 @@ const DEFAULT_ROOMS = [
   {name:'Bedroom 2',icon:'🛏',length_m:3.2,width_m:2.8},
   {name:'Hallway',icon:'🚪',length_m:4.0,width_m:1.2},
 ];
-
+ 
 // ══════════════════════════════════════════════
 // AUTH
 // ══════════════════════════════════════════════
@@ -563,7 +572,7 @@ function toggleAuth(){
   document.getElementById('authSignIn').style.display = document.getElementById('authSignIn').style.display==='none'?'block':'none';
   document.getElementById('authSignUp').style.display = document.getElementById('authSignUp').style.display==='none'?'block':'none';
 }
-
+ 
 async function signIn(){
   const btn=document.getElementById('siBtn');
   const err=document.getElementById('siErr');
@@ -574,7 +583,7 @@ async function signIn(){
   const {error}=await sb.auth.signInWithPassword({email,password:pass});
   if(error){err.textContent=error.message;btn.disabled=false;btn.textContent='Sign In';}
 }
-
+ 
 async function signUp(){
   const btn=document.getElementById('suBtn');
   const err=document.getElementById('suErr');
@@ -588,12 +597,12 @@ async function signUp(){
   if(error){err.textContent=error.message;btn.disabled=false;btn.textContent='Create Account';}
   else{err.style.color='var(--gold)';err.textContent='✅ Check your email to confirm your account!';}
 }
-
+ 
 async function signOut(){
   await sb.auth.signOut();
   location.reload();
 }
-
+ 
 sb.auth.onAuthStateChange(async(event,session)=>{
   if(session?.user){
     currentUser=session.user;
@@ -608,7 +617,7 @@ sb.auth.onAuthStateChange(async(event,session)=>{
     document.getElementById('app').style.display='none';
   }
 });
-
+ 
 // ══════════════════════════════════════════════
 // NAV
 // ══════════════════════════════════════════════
@@ -620,7 +629,7 @@ function navTo(page){
   if(btn)btn.classList.add('on');
   if(page==='dashboard')loadDashboard();
 }
-
+ 
 function propTab(tab,btn){
   document.querySelectorAll('.ptab-content').forEach(p=>p.style.display='none');
   document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('on'));
@@ -630,14 +639,14 @@ function propTab(tab,btn){
   if(tab==='summary')renderSummary();
   if(tab==='materials')renderMaterials();
 }
-
+ 
 // ══════════════════════════════════════════════
 // DASHBOARD
 // ══════════════════════════════════════════════
 async function loadDashboard(){
   const {data:props}=await sb.from('properties').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
   const propList=props||[];
-
+ 
   // Stats
   const totalEquity=propList.reduce((s,p)=>s+(p.gdv-(p.buy_price+p.refurb_budget+5000)),0);
   const totalPortfolio=propList.reduce((s,p)=>s+p.gdv,0);
@@ -648,7 +657,7 @@ async function loadDashboard(){
     <div class="dstat"><div class="dstat-val" style="color:var(--green)">£${fmtK(totalEquity)}</div><div class="dstat-lbl">Total Equity</div></div>
     <div class="dstat"><div class="dstat-val" style="color:${totalCF>=0?'var(--green)':'var(--red)'}">£${Math.round(totalCF)}/mo</div><div class="dstat-lbl">Monthly Cash Flow</div></div>
   `;
-
+ 
   // Props grid
   const grid=document.getElementById('propsGrid');
   const equity_p=p=>p.gdv-(p.buy_price+p.refurb_budget+5000);
@@ -673,7 +682,7 @@ async function loadDashboard(){
       <div class="add-prop-text">Add Property</div>
     </div>`;
 }
-
+ 
 // ══════════════════════════════════════════════
 // PROPERTY
 // ══════════════════════════════════════════════
@@ -687,7 +696,7 @@ async function openProperty(id){
   propTab('rooms',document.querySelector('.ptab'));
   navTo('property');
 }
-
+ 
 function renderPropHeader(){
   const p=currentProp;
   const totalIn=p.buy_price+p.refurb_budget+5000;
@@ -718,7 +727,7 @@ function renderPropHeader(){
       </div>
     </div>`;
 }
-
+ 
 let propUpdateTimer=null;
 function updatePropField(field,val){
   currentProp[field]=val;
@@ -728,7 +737,7 @@ function updatePropField(field,val){
     await sb.from('properties').update({[field]:val}).eq('id',currentProp.id);
   },800);
 }
-
+ 
 async function uploadPropThumb(e){
   const file=e.target.files[0];if(!file)return;
   const path=`${currentUser.id}/${currentProp.id}/thumb.${file.name.split('.').pop()}`;
@@ -740,7 +749,7 @@ async function uploadPropThumb(e){
     renderPropHeader();
   }
 }
-
+ 
 // ══════════════════════════════════════════════
 // ROOMS
 // ══════════════════════════════════════════════
@@ -749,7 +758,7 @@ async function loadRooms(){
   rooms=roomData||[];
   renderRooms();
 }
-
+ 
 function renderRooms(){
   const grid=document.getElementById('roomsGrid');
   if(!rooms.length){
@@ -796,10 +805,15 @@ function renderRooms(){
         <div class="task-list">
           ${tasks.map(t=>`<div class="task-row${t.done?' done':''}">
             <input type="checkbox" class="task-cb" ${t.done?'checked':''} onchange="toggleTask('${t.id}','${r.id}',this.checked)">
-            <span class="task-lbl">${t.name}</span>
-            <span class="task-cost">${t.cost>0?'£'+t.cost.toLocaleString():''}</span>
-            <span class="task-d">${t.days}d</span>
+            <span class="task-lbl" contenteditable="true" spellcheck="false" onblur="renameTask('${t.id}',this.textContent.trim())">${t.name}</span>
+            <span class="task-cost" contenteditable="true" spellcheck="false" title="Click to edit" onblur="updateTaskCost('${t.id}','${r.id}',this.textContent.replace(/[^0-9]/g,''))">${t.cost>0?'£'+t.cost.toLocaleString():''}</span>
+            <button class="task-del" onclick="deleteTask('${t.id}','${r.id}')">✕</button>
           </div>`).join('')}
+        </div>
+        <div class="add-task-row">
+          <input class="add-task-in" id="ati-${r.id}" placeholder="Add task e.g. Rewire sockets..." onkeydown="if(event.key==='Enter')addTask('${r.id}')">
+          <input class="add-task-cost" id="atc-${r.id}" placeholder="£" type="number" min="0" onkeydown="if(event.key==='Enter')addTask('${r.id}')">
+          <button class="add-task-btn" onclick="addTask('${r.id}')">+ Add</button>
         </div>
         <div class="room-foot">
           <span class="rf-lbl">Room total</span>
@@ -809,7 +823,7 @@ function renderRooms(){
     </div>`;
   }).join('');
 }
-
+ 
 async function uploadRoomPhoto(roomId,e){
   const file=e.target.files[0];if(!file)return;
   const path=`${currentUser.id}/${currentProp.id}/room-${roomId}.${file.name.split('.').pop()}`;
@@ -822,7 +836,7 @@ async function uploadRoomPhoto(roomId,e){
     renderRooms();
   }
 }
-
+ 
 let dimTimers={};
 function updateRoomDim(roomId,field,val){
   const r=rooms.find(r=>r.id===roomId);
@@ -833,14 +847,54 @@ function updateRoomDim(roomId,field,val){
     renderRooms();
   },600);
 }
-
+ 
 async function toggleTask(taskId,roomId,done){
   await sb.from('tasks').update({done}).eq('id',taskId);
   const r=rooms.find(r=>r.id===roomId);
   if(r){const t=r.tasks.find(t=>t.id===taskId);if(t)t.done=done;}
   renderRooms();
 }
-
+ 
+async function addTask(roomId){
+  const nameEl=document.getElementById('ati-'+roomId);
+  const costEl=document.getElementById('atc-'+roomId);
+  const name=(nameEl.value||'').trim();
+  if(!name)return;
+  const cost=+costEl.value||0;
+  const r=rooms.find(r=>r.id===roomId);
+  const{data}=await sb.from('tasks').insert({
+    room_id:roomId,property_id:currentProp.id,
+    name,cost,days:1,urgency:'important',done:false,
+    sort_order:(r?.tasks?.length||0)
+  }).select().single();
+  if(data){
+    if(r){if(!r.tasks)r.tasks=[];r.tasks.push(data);}
+    nameEl.value='';costEl.value='';
+    renderRooms();
+  }
+}
+ 
+async function deleteTask(taskId,roomId){
+  await sb.from('tasks').delete().eq('id',taskId);
+  const r=rooms.find(r=>r.id===roomId);
+  if(r)r.tasks=r.tasks.filter(t=>t.id!==taskId);
+  renderRooms();
+}
+ 
+async function renameTask(taskId,name){
+  if(!name||!name.trim())return;
+  await sb.from('tasks').update({name:name.trim()}).eq('id',taskId);
+  rooms.forEach(r=>{const t=r.tasks?.find(t=>t.id===taskId);if(t)t.name=name.trim();});
+}
+ 
+async function updateTaskCost(taskId,roomId,val){
+  const cost=parseInt(val)||0;
+  await sb.from('tasks').update({cost}).eq('id',taskId);
+  const r=rooms.find(r=>r.id===roomId);
+  if(r){const t=r.tasks?.find(t=>t.id===taskId);if(t)t.cost=cost;}
+  renderRooms();
+}
+ 
 // ══════════════════════════════════════════════
 // AI ANALYSIS
 // ══════════════════════════════════════════════
@@ -850,21 +904,21 @@ async function analyseRoom(roomId,e){
   if(!key){openApiModal();return;}
   const r=rooms.find(r=>r.id===roomId);
   if(!r||!r.photo_url){alert('Upload a photo first.');return;}
-
+ 
   const btn=document.getElementById('abtn-'+roomId);
   const stat=document.getElementById('ast-'+roomId);
   if(btn){btn.disabled=true;btn.textContent='...';}
   if(stat)stat.style.display='inline';
-
+ 
   try{
     // Fetch image and convert to base64
     const imgResp=await fetch(r.photo_url);
     const blob=await imgResp.blob();
     const b64=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(fr.result.split(',')[1]);fr.readAsDataURL(blob);});
     const mtype=blob.type||'image/jpeg';
-
+ 
     const prompt=`You are an expert UK property refurbishment surveyor analysing a room for a BRRR buy-to-let investment in the UK.
-
+ 
 Respond ONLY with valid JSON (no markdown, no preamble):
 {
   "summary": "2-3 sentence plain English assessment of condition and what you can see",
@@ -874,9 +928,9 @@ Respond ONLY with valid JSON (no markdown, no preamble):
   ],
   "estimated_room_cost": 2500
 }
-
+ 
 Rules: UK 2026 labour+materials costs in GBP. Flag damp, mould, old wiring, asbestos risk, single glazing, structural cracks. urgent=safety/structural, important=functional, cosmetic=aesthetic.`;
-
+ 
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
@@ -889,14 +943,14 @@ Rules: UK 2026 labour+materials costs in GBP. Flag damp, mould, old wiring, asbe
     if(!data.content)throw new Error(data.error?.message||'API error');
     let txt=data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
     const parsed=JSON.parse(txt);
-
+ 
     // Save AI results to Supabase
     await sb.from('rooms').update({
       ai_summary:parsed.summary,
       ai_condition:parsed.condition,
       ai_estimated_cost:parsed.estimated_room_cost||0
     }).eq('id',roomId);
-
+ 
     // Save tasks
     if(parsed.tasks?.length){
       await sb.from('tasks').delete().eq('room_id',roomId);
@@ -914,7 +968,7 @@ Rules: UK 2026 labour+materials costs in GBP. Flag damp, mould, old wiring, asbe
     if(stat)stat.style.display='none';
   }
 }
-
+ 
 // ══════════════════════════════════════════════
 // MATERIALS
 // ══════════════════════════════════════════════
@@ -929,11 +983,11 @@ async function loadMaterials(){
     materials=d2||[];
   }
 }
-
+ 
 const CAT_CSS={electrical:'ce',plumbing:'cp',structural:'cs',finishing:'cf',other:'co'};
 const CAT_LBL={electrical:'⚡ Elec',plumbing:'🔧 Plumb',structural:'🧱 Struct',finishing:'🎨 Finish',other:'📋 Other'};
 const PRI_CSS={high:'ph',medium:'pm',low:'pl'};
-
+ 
 function renderMaterials(){
   const body=document.getElementById('matBody');
   body.innerHTML=materials.map((m,i)=>`<tr>
@@ -950,7 +1004,7 @@ function renderMaterials(){
   </tr>`).join('');
   updMatTotal();
 }
-
+ 
 function saveMatCalc(id,i,field,val){
   materials[i][field]=val;
   document.getElementById('mtr-'+id).textContent='£'+(materials[i].quantity*materials[i].unit_cost).toLocaleString();
@@ -975,7 +1029,7 @@ function updMatTotal(){
   const t=materials.reduce((s,m)=>s+m.quantity*m.unit_cost,0);
   document.getElementById('matTotal').textContent='£'+t.toLocaleString();
 }
-
+ 
 // ══════════════════════════════════════════════
 // TIMELINE
 // ══════════════════════════════════════════════
@@ -1007,7 +1061,7 @@ function renderTL(){
     <div class="tls-item"><div class="tls-v">£${labTot.toLocaleString()}</div><div class="tls-l">Labour Est.</div></div>
     <div class="tls-item"><div class="tls-v" style="font-size:15px">${finish}</div><div class="tls-l">Completion</div></div>`;
 }
-
+ 
 // ══════════════════════════════════════════════
 // SUMMARY
 // ══════════════════════════════════════════════
@@ -1026,7 +1080,7 @@ function renderSummary(){
   const done=allTasks.filter(t=>t.done).length;
   const pct=allTasks.length?Math.round(done/allTasks.length*100):0;
   const analyzed=rooms.filter(r=>r.ai_summary).length;
-
+ 
   document.getElementById('sumGrid').innerHTML=`
     <div class="sum-card"><div class="sc-lbl">Purchase Price</div><div class="sc-val r">£${p.buy_price.toLocaleString()}</div></div>
     <div class="sum-card"><div class="sc-lbl">Refurb Budget</div><div class="sc-val r">£${p.refurb_budget.toLocaleString()}</div></div>
@@ -1042,7 +1096,7 @@ function renderSummary(){
     <div class="sum-card"><div class="sc-lbl">AI Rooms Done</div><div class="sc-val ${analyzed===rooms.length?'g':'y'}">${analyzed}/${rooms.length}</div></div>
     <div class="sum-card"><div class="sc-lbl">Tasks Progress</div><div class="sc-val ${pct===100?'g':'y'}">${done}/${allTasks.length}</div><div class="sc-sub">${pct}% complete</div></div>
   `;
-
+ 
   const checks=['Solicitor instructed','Survey / building inspection','Bridging finance agreed','BTL mortgage AIP','Electrician contracted','Plumber contracted','Plasterer booked','Skip hire booked','Kitchen ordered','Bathroom suite ordered','Building regs notified','EPC assessor booked','EICR sign-off planned','Gas safe cert arranged','Letting agent contacted','Buildings insurance arranged'];
   document.getElementById('clList').innerHTML=checks.map((t,i)=>`
     <div class="cl-item" id="cl${i}" onclick="toggleCl(${i})">
@@ -1050,14 +1104,14 @@ function renderSummary(){
       <span class="cl-text">${t}</span>
     </div>`).join('');
 }
-
+ 
 function toggleCl(i){
   const el=document.getElementById('cl'+i);
   const cb=el.querySelector('input');
   cb.checked=!cb.checked;
   el.classList.toggle('done',cb.checked);
 }
-
+ 
 // ══════════════════════════════════════════════
 // MODALS
 // ══════════════════════════════════════════════
@@ -1076,7 +1130,7 @@ function saveApiKey(){
   if(k)localStorage.setItem('aurumApiKey',k);
   closeModal();
 }
-
+ 
 async function saveProperty(){
   const btn=document.getElementById('savePropBtn');
   const addr=document.getElementById('npAddr').value.trim();
@@ -1091,11 +1145,11 @@ async function saveProperty(){
     monthly_rent:+document.getElementById('npRent').value||0,
   }).select().single();
   if(error){alert(error.message);btn.disabled=false;btn.textContent='Create Property';return;}
-
+ 
   // Seed default rooms
   const defaultRooms=DEFAULT_ROOMS.map((r,i)=>({...r,property_id:prop.id,sort_order:i}));
   const{data:createdRooms}=await sb.from('rooms').insert(defaultRooms).select();
-
+ 
   // Seed default tasks for each room
   const defaultTasks=[
     [{name:'Replaster walls',cost:600,days:2},{name:'New flooring',cost:400,days:1},{name:'Redecorate',cost:250,days:1},{name:'Rewire sockets',cost:300,days:1}],
@@ -1109,12 +1163,12 @@ async function saveProperty(){
     const allTasks=createdRooms.flatMap((room,ri)=>(defaultTasks[ri]||[]).map((t,ti)=>({...t,room_id:room.id,property_id:prop.id,urgency:'important',done:false,sort_order:ti})));
     await sb.from('tasks').insert(allTasks);
   }
-
+ 
   closeModal();
   btn.disabled=false;btn.textContent='Create Property';
   await openProperty(prop.id);
 }
-
+ 
 async function saveRoom(){
   const name=document.getElementById('nrName').value.trim();
   if(!name){alert('Enter a room name.');return;}
@@ -1129,10 +1183,10 @@ async function saveRoom(){
   if(data){rooms.push({...data,tasks:[]});renderRooms();}
   closeModal();
 }
-
+ 
 // Close modal on background click
 document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal();}));
-
+ 
 // ══════════════════════════════════════════════
 // UTILS
 // ══════════════════════════════════════════════
@@ -1142,10 +1196,10 @@ function fmtK(n){
   if(Math.abs(n)>=1000)return(n/1000).toFixed(0)+'k';
   return Math.round(n).toString();
 }
-
+ 
 // Init timeline date
 document.getElementById('tlStart').valueAsDate=new Date();
-
+ 
 // API key button in topbar
 document.querySelector('.tbar-right').insertAdjacentHTML('afterbegin','<button class="signout-btn" onclick="openApiModal()" title="AI Setup">⚙️ AI</button>');
 </script>
