@@ -1291,7 +1291,7 @@ async function updateTaskCost(taskId,roomId,val){
 // AI ANALYSIS
 // ══════════════════════════════════════════════
 
-// Store b64 globally per room so it survives re-renders
+const PROXY_URL='https://plain-pine-20a9.antoniolondon254.workers.dev';
 const roomPhotoCache={};
 
 async function uploadRoomPhotoAndCache(roomId,e){
@@ -1365,7 +1365,7 @@ Use realistic UK 2026 labour + materials costs in GBP.
 Flag: damp, mould, old wiring, asbestos risk, single glazing, cracked plaster, structural issues.
 urgent = safety or structural. important = functional. cosmetic = aesthetic only.`;
 
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    const resp=await fetch(PROXY_URL,{
       method:'POST',
       headers:{
         'Content-Type':'application/json',
@@ -1782,7 +1782,7 @@ Asking price: £${price.toLocaleString()}
 Max budget (buy+refurb): £${budget.toLocaleString()}
 Target rent: £${rent}/month
 UK market 2026. Be realistic and precise.`});
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    const resp=await fetch(PROXY_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content}]})
