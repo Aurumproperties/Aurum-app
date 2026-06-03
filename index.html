@@ -267,7 +267,46 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .cl-text{font-size:12px;flex:1;font-family:var(--mono);}
 .cl-item.done .cl-text{text-decoration:line-through;color:var(--dim);}
  
-/* ── NOTE BOX ── */
+/* ── CALCULATOR ── */
+.inputs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:10px;margin-bottom:16px;}
+.inp-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;}
+.inp-label{font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px;font-family:var(--mono);}
+.inp-wrap{display:flex;align-items:center;gap:4px;}
+.inp-prefix{font-size:13px;color:var(--muted);font-weight:500;}
+.inp-field{background:none;border:none;color:var(--text);font-family:var(--font);font-size:17px;font-weight:600;width:100%;outline:none;letter-spacing:-.3px;}
+.inp-field:focus{color:var(--gold);}
+.inp-slider{width:100%;margin-top:8px;accent-color:var(--gold);cursor:pointer;height:3px;}
+.inp-range{display:flex;justify-content:space-between;font-size:10px;color:var(--dim);font-family:var(--mono);margin-top:3px;}
+.results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-bottom:14px;}
+.res-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;transition:border-color .2s;}
+.res-card.rc-good{border-color:rgba(64,208,128,.25);background:rgba(64,208,128,.04);}
+.res-card.rc-bad{border-color:rgba(240,64,64,.25);background:rgba(240,64,64,.04);}
+.res-card.rc-gold{border-color:var(--gold-border);background:var(--gold-dim);}
+.res-label{font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;font-family:var(--mono);}
+.res-val{font-size:18px;font-weight:700;letter-spacing:-.3px;}
+.res-val.rv-gold{color:var(--gold);}
+.res-val.rv-green{color:var(--green);}
+.res-val.rv-red{color:var(--red);}
+.res-val.rv-cyan{color:var(--cyan);}
+.res-val.rv-amber{color:var(--amber);}
+.res-sub{font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--mono);}
+.res-bar{height:3px;background:var(--s3);border-radius:2px;margin-top:7px;overflow:hidden;}
+.res-bar-fill{height:100%;border-radius:2px;transition:width .4s;}
+.verdict-box{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;gap:14px;}
+.vb-icon{font-size:28px;flex-shrink:0;}
+.vb-title{font-size:14px;font-weight:700;margin-bottom:3px;}
+.vb-desc{font-size:11px;color:var(--muted);font-family:var(--mono);line-height:1.5;}
+.sc-tag{font-size:10px;padding:2px 7px;border-radius:5px;font-weight:600;font-family:var(--mono);}
+.sc-good{background:rgba(64,208,128,.1);color:var(--green);border:1px solid rgba(64,208,128,.2);}
+.sc-ok{background:rgba(240,192,64,.1);color:var(--gold);border:1px solid rgba(240,192,64,.2);}
+.sc-bad{background:rgba(240,64,64,.1);color:var(--red);border:1px solid rgba(240,64,64,.2);}
+.amort-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.amort-yr{font-size:10px;color:var(--muted);font-family:var(--mono);width:36px;flex-shrink:0;}
+.amort-track{flex:1;height:18px;background:var(--s3);border-radius:3px;overflow:hidden;display:flex;}
+.amort-interest{height:100%;background:rgba(240,64,64,.45);}
+.amort-principal{height:100%;background:rgba(64,208,128,.45);}
+.amort-growth{height:100%;background:rgba(240,192,64,.4);}
+.amort-val{font-size:10px;color:var(--muted);font-family:var(--mono);width:55px;text-align:right;flex-shrink:0;}
 .note-box{background:var(--gold-dim);border:1px dashed var(--gold-border);border-radius:var(--r);padding:11px 14px;font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:16px;font-family:var(--mono);}
 .note-box strong{color:var(--gold);}
  
@@ -370,6 +409,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
         <button class="ptab" onclick="propTab('materials',this)">📦 Materials</button>
         <button class="ptab" onclick="propTab('timeline',this)">📅 Timeline</button>
         <button class="ptab" onclick="propTab('summary',this)">💰 Summary</button>
+        <button class="ptab" onclick="propTab('calculator',this)">⚡ Calculator</button>
       </div>
  
       <!-- ROOMS TAB -->
@@ -420,6 +460,85 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
         <div class="sum-grid" id="sumGrid"></div>
         <div class="sh"><div class="sh-title">Pre-Completion <span>Checklist</span></div></div>
         <div class="cl-list" id="clList"></div>
+      </div>
+ 
+      <!-- CALCULATOR TAB -->
+      <div id="ptab-calculator" class="ptab-content" style="display:none">
+        <div class="sh"><div class="sh-title">⚡ BRRR <span>Live Calculator</span></div></div>
+ 
+        <div class="inputs-grid">
+          <div class="inp-card">
+            <div class="inp-label">Purchase Price</div>
+            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="cPurchase" type="number" value="100000" oninput="calcBRRR()"></div>
+            <input class="inp-slider" type="range" min="50000" max="500000" step="5000" value="100000" oninput="document.getElementById('cPurchase').value=this.value;calcBRRR()">
+            <div class="inp-range"><span>£50k</span><span>£500k</span></div>
+          </div>
+          <div class="inp-card">
+            <div class="inp-label">Refurb Cost</div>
+            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="cRefurb" type="number" value="35000" oninput="calcBRRR()"></div>
+            <input class="inp-slider" type="range" min="5000" max="150000" step="1000" value="35000" oninput="document.getElementById('cRefurb').value=this.value;calcBRRR()">
+            <div class="inp-range"><span>£5k</span><span>£150k</span></div>
+          </div>
+          <div class="inp-card">
+            <div class="inp-label">GDV After Refurb</div>
+            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="cGdv" type="number" value="165000" oninput="calcBRRR()" style="color:var(--gold)"></div>
+            <input class="inp-slider" type="range" min="50000" max="600000" step="5000" value="165000" oninput="document.getElementById('cGdv').value=this.value;calcBRRR()">
+            <div class="inp-range"><span>£50k</span><span>£600k</span></div>
+          </div>
+          <div class="inp-card">
+            <div class="inp-label">Monthly Rent</div>
+            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="cRent" type="number" value="750" oninput="calcBRRR()"></div>
+            <input class="inp-slider" type="range" min="300" max="3000" step="25" value="750" oninput="document.getElementById('cRent').value=this.value;calcBRRR()">
+            <div class="inp-range"><span>£300</span><span>£3k</span></div>
+          </div>
+          <div class="inp-card">
+            <div class="inp-label">BTL Rate %</div>
+            <div class="inp-wrap"><input class="inp-field" id="cRate" type="number" value="5.5" step="0.1" oninput="calcBRRR()"><span class="inp-prefix">%</span></div>
+            <input class="inp-slider" type="range" min="3" max="10" step="0.1" value="5.5" oninput="document.getElementById('cRate').value=this.value;calcBRRR()">
+            <div class="inp-range"><span>3%</span><span>10%</span></div>
+          </div>
+          <div class="inp-card">
+            <div class="inp-label">LTV %</div>
+            <div class="inp-wrap"><input class="inp-field" id="cLtv" type="number" value="75" step="1" oninput="calcBRRR()"><span class="inp-prefix">%</span></div>
+            <input class="inp-slider" type="range" min="60" max="85" step="5" value="75" oninput="document.getElementById('cLtv').value=this.value;calcBRRR()">
+            <div class="inp-range"><span>60%</span><span>85%</span></div>
+          </div>
+          <div class="inp-card">
+            <div class="inp-label">Purchase Costs</div>
+            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="cCosts" type="number" value="5000" oninput="calcBRRR()"></div>
+            <input class="inp-slider" type="range" min="1000" max="20000" step="500" value="5000" oninput="document.getElementById('cCosts').value=this.value;calcBRRR()">
+            <div class="inp-range"><span>£1k</span><span>£20k</span></div>
+          </div>
+          <div class="inp-card">
+            <div class="inp-label">Mortgage Term</div>
+            <div class="inp-wrap"><input class="inp-field" id="cTerm" type="number" value="25" oninput="calcBRRR()"><span class="inp-prefix">yrs</span></div>
+            <input class="inp-slider" type="range" min="10" max="35" step="5" value="25" oninput="document.getElementById('cTerm').value=this.value;calcBRRR()">
+            <div class="inp-range"><span>10yr</span><span>35yr</span></div>
+          </div>
+        </div>
+ 
+        <div class="results-grid" id="calcResults"></div>
+        <div class="verdict-box" id="calcVerdict"></div>
+ 
+        <div class="tbl-wrap" style="margin-top:16px">
+          <div style="padding:10px 14px;font-size:11px;font-weight:600;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border)">📊 Scenario Comparison</div>
+          <table>
+            <thead><tr>
+              <th>Scenario</th><th>Buy</th><th>GDV</th><th>Equity</th><th>Cash Back</th><th>Locked In</th><th>CF/mo</th><th>Verdict</th>
+            </tr></thead>
+            <tbody id="calcScenarios"></tbody>
+          </table>
+        </div>
+ 
+        <div class="tbl-wrap" style="margin-top:16px;padding:16px">
+          <div style="font-size:11px;font-weight:600;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px">📈 10-Year Equity Build</div>
+          <div style="display:flex;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);font-family:var(--mono)"><div style="width:10px;height:10px;border-radius:2px;background:rgba(240,64,64,.6)"></div>Interest</div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);font-family:var(--mono)"><div style="width:10px;height:10px;border-radius:2px;background:rgba(64,208,128,.6)"></div>Principal</div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);font-family:var(--mono)"><div style="width:10px;height:10px;border-radius:2px;background:rgba(240,192,64,.5)"></div>Growth</div>
+          </div>
+          <div id="calcAmort"></div>
+        </div>
       </div>
     </div>
  
@@ -638,6 +757,148 @@ function propTab(tab,btn){
   if(tab==='timeline')renderTL();
   if(tab==='summary')renderSummary();
   if(tab==='materials')renderMaterials();
+  if(tab==='calculator'){
+    // Pre-fill with current property values
+    if(currentProp){
+      document.getElementById('cPurchase').value=currentProp.buy_price||100000;
+      document.getElementById('cRefurb').value=currentProp.refurb_budget||35000;
+      document.getElementById('cGdv').value=currentProp.gdv||165000;
+      document.getElementById('cRent').value=currentProp.monthly_rent||750;
+    }
+    calcBRRR();
+  }
+}
+ 
+function calcBRRR(){
+  const cv=id=>parseFloat(document.getElementById(id).value)||0;
+  const purchase=cv('cPurchase'),refurb=cv('cRefurb'),gdv=cv('cGdv');
+  const rent=cv('cRent'),rate=cv('cRate')/100,ltv=cv('cLtv')/100;
+  const costs=cv('cCosts'),term=cv('cTerm');
+ 
+  const totalIn=purchase+refurb+costs;
+  const equity=gdv-totalIn;
+  const mortgage=gdv*ltv;
+  const locked=Math.max(0,totalIn-mortgage);
+  const recycled=Math.min(100,Math.round(mortgage/totalIn*100));
+  const grossYield=(rent*12/gdv)*100;
+  const mr=rate/12;
+  const n=term*12;
+  const monthlyMtg=mortgage*(mr*Math.pow(1+mr,n))/(Math.pow(1+mr,n)-1);
+  const cf=rent-monthlyMtg;
+  const bmv=gdv>0?((gdv-purchase)/gdv)*100:0;
+ 
+  const fK=n=>{
+    if(Math.abs(n)>=1000000)return'£'+(n/1e6).toFixed(1)+'M';
+    if(Math.abs(n)>=1000)return'£'+(n/1000).toFixed(1)+'k';
+    return'£'+Math.round(n);
+  };
+  const fN=n=>(n>=0?'+':'')+fK(n);
+ 
+  // Results
+  document.getElementById('calcResults').innerHTML=`
+    <div class="res-card ${equity>0?'rc-good':'rc-bad'}">
+      <div class="res-label">Equity Created</div>
+      <div class="res-val ${equity>0?'rv-green':'rv-red'}">${fK(equity)}</div>
+      <div class="res-sub">GDV − total invested</div>
+      <div class="res-bar"><div class="res-bar-fill" style="width:${Math.min(100,Math.max(0,equity/gdv*100))}%;background:var(--green)"></div></div>
+    </div>
+    <div class="res-card rc-gold">
+      <div class="res-label">Refinance Amount</div>
+      <div class="res-val rv-gold">${fK(mortgage)}</div>
+      <div class="res-sub">${(ltv*100).toFixed(0)}% LTV</div>
+      <div class="res-bar"><div class="res-bar-fill" style="width:${ltv*100}%;background:var(--gold)"></div></div>
+    </div>
+    <div class="res-card ${locked<10000?'rc-good':locked<25000?'':'rc-bad'}">
+      <div class="res-label">Capital Locked In</div>
+      <div class="res-val ${locked<10000?'rv-green':locked<25000?'rv-amber':'rv-red'}">${fK(locked)}</div>
+      <div class="res-sub">${recycled}% recycled</div>
+      <div class="res-bar"><div class="res-bar-fill" style="width:${recycled}%;background:var(--green)"></div></div>
+    </div>
+    <div class="res-card ${cf>0?'rc-good':'rc-bad'}">
+      <div class="res-label">Monthly Cash Flow</div>
+      <div class="res-val ${cf>0?'rv-green':'rv-red'}">${fN(cf)}</div>
+      <div class="res-sub">Mtg ${fK(monthlyMtg)}/mo</div>
+    </div>
+    <div class="res-card">
+      <div class="res-label">Gross Yield</div>
+      <div class="res-val ${grossYield>6?'rv-green':grossYield>4?'rv-amber':'rv-red'}">${grossYield.toFixed(1)}%</div>
+      <div class="res-sub">Annual rent / GDV</div>
+    </div>
+    <div class="res-card">
+      <div class="res-label">BMV Discount</div>
+      <div class="res-val ${bmv>15?'rv-green':bmv>5?'rv-amber':'rv-red'}">${bmv.toFixed(1)}%</div>
+      <div class="res-sub">Below market value</div>
+    </div>
+    <div class="res-card">
+      <div class="res-label">Annual Cash Return</div>
+      <div class="res-val rv-cyan">${fK(cf*12)}</div>
+      <div class="res-sub">${totalIn>0?((cf*12/totalIn)*100).toFixed(1):0}% ROI</div>
+    </div>
+    <div class="res-card">
+      <div class="res-label">Total Invested</div>
+      <div class="res-val rv-amber">${fK(totalIn)}</div>
+      <div class="res-sub">Buy + refurb + fees</div>
+    </div>`;
+ 
+  // Verdict
+  const score=(equity>0?1:0)+(locked<15000?1:0)+(cf>100?1:0)+(grossYield>6?1:0)+(bmv>15?1:0);
+  let icon,title,desc,col;
+  if(score>=4){icon='🏆';title='Excellent Deal — Go for it!';desc=`Strong equity ${fK(equity)}, ${recycled}% capital recycled, cash flow ${fN(cf)}/mo. This is exactly what BRRR is about.`;col='var(--green)';}
+  else if(score>=3){icon='✅';title='Good Deal — Worth proceeding';desc=`Solid numbers. ${cf>0?`Positive cash flow ${fN(cf)}/mo.`:'Negative cash flow — review rent or buy price.'} ${locked<20000?`Only ${fK(locked)} locked in.`:'Consider negotiating purchase price down.'}`;col='var(--gold)';}
+  else if(score>=2){icon='⚠️';title='Marginal — Negotiate harder';desc=`Try to reduce purchase price by ${fK(purchase*0.1)} or increase GDV. Target: BMV >15%, yield >6%, positive CF.`;col='var(--amber)';}
+  else{icon='❌';title='Poor Deal — Walk away';desc=`Numbers don't stack up. Equity ${fK(equity)}, CF ${fN(cf)}/mo. Purchase price too high or GDV too low.`;col='var(--red)';}
+ 
+  document.getElementById('calcVerdict').innerHTML=`
+    <div class="vb-icon">${icon}</div>
+    <div><div class="vb-title" style="color:${col}">${title}</div><div class="vb-desc">${desc}</div></div>`;
+ 
+  // Scenarios
+  const scenarios=[
+    {label:'Conservative',buy:purchase*1.05,gdv:gdv*0.95},
+    {label:'Current ←',buy:purchase,gdv,current:true},
+    {label:'Optimistic',buy:purchase*0.95,gdv:gdv*1.05},
+    {label:'Best Case',buy:purchase*0.88,gdv:gdv*1.1},
+  ];
+  document.getElementById('calcScenarios').innerHTML=scenarios.map(s=>{
+    const ti=s.buy+refurb+costs;
+    const eq=s.gdv-ti;
+    const cb=s.gdv*ltv;
+    const lk=Math.max(0,ti-cb);
+    const mm=cb*(mr*Math.pow(1+mr,n))/(Math.pow(1+mr,n)-1);
+    const cf2=rent-mm;
+    const t=eq>5000&&cf2>0&&lk<20000?'good':eq>0&&cf2>-50?'ok':'bad';
+    return`<tr${s.current?' style="background:var(--gold-dim)"':''}>
+      <td style="font-weight:600">${s.label}</td>
+      <td style="font-family:var(--mono)">${fK(s.buy)}</td>
+      <td style="font-family:var(--mono)">${fK(s.gdv)}</td>
+      <td style="color:${eq>0?'var(--green)':'var(--red)'};font-family:var(--mono)">${fK(eq)}</td>
+      <td style="color:var(--gold);font-family:var(--mono)">${fK(cb)}</td>
+      <td style="color:${lk<15000?'var(--green)':lk<25000?'var(--amber)':'var(--red)'};font-family:var(--mono)">${fK(lk)}</td>
+      <td style="color:${cf2>0?'var(--green)':'var(--red)'};font-family:var(--mono)">${fN(cf2)}/mo</td>
+      <td><span class="sc-tag sc-${t}">${t==='good'?'✅ Strong':t==='ok'?'⚠️ OK':'❌ Weak'}</span></td>
+    </tr>`;
+  }).join('');
+ 
+  // Amort
+  let bal=mortgage;
+  let html='';
+  for(let yr=1;yr<=10;yr++){
+    let ai=0,ap=0;
+    for(let m=0;m<12;m++){const i=bal*mr;const p=monthlyMtg-i;ai+=i;ap+=p;bal-=p;}
+    const pv=gdv*Math.pow(1.04,yr);
+    const te=pv-bal;
+    const mx=pv;
+    html+=`<div class="amort-row">
+      <div class="amort-yr">Yr ${yr}</div>
+      <div class="amort-track">
+        <div class="amort-interest" style="width:${Math.min(ai/mx*100*6,35)}%"></div>
+        <div class="amort-principal" style="width:${Math.min(ap/mx*100*10,20)}%"></div>
+        <div class="amort-growth" style="width:${Math.min((pv-gdv)/mx*100*5,35)}%"></div>
+      </div>
+      <div class="amort-val">${fK(te)}</div>
+    </div>`;
+  }
+  document.getElementById('calcAmort').innerHTML=html;
 }
  
 // ══════════════════════════════════════════════
