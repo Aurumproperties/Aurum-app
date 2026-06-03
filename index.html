@@ -145,8 +145,9 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .kpi-l{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;margin-top:2px;}
  
 /* ── PROP TABS ── */
-.prop-tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;}
-.ptab{font-family:var(--font);font-size:12px;font-weight:600;padding:8px 16px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+.prop-tabs{display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+.prop-tabs::-webkit-scrollbar{display:none;}
+.ptab{font-family:var(--font);font-size:12px;font-weight:600;padding:8px 14px;border:none;background:none;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;white-space:nowrap;flex-shrink:0;}
 .ptab.on{color:var(--gold);border-bottom-color:var(--gold);}
 .ptab:hover:not(.on){color:var(--text);}
  
