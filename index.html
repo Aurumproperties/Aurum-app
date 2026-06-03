@@ -323,6 +323,42 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .empty-txt{font-size:14px;font-weight:600;margin-bottom:6px;color:var(--text);}
 .empty-sub{font-size:12px;font-family:var(--mono);}
  
+/* ── PORTFOLIO ── */
+.portfolio-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:20px;}
+.port-stat{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;}
+.port-stat-val{font-size:22px;font-weight:700;letter-spacing:-.4px;}
+.port-stat-lbl{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-top:3px;}
+.port-table{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:20px;}
+.port-table table{width:100%;border-collapse:collapse;}
+.port-table thead th{padding:9px 13px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono);}
+.port-table tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;}
+.port-table tbody tr:last-child{border-bottom:none;}
+.port-table tbody tr:hover{background:var(--s2);}
+.port-table td{padding:10px 13px;font-size:12px;font-family:var(--mono);}
+ 
+/* ── DEAL ANALYSER ── */
+.da-result{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px;}
+.da-score{font-size:52px;font-weight:800;text-align:center;margin-bottom:4px;}
+.da-score-lbl{font-size:12px;color:var(--muted);text-align:center;font-family:var(--mono);margin-bottom:16px;}
+.da-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:16px;}
+.da-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:10px 12px;}
+.da-card-lbl{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
+.da-card-val{font-size:15px;font-weight:700;}
+.da-txt{font-size:12px;color:var(--text);font-family:var(--mono);line-height:1.7;background:var(--s2);border-radius:var(--r);padding:12px;white-space:pre-wrap;}
+ 
+/* ── CONTRACTORS ── */
+.contractor-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:16px;}
+.cc-head{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.cc-avatar{width:42px;height:42px;border-radius:50%;background:var(--gold-dim);border:1px solid var(--gold-border);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.cc-name{font-size:14px;font-weight:700;}
+.cc-trade{font-size:11px;color:var(--gold);font-family:var(--mono);}
+.cc-detail{font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:3px;}
+.cc-detail span{color:var(--text);}
+.cc-actions{display:flex;gap:6px;margin-top:10px;}
+.cc-btn{font-family:var(--font);font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;flex:1;text-align:center;transition:all .15s;}
+.cc-btn:hover{border-color:var(--gold);color:var(--gold);}
+.cc-btn.danger:hover{border-color:var(--red);color:var(--red);}
+ 
 /* ── MOBILE ── */
 @media(max-width:640px){
   .topbar{padding:0 14px;}
@@ -377,6 +413,9 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
     <div class="tbar-logo" onclick="navTo('dashboard')">AURUM</div>
     <div class="tbar-nav">
       <button class="tnav-btn on" id="tnav-dashboard" onclick="navTo('dashboard')">Dashboard</button>
+      <button class="tnav-btn" id="tnav-portfolio" onclick="navTo('portfolio')">📊 Portfolio</button>
+      <button class="tnav-btn" id="tnav-analyser" onclick="navTo('analyser')">🤖 Deal AI</button>
+      <button class="tnav-btn" id="tnav-contractors" onclick="navTo('contractors')">👷 Contractors</button>
       <button class="tnav-btn" id="tnav-property" onclick="navTo('property')" style="display:none">Property</button>
     </div>
     <div class="tbar-right">
@@ -411,6 +450,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
         <button class="ptab" onclick="propTab('timeline',this)">📅 Timeline</button>
         <button class="ptab" onclick="propTab('summary',this)">💰 Summary</button>
         <button class="ptab" onclick="propTab('calculator',this)">⚡ Calculator</button>
+        <button class="ptab" onclick="propTab('documents',this)">📄 Documents</button>
       </div>
  
       <!-- ROOMS TAB -->
@@ -541,8 +581,111 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
           <div id="calcAmort"></div>
         </div>
       </div>
+      <!-- DOCUMENTS TAB -->
+      <div id="ptab-documents" class="ptab-content" style="display:none">
+        <div class="sh">
+          <div class="sh-title">📄 Document <span>Generator</span></div>
+          <button class="btn solid" onclick="generateDoc()">⬇ Generate PDF Spec</button>
+        </div>
+        <div class="note-box">🖨 <strong>Generate a professional refurb spec sheet</strong> to hand to your contractors. Includes all rooms, tasks, materials, costs and timeline. Print or save as PDF.</div>
+        <div id="docPreview" style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:24px;font-family:var(--mono);font-size:12px;line-height:1.8;color:var(--text)">
+          <div style="text-align:center;color:var(--muted);padding:40px 0">Click "Generate PDF Spec" to preview your document</div>
+        </div>
+      </div>
     </div>
  
+  </div>
+ 
+  <!-- ═══ PORTFOLIO PAGE ═══ -->
+  <div class="page" id="page-portfolio">
+    <div class="dash-header">
+      <div class="dash-greeting">📊 Portfolio <span>Tracker</span></div>
+      <div class="dash-sub">// your full investment picture</div>
+    </div>
+    <div id="portfolioContent"></div>
+  </div>
+ 
+  <!-- ═══ DEAL ANALYSER PAGE ═══ -->
+  <div class="page" id="page-analyser">
+    <div class="dash-header">
+      <div class="dash-greeting">🤖 AI Deal <span>Analyser</span></div>
+      <div class="dash-sub">// upload a photo + enter details → Claude analyses the deal</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px" id="analyserGrid">
+      <div style="grid-column:1/-1">
+        <div class="note-box">📸 <strong>How it works:</strong> Upload a photo of the property exterior or interior, enter the address and asking price → Claude analyses condition, estimates refurb cost, calculates BRRR numbers and gives a Deal Score out of 10.</div>
+      </div>
+      <div class="inp-card">
+        <div class="inp-label">Property Address</div>
+        <input class="inp-field" id="daAddr" placeholder="83 Bishop Road, Sunderland SR2" style="font-size:14px;width:100%">
+      </div>
+      <div class="inp-card">
+        <div class="inp-label">Asking Price £</div>
+        <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="daPrice" type="number" placeholder="100000"></div>
+      </div>
+      <div class="inp-card">
+        <div class="inp-label">Your Max Budget £</div>
+        <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="daBudget" type="number" placeholder="140000"></div>
+      </div>
+      <div class="inp-card">
+        <div class="inp-label">Target Rent £/mo</div>
+        <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="daRent" type="number" placeholder="750"></div>
+      </div>
+      <div style="grid-column:1/-1">
+        <div class="photo-zone" id="daPZ" style="height:180px">
+          <div class="pz-icon">📷</div>
+          <div class="pz-hint">Upload property photo for AI analysis</div>
+          <input type="file" accept="image/*" onchange="loadDaPhoto(event)">
+        </div>
+      </div>
+      <div style="grid-column:1/-1;display:flex;gap:10px;align-items:center">
+        <button class="btn solid" id="daBtn" onclick="analyseDeal()" style="padding:12px 28px;font-size:14px">🤖 Analyse Deal with AI</button>
+        <span id="daStat" style="font-size:12px;color:var(--gold);font-family:var(--mono);display:none">Analysing... give me 15 seconds ⚡</span>
+      </div>
+      <div style="grid-column:1/-1" id="daResult"></div>
+    </div>
+  </div>
+ 
+  <!-- ═══ CONTRACTORS PAGE ═══ -->
+  <div class="page" id="page-contractors">
+    <div class="dash-header">
+      <div class="dash-greeting">👷 Contractor <span>Manager</span></div>
+      <div class="dash-sub">// manage your trades team</div>
+    </div>
+    <div class="sh">
+      <div class="sh-title">Your <span>Contractors</span></div>
+      <button class="btn gold" onclick="openAddContractor()">+ Add Contractor</button>
+    </div>
+    <div id="contractorsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:24px"></div>
+    <div class="sh"><div class="sh-title">Assign <span>Tasks</span></div></div>
+    <div id="contractorTasks"></div>
+  </div>
+ 
+</div><!-- /main -->
+</div><!-- /app -->
+ 
+<!-- ADD CONTRACTOR MODAL -->
+<div class="modal-bg" id="addContractorModal" style="display:none">
+  <div class="modal">
+    <div class="modal-title">👷 Add Contractor</div>
+    <label class="form-label">Name</label>
+    <input class="form-input" id="ncName" placeholder="John Smith">
+    <label class="form-label">Trade</label>
+    <select class="form-input" id="ncTrade">
+      <option>Electrician</option><option>Plumber</option><option>Plasterer</option>
+      <option>Builder</option><option>Painter/Decorator</option><option>Tiler</option>
+      <option>Roofer</option><option>Kitchen Fitter</option><option>General</option>
+    </select>
+    <label class="form-label">Phone</label>
+    <input class="form-input" id="ncPhone" placeholder="+44 7700 000000">
+    <label class="form-label">Day Rate £</label>
+    <input class="form-input" id="ncRate" type="number" placeholder="200">
+    <label class="form-label">Notes</label>
+    <input class="form-input" id="ncNotes" placeholder="Reliable, does good work...">
+    <div class="modal-btns">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn solid" onclick="saveContractor()">Add Contractor</button>
+    </div>
   </div>
 </div>
  
@@ -1533,6 +1676,297 @@ document.getElementById('tlStart').valueAsDate=new Date();
  
 // API key button in topbar
 document.querySelector('.tbar-right').insertAdjacentHTML('afterbegin','<button class="signout-btn" onclick="openApiModal()" title="AI Setup">⚙️ AI</button>');
+ 
+// ══════════════════════════════════════════════
+// PORTFOLIO TRACKER
+// ══════════════════════════════════════════════
+async function loadPortfolio(){
+  const{data:props}=await sb.from('properties').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+  const list=props||[];
+  if(!list.length){
+    document.getElementById('portfolioContent').innerHTML=`<div class="empty"><div class="empty-icon">📊</div><div class="empty-txt">No properties yet</div><div class="empty-sub">Add your first property from the Dashboard</div></div>`;
+    return;
+  }
+  const fK=n=>{n=+n||0;if(Math.abs(n)>=1000000)return'£'+(n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1000)return'£'+(n/1000).toFixed(0)+'k';return'£'+Math.round(n);};
+  const totalVal=list.reduce((s,p)=>s+p.gdv,0);
+  const totalEquity=list.reduce((s,p)=>s+(p.gdv-(p.buy_price+p.refurb_budget+5000)),0);
+  const totalCF=list.reduce((s,p)=>s+(p.monthly_rent-(p.gdv*.75*.055/12)),0);
+  const totalInvested=list.reduce((s,p)=>s+(p.buy_price+p.refurb_budget+5000),0);
+  const totalRent=list.reduce((s,p)=>s+p.monthly_rent,0);
+  const avgYield=totalVal>0?(totalRent*12/totalVal*100).toFixed(1):0;
+  document.getElementById('portfolioContent').innerHTML=`
+    <div class="portfolio-stats">
+      <div class="port-stat"><div class="port-stat-val" style="color:var(--gold)">${list.length}</div><div class="port-stat-lbl">Properties</div></div>
+      <div class="port-stat"><div class="port-stat-val" style="color:var(--gold)">${fK(totalVal)}</div><div class="port-stat-lbl">Portfolio Value</div></div>
+      <div class="port-stat"><div class="port-stat-val" style="color:var(--green)">${fK(totalEquity)}</div><div class="port-stat-lbl">Total Equity</div></div>
+      <div class="port-stat"><div class="port-stat-val" style="color:${totalCF>=0?'var(--green)':'var(--red)'}">${fK(totalCF)}/mo</div><div class="port-stat-lbl">Monthly Cash Flow</div></div>
+      <div class="port-stat"><div class="port-stat-val" style="color:var(--amber)">${fK(totalInvested)}</div><div class="port-stat-lbl">Total Invested</div></div>
+      <div class="port-stat"><div class="port-stat-val" style="color:var(--cyan)">${avgYield}%</div><div class="port-stat-lbl">Avg Gross Yield</div></div>
+      <div class="port-stat"><div class="port-stat-val" style="color:var(--gold)">${fK(totalRent*12)}</div><div class="port-stat-lbl">Annual Rent Roll</div></div>
+      <div class="port-stat"><div class="port-stat-val" style="color:var(--green)">${fK(list.reduce((s,p)=>s+p.gdv*.75,0))}</div><div class="port-stat-lbl">Total Refinance</div></div>
+    </div>
+    <div class="port-table">
+      <table>
+        <thead><tr><th>Property</th><th>Buy Price</th><th>GDV</th><th>Equity</th><th>Cash Back</th><th>CF/mo</th><th>Yield</th><th>Status</th></tr></thead>
+        <tbody>${list.map(p=>{
+          const eq=p.gdv-(p.buy_price+p.refurb_budget+5000);
+          const cb=p.gdv*.75;
+          const cf=p.monthly_rent-(cb*.055/12);
+          const yld=p.gdv>0?(p.monthly_rent*12/p.gdv*100).toFixed(1):0;
+          return`<tr onclick="openProperty('${p.id}')">
+            <td style="font-weight:600;color:var(--text)">${p.address}</td>
+            <td>${fK(p.buy_price)}</td>
+            <td style="color:var(--gold)">${fK(p.gdv)}</td>
+            <td style="color:${eq>0?'var(--green)':'var(--red)'}">${fK(eq)}</td>
+            <td style="color:var(--cyan)">${fK(cb)}</td>
+            <td style="color:${cf>0?'var(--green)':'var(--red)'}">${cf>=0?'+':''}${fK(cf)}</td>
+            <td style="color:${yld>6?'var(--green)':yld>4?'var(--amber)':'var(--red)'}">${yld}%</td>
+            <td><span style="font-size:10px;padding:2px 8px;border-radius:8px;background:${p.status==='active'?'#0a200a':'var(--gold-dim)'};color:${p.status==='active'?'var(--green)':'var(--gold)'};border:1px solid ${p.status==='active'?'#1a4a1a':'var(--gold-border)'}">${p.status}</span></td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>
+    </div>`;
+}
+ 
+// ══════════════════════════════════════════════
+// DEAL ANALYSER
+// ══════════════════════════════════════════════
+let daPhotoB64=null;
+ 
+function loadDaPhoto(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    daPhotoB64=ev.target.result;
+    const pz=document.getElementById('daPZ');
+    pz.innerHTML=`<img src="${daPhotoB64}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:var(--r)"><input type="file" accept="image/*" onchange="loadDaPhoto(event)" style="position:absolute;inset:0;opacity:0;cursor:pointer">`;
+  };
+  reader.readAsDataURL(file);
+}
+ 
+async function analyseDeal(){
+  const key=localStorage.getItem('aurumApiKey');
+  if(!key){openApiModal();return;}
+  const addr=document.getElementById('daAddr').value.trim();
+  const price=+document.getElementById('daPrice').value||0;
+  const budget=+document.getElementById('daBudget').value||0;
+  const rent=+document.getElementById('daRent').value||0;
+  if(!addr&&!daPhotoB64){alert('Enter an address or upload a photo.');return;}
+  const btn=document.getElementById('daBtn');
+  const stat=document.getElementById('daStat');
+  btn.disabled=true;stat.style.display='inline';
+  document.getElementById('daResult').innerHTML='';
+  try{
+    const content=[];
+    if(daPhotoB64){
+      content.push({type:'image',source:{type:'base64',media_type:daPhotoB64.split(';')[0].split(':')[1]||'image/jpeg',data:daPhotoB64.split(',')[1]}});
+    }
+    content.push({type:'text',text:`You are a UK BRRR property investment expert. Analyse this deal and respond ONLY with valid JSON:
+{
+  "deal_score": 7,
+  "score_label": "Good Deal",
+  "condition": "fair",
+  "estimated_refurb": 35000,
+  "estimated_gdv": 165000,
+  "estimated_yield": 7.2,
+  "estimated_equity": 25000,
+  "monthly_cashflow": 180,
+  "verdict": "2-3 sentence verdict on this deal",
+  "positives": ["point 1", "point 2", "point 3"],
+  "risks": ["risk 1", "risk 2"],
+  "recommendation": "Buy / Negotiate / Walk Away"
+}
+ 
+Property: ${addr||'See photo'}
+Asking price: £${price.toLocaleString()}
+Max budget (buy+refurb): £${budget.toLocaleString()}
+Target rent: £${rent}/month
+UK market 2026. Be realistic and precise.`});
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content}]})
+    });
+    if(!resp.ok)throw new Error(`API error ${resp.status}`);
+    const data=await resp.json();
+    let txt=data.content.map(c=>c.text||'').join('').replace(/```json|```/g,'').trim();
+    const r=JSON.parse(txt);
+    const fK=n=>n>=1000?'£'+(n/1000).toFixed(0)+'k':'£'+n;
+    const scoreColor=r.deal_score>=7?'var(--green)':r.deal_score>=5?'var(--amber)':'var(--red)';
+    document.getElementById('daResult').innerHTML=`
+      <div class="da-result">
+        <div class="da-score" style="color:${scoreColor}">${r.deal_score}/10</div>
+        <div class="da-score-lbl">${r.score_label} · Recommendation: <strong style="color:${scoreColor}">${r.recommendation}</strong></div>
+        <div class="da-grid">
+          <div class="da-card"><div class="da-card-lbl">Est. Refurb</div><div class="da-card-val" style="color:var(--amber)">${fK(r.estimated_refurb)}</div></div>
+          <div class="da-card"><div class="da-card-lbl">Est. GDV</div><div class="da-card-val" style="color:var(--gold)">${fK(r.estimated_gdv)}</div></div>
+          <div class="da-card"><div class="da-card-lbl">Equity Created</div><div class="da-card-val" style="color:var(--green)">${fK(r.estimated_equity)}</div></div>
+          <div class="da-card"><div class="da-card-lbl">Gross Yield</div><div class="da-card-val" style="color:${r.estimated_yield>6?'var(--green)':'var(--amber)'}">${r.estimated_yield}%</div></div>
+          <div class="da-card"><div class="da-card-lbl">Monthly CF</div><div class="da-card-val" style="color:${r.monthly_cashflow>0?'var(--green)':'var(--red)'}">${r.monthly_cashflow>=0?'+':''}£${r.monthly_cashflow}/mo</div></div>
+          <div class="da-card"><div class="da-card-lbl">Condition</div><div class="da-card-val" style="color:${r.condition==='poor'?'var(--red)':r.condition==='fair'?'var(--amber)':'var(--green)'}">${r.condition}</div></div>
+        </div>
+        <div class="da-txt">📋 VERDICT\n${r.verdict}\n\n✅ POSITIVES\n${(r.positives||[]).map((p,i)=>`${i+1}. ${p}`).join('\n')}\n\n⚠️ RISKS\n${(r.risks||[]).map((p,i)=>`${i+1}. ${p}`).join('\n')}</div>
+        ${r.deal_score>=6?`<div style="margin-top:12px"><button class="btn solid" onclick="addDealAsProperty()">+ Add to Portfolio</button></div>`:''}
+      </div>`;
+    window._lastDeal={addr,price,gdv:r.estimated_gdv,refurb:r.estimated_refurb,rent};
+  }catch(err){
+    alert('AI Error: '+err.message);
+  }
+  btn.disabled=false;stat.style.display='none';
+}
+ 
+function addDealAsProperty(){
+  const d=window._lastDeal||{};
+  document.getElementById('npAddr').value=d.addr||'';
+  document.getElementById('npBuy').value=d.price||'';
+  document.getElementById('npRef').value=d.refurb||'';
+  document.getElementById('npGdv').value=d.gdv||'';
+  document.getElementById('npRent').value=d.rent||'';
+  openAddProp();
+}
+ 
+// ══════════════════════════════════════════════
+// CONTRACTORS
+// ══════════════════════════════════════════════
+let contractors=JSON.parse(localStorage.getItem('aurumContractors')||'[]');
+const tradeIcons={Electrician:'⚡',Plumber:'🔧',Plasterer:'🏗',Builder:'🧱','Painter/Decorator':'🎨',Tiler:'🟦',Roofer:'🏠','Kitchen Fitter':'🍳',General:'👷'};
+ 
+function renderContractors(){
+  const g=document.getElementById('contractorsGrid');
+  if(!contractors.length){
+    g.innerHTML=`<div class="empty" style="grid-column:1/-1"><div class="empty-icon">👷</div><div class="empty-txt">No contractors yet</div><div class="empty-sub">Add your trusted trades team</div></div>`;
+    return;
+  }
+  g.innerHTML=contractors.map((c,i)=>`
+    <div class="contractor-card">
+      <div class="cc-head">
+        <div class="cc-avatar">${tradeIcons[c.trade]||'👷'}</div>
+        <div><div class="cc-name">${c.name}</div><div class="cc-trade">${c.trade}</div></div>
+      </div>
+      <div class="cc-detail">📞 <span>${c.phone||'—'}</span></div>
+      <div class="cc-detail">💷 <span>£${c.rate||0}/day</span></div>
+      ${c.notes?`<div class="cc-detail">📝 <span>${c.notes}</span></div>`:''}
+      <div class="cc-actions">
+        <button class="cc-btn" onclick="callContractor('${c.phone}')">📞 Call</button>
+        <button class="cc-btn" onclick="whatsappContractor('${c.phone}','${c.name}')">💬 WhatsApp</button>
+        <button class="cc-btn danger" onclick="deleteContractor(${i})">✕</button>
+      </div>
+    </div>`).join('');
+}
+ 
+function openAddContractor(){document.getElementById('addContractorModal').style.display='flex';}
+ 
+function saveContractor(){
+  const name=document.getElementById('ncName').value.trim();
+  if(!name){alert('Enter a name.');return;}
+  contractors.push({
+    name,
+    trade:document.getElementById('ncTrade').value,
+    phone:document.getElementById('ncPhone').value.trim(),
+    rate:+document.getElementById('ncRate').value||0,
+    notes:document.getElementById('ncNotes').value.trim()
+  });
+  localStorage.setItem('aurumContractors',JSON.stringify(contractors));
+  closeModal();
+  renderContractors();
+}
+ 
+function deleteContractor(i){
+  if(!confirm('Delete this contractor?'))return;
+  contractors.splice(i,1);
+  localStorage.setItem('aurumContractors',JSON.stringify(contractors));
+  renderContractors();
+}
+ 
+function callContractor(phone){if(phone)window.open('tel:'+phone);}
+function whatsappContractor(phone,name){
+  const msg=encodeURIComponent(`Hi ${name}, I have a property refurbishment project I'd like to discuss with you.`);
+  window.open(`https://wa.me/${phone.replace(/\D/g,'')}?text=${msg}`);
+}
+ 
+// ══════════════════════════════════════════════
+// DOCUMENT GENERATOR
+// ══════════════════════════════════════════════
+function generateDoc(){
+  if(!currentProp){alert('Open a property first.');return;}
+  const p=currentProp;
+  const matTot=materials.reduce((s,m)=>s+m.quantity*m.unit_cost,0);
+  const taskTot=rooms.reduce((s,r)=>s+(r.tasks||[]).reduce((a,t)=>a+t.cost,0),0);
+  const tlDays=PHASES.reduce((s,ph)=>s+ph.days,0);
+  const date=new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+ 
+  let html=`<div style="max-width:700px;margin:0 auto">
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:24px;font-weight:800;color:var(--gold);letter-spacing:-1px">AURUM</div>
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px">// refurbishment specification</div>
+    </div>
+    <div style="border-top:2px solid var(--gold);padding-top:16px;margin-bottom:20px">
+      <div style="font-size:18px;font-weight:700;margin-bottom:8px">${p.address}</div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:12px;font-family:var(--mono);color:var(--muted)">
+        <span>Date: <strong style="color:var(--text)">${date}</strong></span>
+        <span>Purchase: <strong style="color:var(--text)">£${p.buy_price.toLocaleString()}</strong></span>
+        <span>Refurb Budget: <strong style="color:var(--gold)">£${p.refurb_budget.toLocaleString()}</strong></span>
+        <span>GDV: <strong style="color:var(--green)">£${p.gdv.toLocaleString()}</strong></span>
+      </div>
+    </div>
+    <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em">📋 Scope of Works by Room</div>`;
+ 
+  rooms.forEach(r=>{
+    const tasks=r.tasks||[];
+    if(!tasks.length)return;
+    const roomTotal=tasks.reduce((s,t)=>s+t.cost,0);
+    html+=`<div style="margin-bottom:14px;padding:12px;background:var(--s3);border-radius:8px">
+      <div style="font-weight:700;margin-bottom:6px">${r.icon} ${r.name} <span style="color:var(--muted);font-size:11px;font-family:var(--mono)">${r.length_m}×${r.width_m}m = ${(r.length_m*r.width_m).toFixed(1)}m²</span></div>
+      <table style="width:100%;border-collapse:collapse;font-size:11px;font-family:var(--mono)">
+        <tr style="color:var(--muted)"><th style="text-align:left;padding:3px 6px">Task</th><th style="text-align:right;padding:3px 6px">Est. Cost</th><th style="text-align:right;padding:3px 6px">Days</th></tr>
+        ${tasks.map(t=>`<tr><td style="padding:3px 6px;border-top:1px solid var(--border)">${t.name}</td><td style="text-align:right;padding:3px 6px;border-top:1px solid var(--border);color:var(--amber)">${t.cost>0?'£'+t.cost.toLocaleString():'—'}</td><td style="text-align:right;padding:3px 6px;border-top:1px solid var(--border);color:var(--muted)">${t.days}d</td></tr>`).join('')}
+        <tr style="font-weight:700"><td style="padding:5px 6px;border-top:2px solid var(--border2)">Room Total</td><td style="text-align:right;padding:5px 6px;border-top:2px solid var(--border2);color:var(--gold)">£${roomTotal.toLocaleString()}</td><td></td></tr>
+      </table></div>`;
+  });
+ 
+  html+=`<div style="font-size:13px;font-weight:700;color:var(--gold);margin:20px 0 10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em">📦 Materials List</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;font-family:var(--mono);margin-bottom:20px">
+      <tr style="color:var(--muted)"><th style="text-align:left;padding:4px 6px">Item</th><th style="text-align:center;padding:4px 6px">Qty</th><th style="text-align:left;padding:4px 6px">Supplier</th><th style="text-align:right;padding:4px 6px">Cost</th></tr>
+      ${materials.map(m=>`<tr><td style="padding:4px 6px;border-top:1px solid var(--border)">${m.item}</td><td style="text-align:center;padding:4px 6px;border-top:1px solid var(--border)">${m.quantity} ${m.unit}</td><td style="padding:4px 6px;border-top:1px solid var(--border);color:var(--muted)">${m.supplier||'—'}</td><td style="text-align:right;padding:4px 6px;border-top:1px solid var(--border);color:var(--amber)">£${(m.quantity*m.unit_cost).toLocaleString()}</td></tr>`).join('')}
+      <tr style="font-weight:700"><td colspan="3" style="padding:6px;border-top:2px solid var(--border2)">Materials Total</td><td style="text-align:right;padding:6px;border-top:2px solid var(--border2);color:var(--gold)">£${matTot.toLocaleString()}</td></tr>
+    </table>
+ 
+  <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:10px;font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em">📅 Build Programme — ${tlDays} Working Days</div>
+  <table style="width:100%;border-collapse:collapse;font-size:11px;font-family:var(--mono);margin-bottom:20px">
+    <tr style="color:var(--muted)"><th style="text-align:left;padding:4px 6px">Phase</th><th style="text-align:center;padding:4px 6px">Days</th><th style="text-align:left;padding:4px 6px">After</th></tr>
+    ${PHASES.map(ph=>`<tr><td style="padding:4px 6px;border-top:1px solid var(--border)">${ph.name}</td><td style="text-align:center;padding:4px 6px;border-top:1px solid var(--border)">${ph.days}</td><td style="padding:4px 6px;border-top:1px solid var(--border);color:var(--muted)">${ph.before}</td></tr>`).join('')}
+  </table>
+ 
+  <div style="display:flex;justify-content:space-between;border-top:2px solid var(--gold);padding-top:14px;font-family:var(--mono);font-size:12px">
+    <div>Tasks Total: <strong style="color:var(--gold)">£${taskTot.toLocaleString()}</strong></div>
+    <div>Materials: <strong style="color:var(--gold)">£${matTot.toLocaleString()}</strong></div>
+    <div>Total Budget: <strong style="color:var(--gold)">£${(taskTot+matTot).toLocaleString()}</strong></div>
+  </div>
+  <div style="margin-top:16px;font-size:11px;color:var(--dim);font-family:var(--mono)">Generated by AURUM — aurumproperties.github.io/Aurum-app · ${date}</div>
+  </div>`;
+ 
+  document.getElementById('docPreview').innerHTML=html;
+ 
+  // Auto print dialog
+  setTimeout(()=>{
+    if(confirm('Open print dialog to save as PDF?'))window.print();
+  },300);
+}
+ 
+// ══════════════════════════════════════════════
+// UPDATE navTo to handle new pages
+// ══════════════════════════════════════════════
+const _origNavTo=navTo;
+navTo=function(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tnav-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('page-'+page).classList.add('on');
+  const btn=document.getElementById('tnav-'+page);
+  if(btn)btn.classList.add('on');
+  if(page==='dashboard')loadDashboard();
+  if(page==='portfolio')loadPortfolio();
+  if(page==='contractors')renderContractors();
+};
 </script>
 </body>
 </html>
