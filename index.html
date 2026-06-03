@@ -17,8 +17,8 @@
   --border2: #3a3a3a;
   --gold: #f0c040;
   --gold2: #c89820;
-  --gold-dim: rgba(240,192,64,0.12);
-  --gold-border: rgba(240,192,64,0.25);
+  --gold-dim: rgba(240,192,64,0.08);
+  --gold-border: rgba(240,192,64,0.2);
   --cyan: #40e0d0;
   --red: #f04040;
   --amber: #f0a040;
@@ -82,8 +82,8 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .dash-sub{font-size:13px;color:var(--muted);font-family:var(--mono);}
 .dash-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:28px;}
 .dstat{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:16px 18px;}
-.dstat-val{font-size:26px;font-weight:800;color:var(--gold);}
-.dstat-lbl{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:3px;}
+.dstat-val{font-size:22px;font-weight:700;color:var(--gold);font-family:var(--font);letter-spacing:-.5px;}
+.dstat-lbl{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:3px;text-transform:uppercase;letter-spacing:.05em;}
 .sh{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
 .sh-title{font-size:16px;font-weight:700;}
 .sh-title span{color:var(--gold);}
@@ -135,14 +135,14 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .chip{font-size:11px;font-family:var(--mono);padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:var(--s2);color:var(--muted);}
 .chip input{background:none;border:none;color:inherit;font-family:var(--mono);font-size:11px;width:72px;outline:none;}
 .chip.gold{border-color:var(--gold-border);color:var(--gold);}
-.pdh-kpis{display:flex;flex-direction:column;gap:6px;min-width:110px;}
+.pdh-kpis{display:flex;flex-direction:column;gap:6px;min-width:120px;}
 .kpi{text-align:right;}
-.kpi-v{font-size:18px;font-weight:800;}
+.kpi-v{font-size:16px;font-weight:700;font-family:var(--font);letter-spacing:-.3px;}
 .kpi-v.g{color:var(--green);}
 .kpi-v.r{color:var(--red);}
 .kpi-v.b{color:var(--cyan);}
 .kpi-v.y{color:var(--gold);}
-.kpi-l{font-size:10px;color:var(--muted);font-family:var(--mono);}
+.kpi-l{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;}
  
 /* ── PROP TABS ── */
 .prop-tabs{display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;}
@@ -245,14 +245,14 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .w-in{background:var(--s2);border:1px solid var(--border);border-radius:4px;padding:3px 6px;color:var(--gold);font-family:var(--mono);font-size:11px;width:40px;outline:none;text-align:center;}
 .tl-summary{background:var(--s2);border:1px solid var(--gold-border);border-radius:var(--r);padding:14px 18px;display:flex;gap:20px;flex-wrap:wrap;}
 .tls-item{text-align:center;}
-.tls-v{font-size:24px;font-weight:800;color:var(--gold);}
-.tls-l{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
+.tls-v{font-size:22px;font-weight:700;color:var(--gold);font-family:var(--font);letter-spacing:-.3px;}
+.tls-l{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;text-transform:uppercase;letter-spacing:.05em;}
  
 /* ── SUMMARY ── */
 .sum-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:12px;margin-bottom:20px;}
 .sum-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:15px 16px;}
-.sc-lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:7px;font-family:var(--mono);}
-.sc-val{font-size:24px;font-weight:800;}
+.sc-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:7px;font-family:var(--mono);}
+.sc-val{font-size:20px;font-weight:700;font-family:var(--font);letter-spacing:-.3px;}
 .sc-val.g{color:var(--green);}
 .sc-val.r{color:var(--red);}
 .sc-val.b{color:var(--cyan);}
@@ -925,14 +925,22 @@ async function analyseRoom(roomId,e){
   if(stat)stat.style.display='inline';
  
   try{
-    // Get b64 from cache — must have been uploaded this session
-    const cached=roomPhotoCache[roomId];
-    if(!cached){
-      // Not in cache — ask user to re-upload
-      throw new Error('Please re-upload the photo to enable AI analysis (session expired).');
+    // Use cached b64 if available, otherwise send URL directly
+    let imageSource;
+    const cached = roomPhotoCache[roomId];
+    if(cached){
+      imageSource = {
+        type:'base64',
+        media_type: cached.split(';')[0].split(':')[1]||'image/jpeg',
+        data: cached.split(',')[1]
+      };
+    } else {
+      // Send URL directly — Anthropic can fetch it
+      imageSource = {
+        type:'url',
+        url: r.photo_url
+      };
     }
-    const b64=cached.split(',')[1];
-    const mtype=cached.split(';')[0].split(':')[1]||'image/jpeg';
  
     const prompt=`You are an expert UK property refurbishment surveyor analysing a room for a BRRR buy-to-let investment property in the UK (2026).
  
@@ -963,7 +971,7 @@ urgent = safety or structural. important = functional. cosmetic = aesthetic only
         model:'claude-sonnet-4-20250514',
         max_tokens:1000,
         messages:[{role:'user',content:[
-          {type:'image',source:{type:'base64',media_type:mtype,data:b64}},
+          {type:'image',source:imageSource},
           {type:'text',text:prompt}
         ]}]
       })
