@@ -651,7 +651,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
   <div class="page" id="page-scout">
     <div class="dash-header">
       <div class="dash-greeting">🔍 Property <span>Scout</span></div>
-      <div class="dash-sub">// enter a property → engine ranks & scores it against every postcode in your target areas</div>
+      <div class="dash-sub">// enter a property → engine ranks & scores it against every postcode in your target areas · <a href="sold-prices.html" target="_blank" style="color:var(--gold);text-decoration:none">🏠 Sold Prices Engine (full UK) ↗</a></div>
     </div>
 
     <!-- DEAL SCORER — Manual entry -->
@@ -2037,7 +2037,10 @@ function scoreDeal(){
   if(!r){
     document.getElementById('ssDealResult').innerHTML = `
       <div class="deal-score-wrap">
-        <div style="color:var(--amber);font-family:var(--mono);font-size:12px">⚠️ Postcode not in our database yet. We cover: Sunderland (SR), Liverpool (L), Hull (HU), London (N/EN), Coventry (CV), Kent (ME/DA), Luton (LU), Chelmsford (CM).</div>
+        <div style="color:var(--amber);font-family:var(--mono);font-size:12px">⚠️ Postcode not in our scoring database yet.<br><br>
+        <strong style="color:var(--gold)">Use the Sold Prices Engine</strong> — covers entire UK with real Land Registry data.<br><br>
+        <a href="sold-prices.html" target="_blank" style="color:var(--gold);font-weight:600;text-decoration:none">→ Open Sold Prices Engine ↗</a><br><br>
+        Or add this postcode via "My Custom Postcodes" below.</div>
       </div>`;
     return;
   }

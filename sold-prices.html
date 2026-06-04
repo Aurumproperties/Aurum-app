@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURUM — Sold Prices Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080808;--s1:#111;--s2:#181818;--s3:#222;
+  --border:#2a2a2a;--border2:#3a3a3a;
+  --gold:#f0c040;--gold2:#c89820;--gold-dim:rgba(240,192,64,.08);--gold-border:rgba(240,192,64,.2);
+  --cyan:#40e0d0;--red:#f04040;--amber:#f0a040;--green:#40d080;--purple:#c060f0;
+  --text:#f0ede6;--muted:#707068;--dim:#383830;
+  --font:'Inter',sans-serif;--mono:'DM Mono',monospace;
+  --r:10px;--r2:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;}
+.topbar{height:52px;background:rgba(8,8,8,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:100;}
+.logo{font-size:18px;font-weight:800;color:var(--gold);letter-spacing:-.5px;}
+.logo span{color:var(--muted);font-size:12px;font-weight:400;font-family:var(--mono);margin-left:8px;}
+.back-btn{font-family:var(--font);font-size:12px;padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+.back-btn:hover{border-color:var(--gold);color:var(--gold);}
+.wrap{max-width:1100px;margin:0 auto;padding:24px 20px;}
+
+/* SEARCH */
+.search-card{background:var(--s1);border:1px solid var(--gold-border);border-radius:var(--r2);padding:20px 24px;margin-bottom:20px;}
+.sc-title{font-size:16px;font-weight:700;color:var(--gold);margin-bottom:4px;}
+.sc-sub{font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:18px;}
+.search-row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;}
+.sg{display:flex;flex-direction:column;gap:5px;}
+.sl{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);}
+.si{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-family:var(--font);font-size:13px;outline:none;min-width:120px;}
+.si:focus{border-color:var(--gold);}
+.si::placeholder{color:var(--dim);}
+.search-btn{background:var(--gold);color:#000;font-family:var(--font);font-size:13px;font-weight:700;padding:10px 24px;border-radius:8px;border:none;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.search-btn:hover{background:var(--gold2);}
+.search-btn:disabled{opacity:.4;cursor:not-allowed;}
+.radius-note{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:10px;}
+
+/* LOADING */
+.loading{display:flex;align-items:center;justify-content:center;padding:60px 20px;flex-direction:column;gap:14px;}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:13px;color:var(--muted);font-family:var(--mono);}
+
+/* SUMMARY CARDS */
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:18px;}
+.sum-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;}
+.sc-lbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px;font-family:var(--mono);}
+.sc-val{font-size:22px;font-weight:800;letter-spacing:-.4px;}
+.sc-sub{font-size:11px;color:var(--muted);margin-top:3px;font-family:var(--mono);}
+.g{color:var(--green);}
+.r{color:var(--red);}
+.y{color:var(--gold);}
+.b{color:var(--cyan);}
+.p{color:var(--purple);}
+
+/* YOUR PROPERTY VERDICT */
+.verdict-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:18px 20px;margin-bottom:18px;display:flex;gap:16px;align-items:flex-start;}
+.vc-icon{font-size:36px;flex-shrink:0;}
+.vc-title{font-size:16px;font-weight:700;margin-bottom:5px;}
+.vc-body{font-size:12px;color:var(--muted);font-family:var(--mono);line-height:1.6;}
+.vc-metrics{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.vc-chip{font-size:12px;font-family:var(--mono);padding:4px 10px;border-radius:8px;background:var(--s2);border:1px solid var(--border);}
+
+/* CHART */
+.chart-wrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:16px;margin-bottom:18px;}
+.chart-title{font-size:13px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;}
+.chart-area{height:180px;position:relative;display:flex;align-items:flex-end;gap:3px;padding-bottom:24px;}
+.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;}
+.bar{width:100%;border-radius:4px 4px 0 0;transition:height .4s;cursor:pointer;position:relative;min-height:4px;}
+.bar:hover{opacity:.8;}
+.bar-label{font-size:9px;color:var(--muted);font-family:var(--mono);text-align:center;position:absolute;bottom:-20px;white-space:nowrap;}
+.bar-val{font-size:9px;font-family:var(--mono);text-align:center;color:var(--text);position:absolute;top:-16px;white-space:nowrap;}
+.your-price-line{position:absolute;left:0;right:0;border-top:2px dashed var(--gold);z-index:10;}
+.your-price-label{position:absolute;right:0;top:-18px;font-size:10px;color:var(--gold);font-family:var(--mono);background:var(--s1);padding:0 4px;}
+
+/* TABLE */
+.tbl-wrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:18px;}
+.tbl-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);}
+.tbl-title{font-size:13px;font-weight:600;}
+.tbl-filters{display:flex;gap:8px;}
+.tbl-filter{font-size:11px;font-family:var(--mono);padding:4px 10px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all .15s;}
+.tbl-filter.on{background:var(--gold);color:#000;border-color:var(--gold);}
+table{width:100%;border-collapse:collapse;}
+thead th{padding:9px 14px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono);}
+tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+tbody tr:last-child{border-bottom:none;}
+tbody tr:hover{background:var(--s2);}
+tbody td{padding:9px 14px;font-size:12px;font-family:var(--mono);}
+tbody tr.highlight-row{background:rgba(240,192,64,.06);border-left:2px solid var(--gold);}
+.type-badge{font-size:10px;padding:2px 7px;border-radius:6px;}
+.tb-T{background:#0a1a0a;color:#60cc60;border:1px solid #183818;}
+.tb-S{background:#0a0a1a;color:#6080cc;border:1px solid #181838;}
+.tb-D{background:#1a0a0a;color:#cc6060;border:1px solid #381818;}
+.tb-F{background:#1a1a0a;color:#cccc60;border:1px solid #383808;}
+.price-cell{font-weight:700;}
+.price-above{color:var(--red);}
+.price-below{color:var(--green);}
+.price-same{color:var(--amber);}
+.trend-up{color:var(--green);}
+.trend-dn{color:var(--red);}
+
+/* HEATMAP */
+.heatmap-wrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:16px;margin-bottom:18px;}
+.heatmap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:12px;}
+.hm-cell{background:var(--s2);border-radius:var(--r);padding:10px 12px;border:1px solid var(--border);cursor:pointer;transition:all .15s;}
+.hm-cell:hover{border-color:var(--gold);}
+.hm-pc{font-size:13px;font-weight:700;margin-bottom:2px;}
+.hm-price{font-size:16px;font-weight:800;letter-spacing:-.3px;}
+.hm-count{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
+.hm-bar{height:3px;border-radius:2px;margin-top:6px;}
+
+/* BRRR CALC */
+.brrr-result{background:var(--s1);border:1px solid var(--green);border-radius:var(--r2);padding:18px;margin-bottom:18px;}
+.br-title{font-size:14px;font-weight:700;color:var(--green);margin-bottom:12px;}
+.br-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;}
+.br-item{background:var(--s2);border-radius:var(--r);padding:10px 12px;}
+.br-val{font-size:18px;font-weight:700;letter-spacing:-.3px;}
+.br-lbl{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+
+/* EMPTY */
+.empty{text-align:center;padding:50px;color:var(--muted);}
+.empty-icon{font-size:40px;margin-bottom:12px;}
+
+@media(max-width:600px){
+  .search-row{flex-direction:column;}
+  .si{width:100%;}
+  .summary-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">AURUM <span>// sold prices engine</span></div>
+  <a class="back-btn" href="javascript:history.back()">← Back to AURUM</a>
+</div>
+
+<div class="wrap">
+
+  <!-- SEARCH -->
+  <div class="search-card">
+    <div class="sc-title">🏠 Real Sold Prices — Any UK Property</div>
+    <div class="sc-sub">Enter any address or postcode → get every sold price within radius from Land Registry</div>
+    <div class="search-row">
+      <div class="sg">
+        <div class="sl">Address or Postcode</div>
+        <input class="si" id="inputAddr" placeholder="e.g. SR2 7RA or TW13 4QD or EN1 3AB" style="min-width:260px" onkeydown="if(event.key==='Enter')doSearch()">
+      </div>
+      <div class="sg">
+        <div class="sl">Your Asking Price £</div>
+        <input class="si" id="inputPrice" type="number" placeholder="150000" style="width:130px">
+      </div>
+      <div class="sg">
+        <div class="sl">Property Type</div>
+        <select class="si" id="inputType" style="width:130px">
+          <option value="all">All Types</option>
+          <option value="T">Terraced</option>
+          <option value="S">Semi-Detached</option>
+          <option value="D">Detached</option>
+          <option value="F">Flat</option>
+        </select>
+      </div>
+      <div class="sg">
+        <div class="sl">Radius</div>
+        <select class="si" id="inputRadius" style="width:110px">
+          <option value="500">0.3 miles</option>
+          <option value="1000" selected>0.6 miles</option>
+          <option value="1500">1 mile</option>
+          <option value="2000">1.2 miles</option>
+        </select>
+      </div>
+      <div class="sg">
+        <div class="sl">Years Back</div>
+        <select class="si" id="inputYears" style="width:100px">
+          <option value="1">1 year</option>
+          <option value="2">2 years</option>
+          <option value="3" selected>3 years</option>
+          <option value="5">5 years</option>
+        </select>
+      </div>
+      <button class="search-btn" id="searchBtn" onclick="doSearch()">🔍 Search</button>
+    </div>
+    <div class="radius-note">⚡ Covers <strong style="color:var(--gold)">entire UK</strong> — any postcode, any street. Data from Land Registry (26M+ transactions since 1995)</div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results"></div>
+
+</div>
+
+<script>
+const WORKER = 'https://plain-pine-20a9.antoniolondon254.workers.dev';
+const TYPE_LABELS = {T:'Terraced',S:'Semi-Detached',D:'Detached',F:'Flat',O:'Other'};
+
+let allSales = [];
+let currentFilter = 'all';
+
+function fK(n){
+  n=+n||0;
+  if(n>=1000000)return'£'+(n/1e6).toFixed(2)+'M';
+  if(n>=1000)return'£'+(n/1000).toFixed(0)+'k';
+  return'£'+Math.round(n);
+}
+function fDate(d){
+  if(!d)return'—';
+  const dt=new Date(d);
+  return dt.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+}
+function monthsAgo(d){
+  if(!d)return 999;
+  return Math.round((Date.now()-new Date(d))/(1000*60*60*24*30));
+}
+
+async function doSearch(){
+  const addr = document.getElementById('inputAddr').value.trim();
+  if(!addr){alert('Enter a postcode or address.');return;}
+  
+  const btn = document.getElementById('searchBtn');
+  btn.disabled=true;btn.textContent='Searching...';
+  document.getElementById('results').innerHTML=`
+    <div class="loading">
+      <div class="spinner"></div>
+      <div class="loading-txt">Step 1/3 — Looking up location...</div>
+    </div>`;
+
+  try{
+    // Step 1: Get lat/lon from postcode
+    const pcMatch = addr.match(/[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}/i);
+    const postcode = pcMatch ? pcMatch[0] : addr.split(',').pop().trim();
+    
+    document.querySelector('.loading-txt').textContent = 'Step 1/3 — Getting coordinates...';
+    const pcRes = await fetch(`${WORKER}?action=postcode-lookup&postcode=${encodeURIComponent(postcode)}`);
+    const pcData = await pcRes.json();
+    
+    if(pcData.status !== 200 || !pcData.result){
+      throw new Error(`Postcode "${postcode}" not found. Try a full postcode like "SR2 7RA"`);
+    }
+    
+    const {latitude:lat, longitude:lon} = pcData.result;
+    const district = pcData.result.postcode.split(' ')[0];
+    
+    // Step 2: Get all postcodes within radius
+    document.querySelector('.loading-txt').textContent = 'Step 2/3 — Finding nearby postcodes...';
+    const radius = document.getElementById('inputRadius').value;
+    const radRes = await fetch(`${WORKER}?action=postcodes-radius&lat=${lat}&lon=${lon}&radius=${radius}`);
+    const radData = await radRes.json();
+    
+    const nearbyPCs = [...new Set([
+      postcode,
+      ...(radData.result || []).map(p=>p.postcode)
+    ])];
+    
+    document.querySelector('.loading-txt').textContent = `Step 3/3 — Loading sold prices for ${nearbyPCs.length} postcodes...`;
+    
+    // Step 3: Bulk fetch sold prices
+    const bulkRes = await fetch(`${WORKER}?action=bulk-sold-prices`, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({postcodes: nearbyPCs.slice(0,30)}) // limit to 30 postcodes
+    });
+    const bulkData = await bulkRes.json();
+    
+    // Flatten all sales
+    const cutoffDate = new Date();
+    cutoffDate.setFullYear(cutoffDate.getFullYear() - parseInt(document.getElementById('inputYears').value));
+    
+    allSales = Object.values(bulkData.results || {})
+      .flat()
+      .filter(s => s.price && s.date && new Date(s.date) >= cutoffDate)
+      .sort((a,b) => new Date(b.date) - new Date(a.date));
+    
+    if(!allSales.length){
+      document.getElementById('results').innerHTML=`
+        <div class="empty">
+          <div class="empty-icon">🔍</div>
+          <div style="font-size:14px;font-weight:600;margin-bottom:6px">No sold prices found</div>
+          <div style="font-size:12px;font-family:var(--mono)">Try increasing radius or years back</div>
+        </div>`;
+      btn.disabled=false;btn.textContent='🔍 Search';
+      return;
+    }
+    
+    renderResults(addr, postcode, lat, lon, nearbyPCs);
+    
+  }catch(err){
+    document.getElementById('results').innerHTML=`
+      <div class="empty">
+        <div class="empty-icon">⚠️</div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:6px;color:var(--red)">Error</div>
+        <div style="font-size:12px;font-family:var(--mono);color:var(--muted)">${err.message}</div>
+      </div>`;
+  }
+  
+  btn.disabled=false;btn.textContent='🔍 Search';
+}
+
+function filterSales(type){
+  currentFilter = type;
+  document.querySelectorAll('.tbl-filter').forEach(b=>b.classList.remove('on'));
+  document.querySelector(`[data-type="${type}"]`).classList.add('on');
+  renderTable();
+}
+
+function renderResults(addr, postcode, lat, lon, nearbyPCs){
+  const yourPrice = +document.getElementById('inputPrice').value || 0;
+  const typeFilter = document.getElementById('inputType').value;
+  
+  // Filter by type if selected
+  let filtered = typeFilter !== 'all' ? allSales.filter(s=>s.type===typeFilter) : allSales;
+  
+  // Stats
+  const prices = filtered.map(s=>s.price).filter(Boolean);
+  const avg = prices.length ? Math.round(prices.reduce((a,b)=>a+b,0)/prices.length) : 0;
+  const recent12 = filtered.filter(s=>monthsAgo(s.date)<=12).map(s=>s.price).filter(Boolean);
+  const avg12 = recent12.length ? Math.round(recent12.reduce((a,b)=>a+b,0)/recent12.length) : 0;
+  const median = prices.length ? prices.sort((a,b)=>a-b)[Math.floor(prices.length/2)] : 0;
+  const min = prices.length ? Math.min(...prices) : 0;
+  const max = prices.length ? Math.max(...prices) : 0;
+  
+  // BMV calc
+  const bmv = yourPrice && avg ? ((avg - yourPrice) / avg * 100) : 0;
+  const bmvVsRecent = yourPrice && avg12 ? ((avg12 - yourPrice) / avg12 * 100) : 0;
+  
+  // BRRR calcs
+  const refurbEst = Math.round(yourPrice * 0.2 / 1000) * 1000;
+  const gdvEst = Math.round(avg * 1.1 / 1000) * 1000;
+  const totalIn = yourPrice + refurbEst + 5000;
+  const equity = gdvEst - totalIn;
+  const cashback = gdvEst * 0.75;
+  const locked = Math.max(0, totalIn - cashback);
+  const estRent = Math.round(gdvEst * 0.072 / 12);
+  const mtg = cashback * (0.055/12*Math.pow(1+0.055/12,300))/(Math.pow(1+0.055/12,300)-1);
+  const cf = estRent - mtg;
+  
+  // Type breakdown
+  const byType = {};
+  filtered.forEach(s=>{
+    if(!byType[s.type])byType[s.type]={count:0,total:0,sales:[]};
+    byType[s.type].count++;
+    byType[s.type].total+=s.price;
+    byType[s.type].sales.push(s.price);
+  });
+  
+  // Postcode heatmap data
+  const byPC = {};
+  filtered.forEach(s=>{
+    if(!s.postcode)return;
+    if(!byPC[s.postcode])byPC[s.postcode]={count:0,total:0,prices:[]};
+    byPC[s.postcode].count++;
+    byPC[s.postcode].total+=s.price;
+    byPC[s.postcode].prices.push(s.price);
+  });
+  
+  const pcSorted = Object.entries(byPC).sort((a,b)=>b[1].count-a[1].count).slice(0,12);
+  const maxPCavg = Math.max(...pcSorted.map(([,v])=>v.total/v.count));
+  
+  // Monthly trend (last 24 months)
+  const monthly = {};
+  filtered.forEach(s=>{
+    if(!s.date)return;
+    const key = s.date.substring(0,7);
+    if(!monthly[key])monthly[key]={prices:[],count:0};
+    monthly[key].prices.push(s.price);
+    monthly[key].count++;
+  });
+  const months = Object.entries(monthly).sort((a,b)=>a[0].localeCompare(b[0])).slice(-18);
+  const maxMonthAvg = Math.max(...months.map(([,v])=>v.prices.reduce((a,b)=>a+b,0)/v.prices.length));
+
+  const verdictColor = bmv>=15?'var(--green)':bmv>=5?'var(--amber)':bmv>=0?'var(--text)':'var(--red)';
+  const verdictIcon = bmv>=15?'🏆':bmv>=5?'✅':bmv>=0?'⚠️':'❌';
+  const verdictText = bmv>=15?'Excellent BMV — Strong BRRR candidate':bmv>=5?'Good value — below area average':bmv>=0?'Fair price — at or near market value':'Above market — negotiate down or walk away';
+
+  document.getElementById('results').innerHTML = `
+
+    <!-- SUMMARY -->
+    <div class="summary-grid">
+      <div class="sum-card"><div class="sc-lbl">Sales Found</div><div class="sc-val y">${filtered.length}</div><div class="sc-sub">${nearbyPCs.length} postcodes searched</div></div>
+      <div class="sum-card"><div class="sc-lbl">Area Average</div><div class="sc-val y">${fK(avg)}</div><div class="sc-sub">All types, all time</div></div>
+      <div class="sum-card"><div class="sc-lbl">Last 12 Months</div><div class="sc-val b">${fK(avg12)}</div><div class="sc-sub">${recent12.length} sales</div></div>
+      <div class="sum-card"><div class="sc-lbl">Median Price</div><div class="sc-val">${fK(median)}</div><div class="sc-sub">50th percentile</div></div>
+      <div class="sum-card"><div class="sc-lbl">Lowest Sale</div><div class="sc-val g">${fK(min)}</div><div class="sc-sub">Cheapest found</div></div>
+      <div class="sum-card"><div class="sc-lbl">Highest Sale</div><div class="sc-val r">${fK(max)}</div><div class="sc-sub">Most expensive</div></div>
+      ${yourPrice?`<div class="sum-card" style="border-color:${verdictColor}"><div class="sc-lbl">Your BMV</div><div class="sc-val" style="color:${verdictColor}">${bmv>=0?'+':''}${bmv.toFixed(1)}%</div><div class="sc-sub">${bmv>=0?'below':'above'} area avg</div></div>`:''}
+      ${yourPrice?`<div class="sum-card" style="border-color:${verdictColor}"><div class="sc-lbl">vs Recent Sales</div><div class="sc-val" style="color:${verdictColor}">${bmvVsRecent>=0?'+':''}${bmvVsRecent.toFixed(1)}%</div><div class="sc-sub">vs last 12 months</div></div>`:''}
+    </div>
+
+    <!-- VERDICT -->
+    ${yourPrice?`
+    <div class="verdict-card" style="border-color:${verdictColor}">
+      <div class="vc-icon">${verdictIcon}</div>
+      <div style="flex:1">
+        <div class="vc-title" style="color:${verdictColor}">${verdictText}</div>
+        <div class="vc-body">
+          Your asking price <strong style="color:var(--text)">${fK(yourPrice)}</strong> vs area average <strong style="color:var(--text)">${fK(avg)}</strong> — 
+          ${bmv>=0?`you are saving <strong style="color:var(--green)">${fK(avg-yourPrice)}</strong> vs market average`:`you are paying <strong style="color:var(--red)">${fK(yourPrice-avg)}</strong> above market average`}.
+          ${avg12?`Recent 12-month average: <strong style="color:var(--text)">${fK(avg12)}</strong>.`:''}
+        </div>
+        <div class="vc-metrics">
+          ${Object.entries(byType).map(([t,v])=>`<span class="vc-chip" style="color:${t==='T'?'var(--green)':t==='S'?'var(--cyan)':t==='D'?'var(--amber)':'var(--muted)'}">${TYPE_LABELS[t]||t}: avg ${fK(Math.round(v.total/v.count))} (${v.count} sales)</span>`).join('')}
+        </div>
+      </div>
+    </div>`:''}
+
+    <!-- BRRR CALC -->
+    ${yourPrice?`
+    <div class="brrr-result">
+      <div class="br-title">⚡ BRRR Numbers — Based on Real Sold Prices</div>
+      <div class="br-grid">
+        <div class="br-item"><div class="br-val" style="color:var(--amber)">${fK(refurbEst)}</div><div class="br-lbl">Est. Refurb (20%)</div></div>
+        <div class="br-item"><div class="br-val" style="color:var(--gold)">${fK(gdvEst)}</div><div class="br-lbl">Est. GDV</div></div>
+        <div class="br-item"><div class="br-val" style="color:${equity>0?'var(--green)':'var(--red)'}">${fK(equity)}</div><div class="br-lbl">Equity Created</div></div>
+        <div class="br-item"><div class="br-val" style="color:var(--cyan)">${fK(cashback)}</div><div class="br-lbl">Cash Back 75% LTV</div></div>
+        <div class="br-item"><div class="br-val" style="color:${locked<15000?'var(--green)':'var(--red)'}">${fK(locked)}</div><div class="br-lbl">Capital Locked</div></div>
+        <div class="br-item"><div class="br-val" style="color:${cf>0?'var(--green)':'var(--red)'}">${cf>=0?'+':''}£${Math.round(cf)}/mo</div><div class="br-lbl">Est. Cash Flow</div></div>
+      </div>
+    </div>`:''}
+
+    <!-- PRICE TREND CHART -->
+    <div class="chart-wrap">
+      <div class="chart-title">
+        <span>📈 Price Trend — Last 18 Months</span>
+        <span style="font-size:11px;color:var(--muted);font-family:var(--mono)">${addr}</span>
+      </div>
+      <div class="chart-area" id="trendChart">
+        ${yourPrice?`<div class="your-price-line" style="bottom:${Math.round((yourPrice/maxMonthAvg)*156)+24}px"><div class="your-price-label">Your price ${fK(yourPrice)}</div></div>`:''}
+        ${months.map(([mo,v])=>{
+          const avg_m = Math.round(v.prices.reduce((a,b)=>a+b,0)/v.prices.length);
+          const h = Math.max(8, Math.round((avg_m/maxMonthAvg)*156));
+          const col = yourPrice ? (avg_m>yourPrice?'var(--red)':'var(--green)') : 'var(--gold)';
+          const label = mo.substring(0,7);
+          return `<div class="bar-wrap">
+            <div class="bar" style="height:${h}px;background:${col};opacity:.7" title="${fK(avg_m)} avg · ${v.count} sales">
+              <div class="bar-val">${fK(avg_m)}</div>
+            </div>
+            <div class="bar-label">${label}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- POSTCODE HEATMAP -->
+    <div class="heatmap-wrap">
+      <div style="font-size:13px;font-weight:600;margin-bottom:4px">📍 Price by Postcode — Click to filter</div>
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:12px">Darker = higher prices · Lighter = lower prices = better BRRR areas</div>
+      <div class="heatmap-grid">
+        ${pcSorted.map(([pc,v])=>{
+          const pcAvg = Math.round(v.total/v.count);
+          const pct = pcAvg/maxPCavg;
+          const r = Math.round(240*pct);
+          const g = Math.round(208*(1-pct)+64*pct);
+          const isCheap = pct < 0.5;
+          return `<div class="hm-cell" onclick="filterByPC('${pc}')" style="border-color:${isCheap?'rgba(64,208,128,.3)':'rgba(240,64,64,.2)'}">
+            <div class="hm-pc" style="color:${isCheap?'var(--green)':'var(--red)'}">${pc}</div>
+            <div class="hm-price">${fK(pcAvg)}</div>
+            <div class="hm-count">${v.count} sales</div>
+            <div class="hm-bar" style="background:rgba(${r},${g},64,.6);width:${Math.round(pct*100)}%"></div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+
+    <!-- SALES TABLE -->
+    <div class="tbl-wrap">
+      <div class="tbl-head">
+        <div class="tbl-title">🏠 All Sold Prices — ${filtered.length} properties</div>
+        <div class="tbl-filters">
+          <button class="tbl-filter on" data-type="all" onclick="filterSales('all')">All</button>
+          <button class="tbl-filter" data-type="T" onclick="filterSales('T')">Terraced</button>
+          <button class="tbl-filter" data-type="S" onclick="filterSales('S')">Semi</button>
+          <button class="tbl-filter" data-type="D" onclick="filterSales('D')">Detached</button>
+          <button class="tbl-filter" data-type="F" onclick="filterSales('F')">Flat</button>
+        </div>
+      </div>
+      <table>
+        <thead><tr>
+          <th>Address</th><th>Postcode</th><th>Type</th><th>Price</th><th>vs Avg</th><th>Date</th><th>Tenure</th>
+        </tr></thead>
+        <tbody id="salesTable"></tbody>
+      </table>
+    </div>
+  `;
+
+  window._avg = avg;
+  window._filtered = filtered;
+  renderTable();
+}
+
+function renderTable(){
+  const sales = currentFilter==='all' ? window._filtered : window._filtered.filter(s=>s.type===currentFilter);
+  const avg = window._avg;
+  const yourPrice = +document.getElementById('inputPrice').value || 0;
+  
+  document.getElementById('salesTable').innerHTML = sales.slice(0,200).map(s=>{
+    const diff = avg ? Math.round((s.price-avg)/avg*100) : 0;
+    const diffClass = diff>10?'price-above':diff<-10?'price-below':'price-same';
+    const isYourRange = yourPrice && Math.abs(s.price-yourPrice)/yourPrice < 0.1;
+    return `<tr${isYourRange?' class="highlight-row"':''}>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.address||'—'}</td>
+      <td style="color:var(--muted)">${s.postcode||'—'}</td>
+      <td><span class="type-badge tb-${s.type||'O'}">${TYPE_LABELS[s.type]||'Other'}</span></td>
+      <td class="price-cell ${isYourRange?'y':''}">${fK(s.price)}</td>
+      <td class="${diffClass}">${diff>0?'+':''}${diff}%</td>
+      <td style="color:var(--muted)">${fDate(s.date)}</td>
+      <td style="color:var(--dim);font-size:10px">${s.tenure==='F'?'Freehold':s.tenure==='L'?'Leasehold':'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filterByPC(pc){
+  window._filtered = allSales.filter(s=>s.postcode===pc);
+  renderTable();
+  document.querySelectorAll('.tbl-filter').forEach(b=>b.classList.remove('on'));
+  document.querySelector('[data-type="all"]').classList.add('on');
+}
+</script>
+</body>
+</html>
