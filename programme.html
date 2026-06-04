@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURUM — Build Programme</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080808;--s1:#111;--s2:#181818;--s3:#222;
+  --border:#2a2a2a;--border2:#3a3a3a;
+  --gold:#f0c040;--gold2:#c89820;--gold-dim:rgba(240,192,64,.08);--gold-border:rgba(240,192,64,.2);
+  --cyan:#40e0d0;--red:#f04040;--amber:#f0a040;--green:#40d080;
+  --text:#f0ede6;--muted:#707068;--dim:#383830;
+  --font:'Inter',sans-serif;--mono:'DM Mono',monospace;
+  --r:10px;--r2:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;}
+
+/* TOPBAR */
+.topbar{height:52px;background:rgba(8,8,8,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:200;}
+.logo{font-size:17px;font-weight:800;color:var(--gold);}
+.logo span{color:var(--muted);font-size:11px;font-weight:400;font-family:var(--mono);margin-left:8px;}
+.tbar-actions{display:flex;gap:8px;align-items:center;}
+.tbtn{font-family:var(--font);font-size:12px;font-weight:600;padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all .15s;}
+.tbtn:hover{border-color:var(--border2);color:var(--text);}
+.tbtn.gold{border-color:var(--gold);color:var(--gold);}
+.tbtn.gold:hover{background:var(--gold);color:#000;}
+.tbtn.solid{background:var(--gold);color:#000;border-color:var(--gold);}
+.tbtn.solid:hover{background:var(--gold2);}
+
+/* LAYOUT */
+.wrap{max-width:1200px;margin:0 auto;padding:20px;}
+
+/* SETTINGS BAR */
+.settings-bar{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:14px 18px;margin-bottom:18px;display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;}
+.sb-group{display:flex;flex-direction:column;gap:4px;}
+.sb-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);}
+.sb-input{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 11px;color:var(--text);font-family:var(--font);font-size:12px;outline:none;}
+.sb-input:focus{border-color:var(--gold);}
+.prop-title-input{background:none;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:18px;font-weight:700;outline:none;padding-bottom:3px;min-width:280px;}
+.prop-title-input:focus{border-color:var(--gold);}
+
+/* SUMMARY STRIP */
+.summary-strip{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+.ss-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;text-align:center;flex:1;min-width:100px;}
+.ss-val{font-size:18px;font-weight:800;letter-spacing:-.3px;}
+.ss-lbl{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
+
+/* GANTT */
+.gantt-wrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:18px;}
+.gantt-header{display:flex;border-bottom:1px solid var(--border);background:var(--s2);}
+.gh-phase{width:220px;flex-shrink:0;padding:10px 14px;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);border-right:1px solid var(--border);}
+.gh-days{flex:1;display:flex;overflow:hidden;position:relative;}
+.gh-day{flex-shrink:0;text-align:center;font-size:9px;color:var(--dim);font-family:var(--mono);padding:4px 0;border-right:1px solid var(--border);position:relative;}
+.gh-day.weekend{background:rgba(255,255,255,.02);}
+.gh-day.monday{border-left:1px solid var(--border2);}
+.gh-week-label{position:absolute;top:0;left:0;right:0;font-size:8px;color:var(--muted);text-align:center;padding-top:1px;}
+.gantt-scroll{overflow-x:auto;}
+.gantt-row{display:flex;border-bottom:1px solid var(--border);transition:background .1s;align-items:stretch;}
+.gantt-row:last-child{border-bottom:none;}
+.gantt-row:hover{background:rgba(255,255,255,.02);}
+.gantt-row.critical{background:rgba(240,64,64,.03);}
+.gantt-row.done{background:rgba(64,208,128,.03);}
+.gr-phase{width:220px;flex-shrink:0;padding:10px 14px;border-right:1px solid var(--border);display:flex;flex-direction:column;gap:3px;}
+.gr-name{font-size:12px;font-weight:600;}
+.gr-desc{font-size:10px;color:var(--muted);font-family:var(--mono);line-height:1.4;}
+.gr-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.gr-badge{font-size:9px;padding:2px 6px;border-radius:4px;font-family:var(--mono);}
+.gr-days-cell{flex:1;position:relative;min-height:52px;}
+.gr-bar{position:absolute;height:28px;top:12px;border-radius:5px;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:600;white-space:nowrap;overflow:hidden;cursor:pointer;transition:opacity .15s;min-width:6px;}
+.gr-bar:hover{opacity:.85;}
+.gr-bar-label{overflow:hidden;text-overflow:ellipsis;}
+.gr-done-check{position:absolute;right:4px;top:50%;transform:translateY(-50%);font-size:11px;}
+.today-line{position:absolute;top:0;bottom:0;width:2px;background:var(--red);opacity:.6;z-index:10;}
+.today-label{position:absolute;top:0;font-size:8px;color:var(--red);font-family:var(--mono);white-space:nowrap;padding:1px 2px;}
+
+/* CONTROLS per row */
+.row-controls{display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:4px;}
+.rc-input{background:var(--s2);border:1px solid var(--border);border-radius:5px;padding:3px 6px;color:var(--text);font-family:var(--mono);font-size:10px;outline:none;text-align:center;}
+.rc-input:focus{border-color:var(--gold);}
+.rc-label{font-size:9px;color:var(--dim);font-family:var(--mono);}
+.rc-check{width:13px;height:13px;accent-color:var(--green);cursor:pointer;}
+
+/* TIMELINE TABLE */
+.tl-table{width:100%;border-collapse:collapse;margin-bottom:18px;}
+.tl-table thead th{padding:9px 13px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono);}
+.tl-table tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+.tl-table tbody tr:hover{background:var(--s2);}
+.tl-table td{padding:10px 13px;font-size:12px;font-family:var(--mono);}
+.tl-table td:first-child{font-weight:600;}
+.phase-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;}
+.seq-badge{font-size:10px;padding:2px 8px;border-radius:6px;background:var(--s2);border:1px solid var(--border);color:var(--muted);}
+.workers-input{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--gold);font-family:var(--mono);font-size:12px;width:44px;outline:none;text-align:center;}
+.workers-input:focus{border-color:var(--gold);}
+.days-input{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-family:var(--mono);font-size:12px;width:50px;outline:none;text-align:center;}
+.days-input:focus{border-color:var(--gold);}
+
+/* PRINT STYLES */
+@media print {
+  body{background:#fff;color:#000;}
+  .topbar,.settings-bar,.no-print{display:none!important;}
+  .gantt-wrap,.tl-table-wrap{page-break-inside:avoid;}
+  .print-header{display:block!important;}
+  .workers-col,.gr-meta,.row-controls{display:none!important;}
+  .gr-phase{width:180px;}
+  .ss-card{border:1px solid #ddd;background:#f9f9f9;}
+  .ss-val{color:#000;}
+  .gantt-wrap{border:1px solid #ddd;}
+  .gantt-row{border-bottom:1px solid #eee;}
+  .gr-name{color:#000;}
+  .gr-desc{color:#666;}
+  table{border:1px solid #ddd;}
+  thead th{background:#f0f0f0;color:#333;}
+  td{color:#333;}
+}
+.print-header{display:none;text-align:center;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid #000;}
+.print-header h1{font-size:22px;font-weight:800;margin-bottom:4px;}
+.print-header p{font-size:12px;color:#666;}
+
+@media(max-width:768px){
+  .gh-phase,.gr-phase{width:150px;}
+  .settings-bar{flex-direction:column;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar no-print">
+  <div class="logo">AURUM <span>// build programme</span></div>
+  <div class="tbar-actions">
+    <a class="tbtn" href="javascript:history.back()">← Back</a>
+    <button class="tbtn gold" onclick="resetDates()">↺ Reset Dates</button>
+    <button class="tbtn solid" onclick="window.print()">🖨 Print Programme</button>
+  </div>
+</div>
+
+<!-- PRINT HEADER (only shows when printing) -->
+<div class="print-header">
+  <h1 id="printTitle">Refurbishment Programme</h1>
+  <p id="printMeta"></p>
+</div>
+
+<div class="wrap">
+
+  <!-- SETTINGS -->
+  <div class="settings-bar no-print">
+    <div class="sb-group">
+      <div class="sb-label">Property</div>
+      <input class="prop-title-input" id="propTitle" placeholder="83 Bishop Road, Sunderland" oninput="updatePrint()">
+    </div>
+    <div class="sb-group">
+      <div class="sb-label">Start Date</div>
+      <input class="sb-input" type="date" id="startDate" oninput="recalc()">
+    </div>
+    <div class="sb-group">
+      <div class="sb-label">Working Days/Week</div>
+      <input class="sb-input" type="number" id="wdpw" value="5" min="1" max="7" style="width:60px" oninput="recalc()">
+    </div>
+    <div class="sb-group">
+      <div class="sb-label">Day Rate £</div>
+      <input class="sb-input" type="number" id="dayRate" value="200" style="width:80px" oninput="recalc()">
+    </div>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="summary-strip" id="summaryStrip"></div>
+
+  <!-- GANTT CHART -->
+  <div class="gantt-wrap">
+    <div class="gantt-scroll" id="ganttScroll">
+      <div id="ganttInner"></div>
+    </div>
+  </div>
+
+  <!-- DETAIL TABLE -->
+  <div class="gantt-wrap">
+    <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600">📋 Phase Details</div>
+    <table class="tl-table">
+      <thead><tr>
+        <th>#</th>
+        <th>Phase</th>
+        <th>Duration</th>
+        <th class="workers-col">Workers</th>
+        <th class="workers-col">Labour Cost</th>
+        <th>Start Date</th>
+        <th>End Date</th>
+        <th>Depends On</th>
+        <th class="no-print">Done</th>
+      </tr></thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+// ── PHASES DATA ──
+const PHASES = [
+  {id:0,name:'1. Strip Out + Skip',desc:'Remove kitchen, bathroom, old carpets, strip back walls ready',days:3,workers:2,col:'#f04040',before:'—',critical:true,done:false},
+  {id:1,name:'2. Damp / Roof / Structure',desc:'DPC injection, roof repairs, structural works — must dry before plaster',days:4,workers:2,col:'#f09040',before:'Phase 1',critical:true,done:false},
+  {id:2,name:'3. First Fix Electrics',desc:'Consumer unit, all cabling routed through walls',days:3,workers:1,col:'#d4f244',before:'Phase 2',critical:false,done:false},
+  {id:3,name:'4. First Fix Plumbing',desc:'Boiler, pipework, radiator drops, bathroom rough-in',days:3,workers:1,col:'#40d0b0',before:'Phase 2',critical:false,done:false},
+  {id:4,name:'5. Plastering',desc:'Skim all walls and ceilings — critical gateway phase',days:5,workers:2,col:'#9040f0',before:'Phases 3+4',critical:true,done:false},
+  {id:5,name:'6. Drying Time ⏳',desc:'Plaster MUST dry — minimum 7-10 days — no shortcuts',days:8,workers:0,col:'#505048',before:'Phase 5',critical:true,done:false},
+  {id:6,name:'7. Second Fix Electrics',desc:'Fit sockets, switches, consumer unit final, pendants',days:2,workers:1,col:'#d4f244',before:'Phase 6',critical:false,done:false},
+  {id:7,name:'8. Second Fix Plumbing',desc:'Fit radiators, bathroom suite, kitchen sink, pressure test',days:2,workers:1,col:'#40d0b0',before:'Phase 6',critical:false,done:false},
+  {id:8,name:'9. Tiling',desc:'Bathroom walls + floor, kitchen splashback',days:3,workers:1,col:'#f044c0',before:'Phase 8',critical:false,done:false},
+  {id:9,name:'10. Kitchen Fit',desc:'Units, worktop, appliances, upstands',days:2,workers:2,col:'#f0b840',before:'Phase 8',critical:false,done:false},
+  {id:10,name:'11. Doors + Skirting',desc:'Internal doors, skirting, architrave, door furniture',days:2,workers:1,col:'#40a0f0',before:'Phase 9',critical:false,done:false},
+  {id:11,name:'12. Flooring',desc:'Laminate (living/hall), carpet (bedrooms)',days:2,workers:1,col:'#f09040',before:'Phase 11',critical:false,done:false},
+  {id:12,name:'13. Decorating',desc:'2 coats all rooms — ceiling first, walls, gloss last',days:3,workers:2,col:'#f0b840',before:'Phase 12',critical:false,done:false},
+  {id:13,name:'14. Snag + Deep Clean',desc:'Fix defects, professional clean, obtain all certs',days:2,workers:2,col:'#40e0d0',before:'Phase 13',critical:true,done:false},
+];
+
+let startDate = new Date();
+startDate.setDate(startDate.getDate() + ((1 + 7 - startDate.getDay()) % 7) || 7); // next Monday
+
+document.getElementById('startDate').valueAsDate = startDate;
+
+// ── CALCULATE PHASE DATES ──
+function calcDates(){
+  const sd = new Date(document.getElementById('startDate').value);
+  if(isNaN(sd)) return;
+  const wpw = parseInt(document.getElementById('wdpw').value) || 5;
+  
+  let currentDay = 0; // working days from start
+  
+  PHASES.forEach((p,i) => {
+    p.startWD = currentDay;
+    p.endWD = currentDay + p.days - 1;
+    
+    // Calculate actual calendar dates
+    p.startDate = addWorkingDays(sd, currentDay, wpw);
+    p.endDate = addWorkingDays(sd, currentDay + p.days - 1, wpw);
+    
+    // Adjusted days based on workers (more workers = fewer days)
+    p.adjustedDays = p.workers > 1 ? Math.ceil(p.days / p.workers) : p.days;
+    
+    currentDay += p.days;
+  });
+  
+  return {totalDays: currentDay, totalWeeks: Math.ceil(currentDay/wpw)};
+}
+
+function addWorkingDays(start, workingDays, wpw){
+  const d = new Date(start);
+  let added = 0;
+  let safety = 0;
+  while(added < workingDays && safety < 500){
+    d.setDate(d.getDate() + 1);
+    safety++;
+    if(d.getDay() !== 0 && d.getDay() !== 6) added++;
+    // Skip weekends if wpw < 6
+    if(wpw <= 5 && (d.getDay() === 0 || d.getDay() === 6)) continue;
+  }
+  return new Date(d);
+}
+
+function fDate(d){
+  if(!d||isNaN(d)) return '—';
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+}
+function fDateShort(d){
+  if(!d||isNaN(d)) return '';
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+}
+
+// ── RECALC & RENDER ──
+function recalc(){
+  const info = calcDates();
+  renderSummary(info);
+  renderGantt(info);
+  renderTable();
+  updatePrint();
+}
+
+function renderSummary(info){
+  const dayRate = +document.getElementById('dayRate').value || 200;
+  const totalLabour = PHASES.reduce((s,p)=>s+p.workers*p.days*dayRate,0);
+  const doneCount = PHASES.filter(p=>p.done).length;
+  const pct = Math.round(doneCount/PHASES.length*100);
+  const finishDate = PHASES[PHASES.length-1].endDate;
+  const wpw = +document.getElementById('wdpw').value || 5;
+  
+  document.getElementById('summaryStrip').innerHTML = `
+    <div class="ss-card"><div class="ss-val" style="color:var(--gold)">${info.totalDays}</div><div class="ss-lbl">Working Days</div></div>
+    <div class="ss-card"><div class="ss-val" style="color:var(--cyan)">${info.totalWeeks}</div><div class="ss-lbl">Weeks Total</div></div>
+    <div class="ss-card"><div class="ss-val" style="color:var(--text)">${wpw}d/wk</div><div class="ss-lbl">Working Days/Week</div></div>
+    <div class="ss-card no-print"><div class="ss-val" style="color:var(--amber)">£${totalLabour.toLocaleString()}</div><div class="ss-lbl">Labour Est.</div></div>
+    <div class="ss-card"><div class="ss-val" style="color:var(--text);font-size:14px">${fDateShort(PHASES[0].startDate)}</div><div class="ss-lbl">Start Date</div></div>
+    <div class="ss-card"><div class="ss-val" style="color:var(--green);font-size:14px">${fDateShort(finishDate)}</div><div class="ss-lbl">Finish Date</div></div>
+    <div class="ss-card no-print"><div class="ss-val" style="color:${pct===100?'var(--green)':'var(--gold)'}">${doneCount}/${PHASES.length}</div><div class="ss-lbl">Phases Done</div></div>
+  `;
+}
+
+function renderGantt(info){
+  const totalDays = info.totalDays;
+  const DAY_W = Math.max(24, Math.min(40, Math.floor((window.innerWidth - 260) / totalDays)));
+  const today = new Date();
+  const startD = new Date(document.getElementById('startDate').value);
+  const wpw = +document.getElementById('wdpw').value || 5;
+  
+  // Build day headers
+  let dayHeaders = '<div class="gantt-header"><div class="gh-phase">Phase</div><div class="gh-days" style="min-width:' + (totalDays * DAY_W) + 'px">';
+  
+  // Week markers
+  let weekNum = 1;
+  for(let d=0; d<totalDays; d++){
+    const isMonday = d % wpw === 0;
+    dayHeaders += `<div class="gh-day${isMonday?' monday':''}" style="width:${DAY_W}px;flex-shrink:0">
+      ${isMonday?`<div style="font-size:8px;color:var(--muted);white-space:nowrap">Wk ${weekNum++}</div>`:''}
+    </div>`;
+  }
+  dayHeaders += '</div></div>';
+  
+  // Today line position
+  let todayPos = -1;
+  if(startD && !isNaN(startD)){
+    let wd = 0;
+    const cur = new Date(startD);
+    while(cur < today && wd < totalDays){
+      cur.setDate(cur.getDate()+1);
+      if(cur.getDay()!==0 && cur.getDay()!==6) wd++;
+    }
+    todayPos = wd;
+  }
+  
+  // Build rows
+  let rows = '';
+  PHASES.forEach((p,i) => {
+    const barLeft = p.startWD * DAY_W;
+    const barWidth = Math.max(DAY_W, p.days * DAY_W);
+    const textColor = p.col === '#505048' ? '#888' : '#000';
+    const isLight = ['#d4f244','#f0b840','#f09040','#40d0b0','#40e0d0','#40a0f0'].includes(p.col);
+    const labourCost = p.workers * p.days * (+document.getElementById('dayRate').value||200);
+    
+    rows += `<div class="gantt-row${p.critical?' critical':''}${p.done?' done':''}" id="gr-${i}">
+      <div class="gr-phase">
+        <div class="gr-name">${p.name}</div>
+        <div class="gr-desc no-print">${p.desc}</div>
+        <div class="row-controls no-print">
+          <div class="rc-label">Days:</div>
+          <input class="rc-input" type="number" value="${p.days}" min="1" max="30" style="width:38px" oninput="updatePhase(${i},'days',+this.value)">
+          <div class="rc-label workers-col">Workers:</div>
+          <input class="rc-input workers-col" type="number" value="${p.workers}" min="0" max="10" style="width:38px" oninput="updatePhase(${i},'workers',+this.value)">
+          <input type="checkbox" class="rc-check no-print" ${p.done?'checked':''} onchange="PHASES[${i}].done=this.checked;recalc()" title="Mark done">
+        </div>
+      </div>
+      <div class="gr-days-cell" style="min-width:${totalDays*DAY_W}px;position:relative">
+        ${todayPos>=0&&todayPos>=p.startWD&&todayPos<=p.endWD?`<div class="today-line" style="left:${todayPos*DAY_W}px"><div class="today-label">TODAY</div></div>`:''}
+        <div class="gr-bar" style="left:${barLeft}px;width:${barWidth}px;background:${p.col};color:${isLight?'#000':'#fff'};opacity:${p.done?.5:1}"
+          onclick="toggleDone(${i})" title="${p.name} — ${p.days} days, ${p.workers} workers">
+          <span class="gr-bar-label">${p.days}d${p.workers>0?` · ${p.workers}👷`:''}</span>
+          ${p.done?'<span class="gr-done-check">✓</span>':''}
+        </div>
+      </div>
+    </div>`;
+  });
+  
+  // Today line in header
+  const todayHeaderMarker = todayPos>=0 ? `<div style="position:absolute;left:${todayPos*DAY_W+220}px;top:0;bottom:0;width:2px;background:var(--red);opacity:.4;z-index:5"></div>` : '';
+  
+  document.getElementById('ganttInner').innerHTML = dayHeaders + rows;
+}
+
+function renderTable(){
+  const dayRate = +document.getElementById('dayRate').value || 200;
+  document.getElementById('tableBody').innerHTML = PHASES.map((p,i)=>`
+    <tr style="${p.done?'opacity:.5':''}">
+      <td style="color:var(--muted)">${i+1}</td>
+      <td>
+        <span class="phase-dot" style="background:${p.col}"></span>${p.name}
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${p.desc}</div>
+      </td>
+      <td>
+        <input class="days-input" type="number" value="${p.days}" min="1" max="60" oninput="updatePhase(${i},'days',+this.value)">
+        <span style="color:var(--muted);font-size:10px;margin-left:4px">days</span>
+      </td>
+      <td class="workers-col">
+        <input class="workers-input" type="number" value="${p.workers}" min="0" max="10" oninput="updatePhase(${i},'workers',+this.value)">
+      </td>
+      <td class="workers-col" style="color:var(--amber)">
+        ${p.workers>0?'£'+(p.workers*p.days*dayRate).toLocaleString():'—'}
+      </td>
+      <td style="color:var(--gold)">${fDate(p.startDate)}</td>
+      <td style="color:var(--text)">${fDate(p.endDate)}</td>
+      <td><span class="seq-badge">${p.before}</span></td>
+      <td class="no-print">
+        <input type="checkbox" style="accent-color:var(--green);cursor:pointer" ${p.done?'checked':''} onchange="PHASES[${i}].done=this.checked;recalc()">
+      </td>
+    </tr>`).join('');
+}
+
+function updatePhase(i, field, val){
+  if(val < 0) return;
+  PHASES[i][field] = val;
+  recalc();
+}
+
+function toggleDone(i){
+  PHASES[i].done = !PHASES[i].done;
+  recalc();
+}
+
+function resetDates(){
+  const today = new Date();
+  const nextMon = new Date(today);
+  nextMon.setDate(today.getDate() + ((1 + 7 - today.getDay()) % 7) || 7);
+  document.getElementById('startDate').valueAsDate = nextMon;
+  PHASES.forEach(p=>p.done=false);
+  recalc();
+}
+
+function updatePrint(){
+  const title = document.getElementById('propTitle').value || 'Refurbishment Programme';
+  const sd = document.getElementById('startDate').value;
+  const info = calcDates();
+  document.getElementById('printTitle').textContent = title;
+  document.getElementById('printMeta').textContent = 
+    `Start: ${fDate(PHASES[0]?.startDate)} · Finish: ${fDate(PHASES[PHASES.length-1]?.endDate)} · ${info.totalDays} working days · ${info.totalWeeks} weeks · Generated: ${new Date().toLocaleDateString('en-GB')}`;
+}
+
+// Init
+recalc();
+window.addEventListener('resize', ()=>renderGantt(calcDates()));
+</script>
+</body>
+</html>
