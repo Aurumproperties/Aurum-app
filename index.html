@@ -165,7 +165,14 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .photo-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;}
 .pz-hint{font-size:11px;color:var(--dim);text-align:center;pointer-events:none;z-index:1;}
 .pz-icon{font-size:22px;margin-bottom:4px;pointer-events:none;z-index:1;}
-.analyze-overlay{position:absolute;bottom:0;left:0;right:0;background:rgba(8,8,8,.9);padding:7px 10px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(4px);}
+.pc-delete-btn{position:absolute;top:6px;left:6px;background:rgba(8,8,8,.8);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:3px 7px;cursor:pointer;transition:all .15s;z-index:10;backdrop-filter:blur(4px);}
+.pc-delete-btn:hover{background:var(--red);border-color:var(--red);color:#fff;}
+.photo-actions{position:absolute;bottom:0;left:0;right:0;background:rgba(8,8,8,.85);padding:6px 8px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(4px);gap:6px;}
+.photo-action-btn{font-family:var(--font);font-size:10px;font-weight:600;padding:4px 10px;border-radius:6px;border:none;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.pab-change{background:var(--gold);color:#000;}
+.pab-change:hover{background:var(--gold2);}
+.pab-delete{background:rgba(240,64,64,.2);color:var(--red);border:1px solid rgba(240,64,64,.3);}
+.pab-delete:hover{background:var(--red);color:#fff;}
 .ai-btn{font-family:var(--font);font-size:11px;font-weight:700;padding:5px 12px;border-radius:6px;background:var(--gold);color:#000;border:none;cursor:pointer;}
 .ai-btn:hover{background:var(--gold2);}
 .ai-btn:disabled{opacity:.4;cursor:not-allowed;}
@@ -1257,6 +1264,7 @@ async function loadDashboard(){
       <div class="pc-thumb">
         ${p.thumbnail_url?`<img src="${p.thumbnail_url}">`:'🏚'}
         <div class="pc-status ${p.status}">${p.status}</div>
+        <button class="pc-delete-btn" onclick="event.stopPropagation();deleteProperty('${p.id}','${p.address.replace(/'/g,"\\'")}')">✕</button>
       </div>
       <div class="pc-body">
         <div class="pc-addr">${p.address}</div>
@@ -1373,13 +1381,19 @@ function renderRooms(){
           ${r.photo_url?`<img src="${r.photo_url}">`:''}
           <div class="pz-icon" ${r.photo_url?'style="display:none"':''}>📷</div>
           <div class="pz-hint" ${r.photo_url?'style="display:none"':''}>Upload photo for AI analysis</div>
-          <input type="file" accept="image/*" onchange="uploadRoomPhotoAndCache('${r.id}',event)">
-          ${r.photo_url?`<div class="analyze-overlay">
+          <input type="file" accept="image/*" onchange="uploadRoomPhotoAndCache('${r.id}',event)" ${r.photo_url?'style="display:none"':''} id="photoinput-${r.id}">
+          ${r.photo_url?`
+          <div class="photo-actions">
             <span id="ast-${r.id}" class="analyzing" style="display:none">🤖 Analysing...</span>
+            <button class="photo-action-btn pab-change" onclick="document.getElementById('photochange-${r.id}').click()">📷 Change</button>
+            <input type="file" accept="image/*" id="photochange-${r.id}" style="display:none" onchange="uploadRoomPhotoAndCache('${r.id}',event)">
             <button class="ai-btn" id="abtn-${r.id}" onclick="analyseRoom('${r.id}',event)" ${!localStorage.getItem('aurumApiKey')?'disabled title="Add API key in ⚙️"':''}>
-              ${r.ai_summary?'🔄 Re-analyse':'🤖 Analyse with AI'}
+              ${r.ai_summary?'🔄 Re-analyse':'🤖 AI'}
             </button>
-          </div>`:''}
+            <button class="photo-action-btn pab-delete" onclick="deleteRoomPhoto('${r.id}')">🗑</button>
+          </div>`:
+          `<input type="file" accept="image/*" onchange="uploadRoomPhotoAndCache('${r.id}',event)" style="position:absolute;inset:0;opacity:0;cursor:pointer">`}
+        </div>
         </div>
         ${r.ai_summary?`<div class="ai-box">
           <div class="ai-box-title">🤖 AI Assessment</div>
@@ -1470,6 +1484,24 @@ async function updateTaskCost(taskId,roomId,val){
   await sb.from('tasks').update({cost}).eq('id',taskId);
   const r=rooms.find(r=>r.id===roomId);
   if(r){const t=r.tasks?.find(t=>t.id===taskId);if(t)t.cost=cost;}
+  renderRooms();
+}
+
+async function deleteProperty(id, address){
+  if(!confirm(`Delete "${address}"?\n\nThis will permanently delete the property and all its rooms, tasks and materials. This cannot be undone.`)) return;
+  await sb.from('tasks').delete().eq('property_id', id);
+  await sb.from('materials').delete().eq('property_id', id);
+  await sb.from('rooms').delete().eq('property_id', id);
+  await sb.from('properties').delete().eq('id', id);
+  await loadDashboard();
+}
+
+async function deleteRoomPhoto(roomId){
+  if(!confirm('Remove this photo?')) return;
+  await sb.from('rooms').update({photo_url:null, ai_summary:null, ai_condition:null, ai_estimated_cost:0}).eq('id', roomId);
+  delete roomPhotoCache[roomId];
+  const r = rooms.find(r=>r.id===roomId);
+  if(r){r.photo_url=null;r.ai_summary=null;}
   renderRooms();
 }
 
