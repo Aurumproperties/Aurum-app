@@ -506,6 +506,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
         <button class="ptab on" onclick="propTab('rooms',this)">🏠 Rooms</button>
         <button class="ptab" onclick="propTab('materials',this)">📦 Materials</button>
         <button class="ptab" onclick="propTab('timeline',this)">📅 Timeline</button>
+        <button class="ptab" onclick="propTab('programme',this)">📋 Programme</button>
         <button class="ptab" onclick="propTab('summary',this)">💰 Summary</button>
         <button class="ptab" onclick="propTab('calculator',this)">⚡ Calculator</button>
         <button class="ptab" onclick="propTab('documents',this)">📄 Documents</button>
@@ -541,16 +542,75 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 
       <!-- TIMELINE TAB -->
       <div id="ptab-timeline" class="ptab-content" style="display:none">
-        <div class="sh"><div class="sh-title">Build <span>Programme</span></div></div>
+        <div class="sh">
+          <div class="sh-title">Build <span>Timeline</span></div>
+          <button class="btn gold" onclick="propTab('programme',document.querySelectorAll('.ptab')[3])">📋 Open Full Programme →</button>
+        </div>
         <div class="tl-controls">
-          <div class="ctrl"><label>Start Date</label><input type="date" id="tlStart"></div>
-          <div class="ctrl"><label>Working Days/Week</label><input type="number" id="tlWpw" value="5" min="1" max="7" oninput="renderTL()"></div>
+          <div class="ctrl"><label>Start Date</label><input type="date" id="tlStart" oninput="renderTL();syncProgramme()"></div>
+          <div class="ctrl"><label>Working Days/Week</label><input type="number" id="tlWpw" value="5" min="1" max="7" oninput="renderTL();syncProgramme()"></div>
         </div>
         <div class="tl-box">
           <div id="tlBars"></div>
           <div class="tl-summary" id="tlSummary" style="margin-top:16px"></div>
         </div>
-        <div class="note-box">⚡ <strong>Sequence locked:</strong> First fix → Plaster → DRY 7-10 days (non-negotiable) → Second fix → Tiling → Kitchen → Floors → Decorate → Snag.</div>
+        <div class="note-box">⚡ <strong>Sequence locked:</strong> First fix → Plaster → DRY 7-10 days (non-negotiable) → Second fix → Tiling → Kitchen → Floors → Decorate → Snag. Go to <strong>📋 Programme</strong> for full Gantt chart.</div>
+      </div>
+
+      <!-- PROGRAMME TAB -->
+      <div id="ptab-programme" class="ptab-content" style="display:none">
+        <div class="sh">
+          <div class="sh-title">📋 Build <span>Programme</span></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn" onclick="progResetDates()">↺ Reset</button>
+            <button class="btn solid" onclick="window.print()">🖨 Print</button>
+          </div>
+        </div>
+
+        <!-- SETTINGS -->
+        <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:14px 18px;margin-bottom:16px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+          <div class="ctrl">
+            <label>Start Date</label>
+            <input type="date" id="progStart" oninput="renderProgramme()">
+          </div>
+          <div class="ctrl">
+            <label>Working Days/Week</label>
+            <input type="number" id="progWpw" value="5" min="1" max="7" style="width:60px" oninput="renderProgramme()">
+          </div>
+          <div class="ctrl">
+            <label>Day Rate £</label>
+            <input type="number" id="progDayRate" value="200" style="width:80px" oninput="renderProgramme()">
+          </div>
+        </div>
+
+        <!-- SUMMARY STRIP -->
+        <div id="progSummary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px"></div>
+
+        <!-- GANTT -->
+        <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:16px">
+          <div style="overflow-x:auto" id="progGanttWrap">
+            <div id="progGantt"></div>
+          </div>
+        </div>
+
+        <!-- DETAIL TABLE -->
+        <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600">📋 Phase Details</div>
+          <table style="width:100%;border-collapse:collapse">
+            <thead><tr>
+              <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono)">#</th>
+              <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono)">Phase</th>
+              <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono)">Days</th>
+              <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono)">Workers</th>
+              <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono)">Labour £</th>
+              <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono)">Start</th>
+              <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono)">End</th>
+              <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono)">Sequence</th>
+              <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono)">Done</th>
+            </tr></thead>
+            <tbody id="progTableBody"></tbody>
+          </table>
+        </div>
       </div>
 
       <!-- SUMMARY TAB -->
@@ -658,135 +718,187 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
   <div class="page" id="page-scout">
     <div class="dash-header">
       <div class="dash-greeting">🔍 Property <span>Scout</span></div>
-      <div class="dash-sub">// enter a property → engine ranks & scores it against every postcode in your target areas · <a href="sold-prices.html" target="_blank" style="color:var(--gold);text-decoration:none">🏠 Sold Prices Engine (full UK) ↗</a></div>
+      <div class="dash-sub">// nationwide BRRR engine · <a href="sold-prices.html" target="_blank" style="color:var(--gold);text-decoration:none">🏠 Sold Prices Engine ↗</a></div>
     </div>
 
-    <!-- DEAL SCORER — Manual entry -->
-    <div class="scout-scorer" id="scoutScorer">
-      <div class="ss-title">⚡ Score a Property</div>
-      <div class="ss-desc">Enter any property from Rightmove/Zoopla/Auction — engine does the rest</div>
-      <div class="ss-grid">
-        <div class="sf-group">
-          <div class="sf-label">Address / Postcode</div>
-          <input class="sf-input" id="ssPostcode" placeholder="e.g. SR2 7RA or 83 Bishop Road SR2" style="min-width:220px">
-        </div>
-        <div class="sf-group">
-          <div class="sf-label">Asking Price £</div>
-          <input class="sf-input" id="ssPrice" type="number" placeholder="100000">
-        </div>
-        <div class="sf-group">
-          <div class="sf-label">Property Type</div>
-          <select class="sf-input" id="ssType">
-            <option value="T">Terraced</option>
-            <option value="S">Semi-Detached</option>
-            <option value="D">Detached</option>
-            <option value="F">Flat</option>
-          </select>
-        </div>
-        <div class="sf-group">
-          <div class="sf-label">Bedrooms</div>
-          <select class="sf-input" id="ssBeds">
-            <option value="1">1 bed</option>
-            <option value="2">2 beds</option>
-            <option value="3" selected>3 beds</option>
-            <option value="4">4 beds</option>
-            <option value="5">5 beds</option>
-          </select>
-        </div>
-        <div class="sf-group">
-          <div class="sf-label">Floor Area m²</div>
-          <input class="sf-input" id="ssSqm" type="number" placeholder="75" style="width:90px">
-        </div>
-        <div class="sf-group" style="justify-content:flex-end">
-          <button class="btn solid" onclick="scoreDeal()" style="padding:9px 20px">⚡ Score Deal</button>
-        </div>
-      </div>
-      <div id="ssDealResult"></div>
+    <!-- SCOUT TABS -->
+    <div class="prop-tabs" style="margin-bottom:20px">
+      <button class="ptab on" onclick="scoutTab('score',this)">⚡ Score a Deal</button>
+      <button class="ptab" onclick="scoutTab('ranking',this)">📊 Area Ranking</button>
+      <button class="ptab" onclick="scoutTab('yield',this)">💹 Rental Yields</button>
+      <button class="ptab" onclick="scoutTab('custom',this)">📍 My Postcodes</button>
     </div>
 
-    <!-- AREA RANKER -->
-    <div class="scout-filters" style="margin-top:16px">
-      <div style="font-size:13px;font-weight:700;margin-bottom:12px">📊 Area Intelligence — Ranked by BRRR Potential</div>
-      <div class="sf-row" style="gap:8px;flex-wrap:wrap">
-        <div class="sf-group">
-          <div class="sf-label">Budget £</div>
-          <input class="sf-input" id="rankBudget" type="number" value="150000" oninput="renderAreaRanking()">
-        </div>
-        <div class="sf-group">
-          <div class="sf-label">Type</div>
-          <select class="sf-input" id="rankType" onchange="renderAreaRanking()">
-            <option value="T">Terraced</option>
-            <option value="S">Semi-Detached</option>
-            <option value="D">Detached</option>
-          </select>
-        </div>
-        <div class="sf-group">
-          <div class="sf-label">Beds</div>
-          <select class="sf-input" id="rankBeds" onchange="renderAreaRanking()">
-            <option value="2">2 bed</option>
-            <option value="3" selected>3 bed</option>
-            <option value="4">4 bed</option>
-          </select>
-        </div>
-        <div class="sf-group">
-          <div class="sf-label">🚫 Exclude</div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap">
-            <label class="sf-check"><input type="checkbox" id="exLH" checked onchange="renderAreaRanking()"> Leasehold</label>
-            <label class="sf-check"><input type="checkbox" id="exRet" checked onchange="renderAreaRanking()"> Retirement</label>
-            <label class="sf-check"><input type="checkbox" id="exSO" checked onchange="renderAreaRanking()"> Shared Ownership</label>
-            <label class="sf-check"><input type="checkbox" id="exNB" checked onchange="renderAreaRanking()"> New Build</label>
+    <!-- TAB: SCORE A DEAL -->
+    <div id="stab-score" class="stab-content">
+      <div class="scout-scorer">
+        <div class="ss-title">⚡ Score Any UK Property</div>
+        <div class="ss-desc">Enter any property → engine scores it, calculates BRRR numbers, all editable</div>
+        <div class="ss-grid">
+          <div class="sf-group">
+            <div class="sf-label">Postcode</div>
+            <input class="sf-input" id="ssPostcode" placeholder="SR2, TW13, B12..." style="min-width:140px">
+          </div>
+          <div class="sf-group">
+            <div class="sf-label">Asking Price £</div>
+            <input class="sf-input" id="ssPrice" type="number" placeholder="100000" oninput="liveScore()">
+          </div>
+          <div class="sf-group">
+            <div class="sf-label">Type</div>
+            <select class="sf-input" id="ssType" onchange="liveScore()">
+              <option value="T">Terraced</option>
+              <option value="S">Semi-Detached</option>
+              <option value="D">Detached</option>
+              <option value="F">Flat</option>
+            </select>
+          </div>
+          <div class="sf-group">
+            <div class="sf-label">Bedrooms</div>
+            <select class="sf-input" id="ssBeds" onchange="liveScore()">
+              <option value="1">1 bed</option>
+              <option value="2">2 beds</option>
+              <option value="3" selected>3 beds</option>
+              <option value="4">4 beds</option>
+              <option value="5">5 beds</option>
+            </select>
+          </div>
+          <div class="sf-group">
+            <div class="sf-label">Floor Area m²</div>
+            <input class="sf-input" id="ssSqm" type="number" placeholder="75" style="width:80px" oninput="liveScore()">
+          </div>
+          <div class="sf-group" style="justify-content:flex-end">
+            <button class="btn solid" onclick="scoreDeal()" style="padding:9px 20px">⚡ Score Deal</button>
           </div>
         </div>
       </div>
+
+      <!-- EDITABLE ASSUMPTIONS -->
+      <div id="ssAssumptions" style="display:none">
+        <div style="font-size:13px;font-weight:700;color:var(--text);margin:16px 0 10px">✏️ Edit Assumptions — all values adjustable</div>
+        <div class="inputs-grid" style="margin-bottom:0">
+          <div class="inp-card">
+            <div class="inp-label">Refurb Cost £</div>
+            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="ssRefurb" type="number" oninput="updateScoreFromEdits()"></div>
+            <input class="inp-slider" type="range" min="5000" max="100000" step="1000" oninput="document.getElementById('ssRefurb').value=this.value;updateScoreFromEdits()" id="ssRefurbSlider">
+          </div>
+          <div class="inp-card">
+            <div class="inp-label">Your GDV Estimate £</div>
+            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="ssGdv" type="number" oninput="updateScoreFromEdits()"></div>
+            <input class="inp-slider" type="range" min="50000" max="600000" step="5000" oninput="document.getElementById('ssGdv').value=this.value;updateScoreFromEdits()" id="ssGdvSlider">
+          </div>
+          <div class="inp-card">
+            <div class="inp-label">Monthly Rent £</div>
+            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="ssRent" type="number" oninput="updateScoreFromEdits()"></div>
+            <input class="inp-slider" type="range" min="300" max="3000" step="25" oninput="document.getElementById('ssRent').value=this.value;updateScoreFromEdits()" id="ssRentSlider">
+          </div>
+          <div class="inp-card">
+            <div class="inp-label">BTL Rate %</div>
+            <div class="inp-wrap"><input class="inp-field" id="ssMortRate" type="number" value="5.5" step="0.1" oninput="updateScoreFromEdits()"><span class="inp-prefix">%</span></div>
+            <input class="inp-slider" type="range" min="3" max="10" step="0.1" value="5.5" oninput="document.getElementById('ssMortRate').value=this.value;updateScoreFromEdits()" id="ssMortSlider">
+          </div>
+          <div class="inp-card">
+            <div class="inp-label">LTV %</div>
+            <div class="inp-wrap"><input class="inp-field" id="ssLtv" type="number" value="75" step="5" oninput="updateScoreFromEdits()"><span class="inp-prefix">%</span></div>
+            <input class="inp-slider" type="range" min="60" max="85" step="5" value="75" oninput="document.getElementById('ssLtv').value=this.value;updateScoreFromEdits()" id="ssLtvSlider">
+          </div>
+          <div class="inp-card">
+            <div class="inp-label">Purchase Costs £</div>
+            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="ssCosts" type="number" value="5000" oninput="updateScoreFromEdits()"></div>
+            <input class="inp-slider" type="range" min="1000" max="20000" step="500" value="5000" oninput="document.getElementById('ssCosts').value=this.value;updateScoreFromEdits()" id="ssCostsSlider">
+          </div>
+        </div>
+      </div>
+
+      <div id="ssDealResult"></div>
     </div>
 
-    <div id="areaRanking"></div>
-
-    <!-- RIGHTMOVE QUICK LINKS -->
-    <div class="scout-filters" style="margin-top:16px">
-      <div style="font-size:13px;font-weight:700;margin-bottom:12px">🔗 Quick Links — Open on Rightmove with filters pre-set</div>
-      <div id="rightmoveLinks" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+    <!-- TAB: AREA RANKING -->
+    <div id="stab-ranking" class="stab-content" style="display:none">
+      <div class="scout-filters">
+        <div class="sf-row" style="gap:10px;flex-wrap:wrap;align-items:flex-end">
+          <div class="sf-group"><div class="sf-label">Budget £</div><input class="sf-input" id="rankBudget" type="number" value="150000" oninput="renderAreaRanking()"></div>
+          <div class="sf-group"><div class="sf-label">Type</div><select class="sf-input" id="rankType" onchange="renderAreaRanking()"><option value="T">Terraced</option><option value="S">Semi-Detached</option><option value="D">Detached</option></select></div>
+          <div class="sf-group"><div class="sf-label">Beds</div><select class="sf-input" id="rankBeds" onchange="renderAreaRanking()"><option value="2">2 bed</option><option value="3" selected>3 bed</option><option value="4">4 bed</option></select></div>
+          <div class="sf-group"><div class="sf-label">🚫 Exclude</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <label class="sf-check"><input type="checkbox" id="exLH" checked onchange="renderAreaRanking()"> Leasehold</label>
+              <label class="sf-check"><input type="checkbox" id="exRet" checked onchange="renderAreaRanking()"> Retirement</label>
+              <label class="sf-check"><input type="checkbox" id="exSO" checked onchange="renderAreaRanking()"> Shared Ownership</label>
+              <label class="sf-check"><input type="checkbox" id="exNB" checked onchange="renderAreaRanking()"> New Build</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="areaRanking"></div>
+      <div class="scout-filters" style="margin-top:16px">
+        <div style="font-size:13px;font-weight:700;margin-bottom:12px">🔗 Quick Links — Rightmove with pre-set filters</div>
+        <div id="rightmoveLinks" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+      </div>
     </div>
 
-    <!-- CUSTOM POSTCODES -->
-    <div class="scout-filters" style="margin-top:16px">
-      <div style="font-size:13px;font-weight:700;margin-bottom:4px">📍 My Custom Postcodes</div>
-      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:14px">Add any UK postcode area — engine will include it in rankings automatically</div>
-      <div class="ss-grid" style="margin-bottom:14px">
-        <div class="sf-group">
-          <div class="sf-label">Postcode (e.g. B12)</div>
-          <input class="sf-input" id="cpPostcode" placeholder="B12" style="width:90px;text-transform:uppercase">
+    <!-- TAB: RENTAL YIELDS -->
+    <div id="stab-yield" class="stab-content" style="display:none">
+      <div class="note-box">💹 <strong>Rental yield data</strong> for every area in our database — based on average asking rents vs average sold prices. Higher yield = better cash flow for BRRR.</div>
+      <div class="scout-filters" style="margin-bottom:16px">
+        <div class="sf-row">
+          <div class="sf-group"><div class="sf-label">Sort by</div>
+            <select class="sf-input" id="yieldSort" onchange="renderYieldTable()">
+              <option value="yield">Yield % ↓</option>
+              <option value="rent">Rent £ ↓</option>
+              <option value="price">Avg Price ↑</option>
+              <option value="growth">Growth % ↓</option>
+            </select>
+          </div>
+          <div class="sf-group"><div class="sf-label">Min Yield %</div>
+            <input class="sf-input" id="yieldMin" type="number" value="0" step="0.5" style="width:80px" oninput="renderYieldTable()">
+          </div>
+          <div class="sf-group"><div class="sf-label">Region</div>
+            <select class="sf-input" id="yieldRegion" onchange="renderYieldTable()">
+              <option value="all">All Regions</option>
+              <option value="North East">North East</option>
+              <option value="North West">North West</option>
+              <option value="Yorkshire">Yorkshire</option>
+              <option value="Midlands">Midlands</option>
+              <option value="London">London</option>
+              <option value="East">East</option>
+              <option value="Kent">Kent</option>
+              <option value="Lincolnshire">Lincolnshire</option>
+              <option value="Custom">My Custom</option>
+            </select>
+          </div>
         </div>
-        <div class="sf-group">
-          <div class="sf-label">Area Name</div>
-          <input class="sf-input" id="cpArea" placeholder="Birmingham Sparkhill">
-        </div>
-        <div class="sf-group">
-          <div class="sf-label">Avg Terraced £</div>
-          <input class="sf-input" id="cpAvgT" type="number" placeholder="150000" style="width:110px">
-        </div>
-        <div class="sf-group">
-          <div class="sf-label">Avg Semi £</div>
-          <input class="sf-input" id="cpAvgS" type="number" placeholder="200000" style="width:110px">
-        </div>
-        <div class="sf-group">
-          <div class="sf-label">Avg Rent 3bed £/mo</div>
-          <input class="sf-input" id="cpRent" type="number" placeholder="850" style="width:100px">
-        </div>
-        <div class="sf-group">
-          <div class="sf-label">Est. Yield %</div>
-          <input class="sf-input" id="cpYield" type="number" placeholder="6.5" step="0.1" style="width:80px">
-        </div>
-        <div class="sf-group">
-          <div class="sf-label">Annual Growth %</div>
-          <input class="sf-input" id="cpGrowth" type="number" placeholder="3.5" step="0.1" style="width:80px">
-        </div>
-        <div class="sf-group" style="justify-content:flex-end">
-          <button class="btn solid" onclick="addCustomPostcode()" style="padding:8px 16px">+ Add Postcode</button>
-        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th>Postcode</th><th>Area</th><th>Region</th>
+            <th>Avg Price (T)</th><th>Avg Rent 3bd</th>
+            <th>Gross Yield</th><th>Annual Growth</th>
+            <th>Auction Freq</th><th>Regen?</th><th>BRRR Rating</th>
+          </tr></thead>
+          <tbody id="yieldTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: CUSTOM POSTCODES -->
+    <div id="stab-custom" class="stab-content" style="display:none">
+      <div style="font-size:13px;font-weight:700;margin-bottom:4px">📍 Add Any UK Postcode</div>
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:14px">Add postcodes not in our database — they'll appear in rankings and yield table automatically</div>
+      <div class="ss-grid" style="margin-bottom:16px">
+        <div class="sf-group"><div class="sf-label">Postcode</div><input class="sf-input" id="cpPostcode" placeholder="B12" style="width:90px;text-transform:uppercase"></div>
+        <div class="sf-group"><div class="sf-label">Area Name</div><input class="sf-input" id="cpArea" placeholder="Birmingham Sparkhill"></div>
+        <div class="sf-group"><div class="sf-label">Region</div><input class="sf-input" id="cpRegion" placeholder="Midlands" style="width:110px"></div>
+        <div class="sf-group"><div class="sf-label">Avg Terraced £</div><input class="sf-input" id="cpAvgT" type="number" placeholder="150000" style="width:110px"></div>
+        <div class="sf-group"><div class="sf-label">Avg Semi £</div><input class="sf-input" id="cpAvgS" type="number" placeholder="200000" style="width:110px"></div>
+        <div class="sf-group"><div class="sf-label">Avg Rent 3bed £</div><input class="sf-input" id="cpRent" type="number" placeholder="850" style="width:100px"></div>
+        <div class="sf-group"><div class="sf-label">Yield %</div><input class="sf-input" id="cpYield" type="number" placeholder="6.5" step="0.1" style="width:70px"></div>
+        <div class="sf-group"><div class="sf-label">Growth %</div><input class="sf-input" id="cpGrowth" type="number" placeholder="3.5" step="0.1" style="width:70px"></div>
+        <div class="sf-group" style="justify-content:flex-end"><button class="btn solid" onclick="addCustomPostcode()" style="padding:8px 16px">+ Add</button></div>
       </div>
       <div id="customPcList"></div>
     </div>
+
   </div>
 
   <!-- ═══ PORTFOLIO PAGE ═══ -->
@@ -1092,10 +1204,10 @@ function propTab(tab,btn){
   document.getElementById('ptab-'+tab).style.display='block';
   btn.classList.add('on');
   if(tab==='timeline')renderTL();
+  if(tab==='programme')renderProgramme();
   if(tab==='summary')renderSummary();
   if(tab==='materials')renderMaterials();
   if(tab==='calculator'){
-    // Pre-fill with current property values
     if(currentProp){
       document.getElementById('cPurchase').value=currentProp.buy_price||100000;
       document.getElementById('cRefurb').value=currentProp.refurb_budget||35000;
@@ -1105,6 +1217,167 @@ function propTab(tab,btn){
     calcBRRR();
   }
 }
+
+// ── PROGRAMME (Gantt inside property) ──
+const PROG_PHASES = [
+  {id:0,name:'1. Strip Out + Skip',desc:'Remove kitchen, bathroom, carpets',days:3,workers:2,col:'#f04040',before:'—',done:false},
+  {id:1,name:'2. Damp / Roof / Structure',desc:'DPC, roof repairs, structural works',days:4,workers:2,col:'#f09040',before:'Phase 1',done:false},
+  {id:2,name:'3. First Fix Electrics',desc:'Consumer unit, all cabling',days:3,workers:1,col:'#d4f244',before:'Phase 2',done:false},
+  {id:3,name:'4. First Fix Plumbing',desc:'Boiler, pipework, radiator drops',days:3,workers:1,col:'#40d0b0',before:'Phase 2',done:false},
+  {id:4,name:'5. Plastering',desc:'Skim all walls and ceilings',days:5,workers:2,col:'#9040f0',before:'Phases 3+4',done:false},
+  {id:5,name:'6. Drying Time ⏳',desc:'MUST dry — 7-10 days minimum',days:8,workers:0,col:'#505048',before:'Phase 5',done:false},
+  {id:6,name:'7. Second Fix Electrics',desc:'Sockets, switches, pendants',days:2,workers:1,col:'#d4f244',before:'Phase 6',done:false},
+  {id:7,name:'8. Second Fix Plumbing',desc:'Radiators, bathroom, kitchen sink',days:2,workers:1,col:'#40d0b0',before:'Phase 6',done:false},
+  {id:8,name:'9. Tiling',desc:'Bathroom + kitchen splashback',days:3,workers:1,col:'#f044c0',before:'Phase 8',done:false},
+  {id:9,name:'10. Kitchen Fit',desc:'Units, worktop, appliances',days:2,workers:2,col:'#f0b840',before:'Phase 8',done:false},
+  {id:10,name:'11. Doors + Skirting',desc:'Internal doors, skirting, architrave',days:2,workers:1,col:'#40a0f0',before:'Phase 9',done:false},
+  {id:11,name:'12. Flooring',desc:'Laminate, carpet, vinyl',days:2,workers:1,col:'#f09040',before:'Phase 11',done:false},
+  {id:12,name:'13. Decorating',desc:'2 coats all rooms',days:3,workers:2,col:'#f0b840',before:'Phase 12',done:false},
+  {id:13,name:'14. Snag + Deep Clean',desc:'Fix defects, clean, get certs',days:2,workers:2,col:'#40e0d0',before:'Phase 13',done:false},
+];
+
+function syncProgramme(){
+  const tlStart = document.getElementById('tlStart').value;
+  const tlWpw = document.getElementById('tlWpw').value;
+  if(document.getElementById('progStart')) document.getElementById('progStart').value = tlStart;
+  if(document.getElementById('progWpw')) document.getElementById('progWpw').value = tlWpw;
+  // sync workers from PHASES to PROG_PHASES
+  PHASES.forEach((p,i)=>{ if(PROG_PHASES[i]) PROG_PHASES[i].workers = p.w; });
+}
+
+function progResetDates(){
+  const today = new Date();
+  const nextMon = new Date(today);
+  nextMon.setDate(today.getDate() + ((1+7-today.getDay())%7)||7);
+  document.getElementById('progStart').valueAsDate = nextMon;
+  PROG_PHASES.forEach(p=>p.done=false);
+  renderProgramme();
+}
+
+function addProgWorkingDays(start, wd, wpw){
+  const d = new Date(start);
+  let added = 0, safety = 0;
+  while(added < wd && safety < 500){
+    d.setDate(d.getDate()+1); safety++;
+    if(wpw<=5 && (d.getDay()===0||d.getDay()===6)) continue;
+    added++;
+  }
+  return new Date(d);
+}
+
+function fProgDate(d){
+  if(!d||isNaN(d)) return '—';
+  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+}
+
+function renderProgramme(){
+  const sdVal = document.getElementById('progStart').value;
+  const sd = sdVal ? new Date(sdVal) : new Date();
+  const wpw = +document.getElementById('progWpw').value || 5;
+  const dayRate = +document.getElementById('progDayRate').value || 200;
+
+  // Calculate dates
+  let currentWD = 0;
+  PROG_PHASES.forEach(p=>{
+    p.startWD = currentWD;
+    p.endWD = currentWD + p.days - 1;
+    p.startDate = addProgWorkingDays(sd, currentWD, wpw);
+    p.endDate = addProgWorkingDays(sd, currentWD + p.days - 1, wpw);
+    currentWD += p.days;
+  });
+  const totalDays = currentWD;
+  const totalWeeks = Math.ceil(totalDays/wpw);
+  const totalLabour = PROG_PHASES.reduce((s,p)=>s+p.workers*p.days*dayRate,0);
+  const finishDate = PROG_PHASES[PROG_PHASES.length-1].endDate;
+  const doneCount = PROG_PHASES.filter(p=>p.done).length;
+
+  // Summary
+  document.getElementById('progSummary').innerHTML = `
+    <div class="ss-card"><div class="ss-val" style="color:var(--gold)">${totalDays}</div><div class="ss-lbl">Working Days</div></div>
+    <div class="ss-card"><div class="ss-val" style="color:var(--cyan)">${totalWeeks}</div><div class="ss-lbl">Weeks</div></div>
+    <div class="ss-card"><div class="ss-val" style="color:var(--amber)">£${totalLabour.toLocaleString()}</div><div class="ss-lbl">Labour Est.</div></div>
+    <div class="ss-card"><div class="ss-val" style="color:var(--text);font-size:13px">${fProgDate(PROG_PHASES[0].startDate)}</div><div class="ss-lbl">Start</div></div>
+    <div class="ss-card"><div class="ss-val" style="color:var(--green);font-size:13px">${fProgDate(finishDate)}</div><div class="ss-lbl">Finish</div></div>
+    <div class="ss-card"><div class="ss-val" style="color:${doneCount===PROG_PHASES.length?'var(--green)':'var(--gold)'}">${doneCount}/${PROG_PHASES.length}</div><div class="ss-lbl">Done</div></div>
+  `;
+
+  // Gantt
+  const DAY_W = 28;
+  const totalW = totalDays * DAY_W;
+  const today = new Date();
+  let todayWD = 0;
+  const cur = new Date(sd);
+  while(cur < today && todayWD < totalDays){ cur.setDate(cur.getDate()+1); if(cur.getDay()!==0&&cur.getDay()!==6) todayWD++; }
+
+  let weekHeaders = '';
+  for(let w=0;w<totalWeeks;w++){
+    weekHeaders += `<div style="position:absolute;left:${w*wpw*DAY_W}px;top:0;bottom:0;border-left:1px dashed rgba(255,255,255,.08);pointer-events:none">
+      <div style="font-size:9px;color:var(--dim);font-family:var(--mono);padding:2px 3px">W${w+1}</div>
+    </div>`;
+  }
+
+  const ganttRows = PROG_PHASES.map((p,i)=>{
+    const barL = p.startWD * DAY_W;
+    const barW = Math.max(DAY_W, p.days * DAY_W);
+    const isLight = ['#d4f244','#f0b840','#40d0b0','#40a0f0','#40e0d0'].includes(p.col);
+    const labCost = p.workers * p.days * dayRate;
+    return `<div style="display:flex;align-items:center;border-bottom:1px solid var(--border);min-height:44px${p.done?';opacity:.5':''}">
+      <div style="width:180px;flex-shrink:0;padding:8px 12px;border-right:1px solid var(--border)">
+        <div style="font-size:11px;font-weight:600">${p.name}</div>
+        <div style="display:flex;gap:6px;margin-top:4px;align-items:center">
+          <input type="number" value="${p.days}" min="1" max="60" style="background:var(--s2);border:1px solid var(--border);border-radius:4px;padding:2px 5px;color:var(--text);font-family:var(--mono);font-size:10px;width:36px;outline:none;text-align:center" oninput="PROG_PHASES[${i}].days=+this.value;renderProgramme()" title="Days">
+          <input type="number" value="${p.workers}" min="0" max="10" style="background:var(--s2);border:1px solid var(--border);border-radius:4px;padding:2px 5px;color:var(--gold);font-family:var(--mono);font-size:10px;width:32px;outline:none;text-align:center" oninput="PROG_PHASES[${i}].workers=+this.value;renderProgramme()" title="Workers">
+          <span style="font-size:9px;color:var(--dim);font-family:var(--mono)">👷${p.workers>0?'£'+(p.workers*p.days*dayRate).toLocaleString():''}</span>
+        </div>
+      </div>
+      <div style="flex:1;position:relative;height:44px;min-width:${totalW}px">
+        ${weekHeaders}
+        ${todayWD>0&&todayWD>=p.startWD&&todayWD<=p.endWD?`<div style="position:absolute;left:${todayWD*DAY_W}px;top:0;bottom:0;width:2px;background:var(--red);opacity:.7;z-index:5"><div style="font-size:8px;color:var(--red);font-family:var(--mono);position:absolute;top:0;left:2px;white-space:nowrap">TODAY</div></div>`:''}
+        <div style="position:absolute;left:${barL}px;width:${barW}px;height:26px;top:9px;border-radius:5px;background:${p.col};opacity:${p.done?.4:.8};display:flex;align-items:center;padding:0 7px;font-size:10px;font-weight:600;color:${isLight?'#000':'#fff'};cursor:pointer;white-space:nowrap;overflow:hidden"
+          onclick="PROG_PHASES[${i}].done=!PROG_PHASES[${i}].done;renderProgramme()">
+          ${p.days}d${p.done?' ✓':''}
+        </div>
+      </div>
+      <input type="checkbox" style="accent-color:var(--green);cursor:pointer;margin:0 12px;width:14px;height:14px" ${p.done?'checked':''} onchange="PROG_PHASES[${i}].done=this.checked;renderProgramme()">
+    </div>`;
+  }).join('');
+
+  document.getElementById('progGantt').innerHTML = `
+    <div style="display:flex;border-bottom:1px solid var(--border);background:var(--s2)">
+      <div style="width:180px;flex-shrink:0;padding:8px 12px;border-right:1px solid var(--border);font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em">Phase · Days · Workers</div>
+      <div style="flex:1;padding:8px 12px;font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;position:relative;min-width:${totalW}px">Timeline →</div>
+    </div>
+    ${ganttRows}`;
+
+  // Table
+  document.getElementById('progTableBody').innerHTML = PROG_PHASES.map((p,i)=>`
+    <tr style="${p.done?'opacity:.5':''}border-bottom:1px solid var(--border)">
+      <td style="padding:9px 13px;font-size:12px;font-family:var(--mono);color:var(--muted)">${i+1}</td>
+      <td style="padding:9px 13px;font-size:12px;font-family:var(--mono)">
+        <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.col};margin-right:6px"></span>${p.name}
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${p.desc}</div>
+      </td>
+      <td style="padding:9px 13px;font-size:12px;font-family:var(--mono)">
+        <input style="background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--text);font-family:var(--mono);font-size:12px;width:50px;outline:none;text-align:center" type="number" value="${p.days}" min="1" max="60" oninput="PROG_PHASES[${i}].days=+this.value;renderProgramme()">
+      </td>
+      <td style="padding:9px 13px;font-size:12px;font-family:var(--mono)">
+        <input style="background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--gold);font-family:var(--mono);font-size:12px;width:44px;outline:none;text-align:center" type="number" value="${p.workers}" min="0" max="10" oninput="PROG_PHASES[${i}].workers=+this.value;renderProgramme()">
+      </td>
+      <td style="padding:9px 13px;font-size:12px;font-family:var(--mono);color:var(--amber)">${p.workers>0?'£'+(p.workers*p.days*dayRate).toLocaleString():'—'}</td>
+      <td style="padding:9px 13px;font-size:12px;font-family:var(--mono);color:var(--gold)">${fProgDate(p.startDate)}</td>
+      <td style="padding:9px 13px;font-size:12px;font-family:var(--mono)">${fProgDate(p.endDate)}</td>
+      <td style="padding:9px 13px;font-size:12px;font-family:var(--mono)"><span style="font-size:10px;padding:2px 8px;border-radius:6px;background:var(--s2);border:1px solid var(--border);color:var(--muted)">${p.before}</span></td>
+      <td style="padding:9px 13px"><input type="checkbox" style="accent-color:var(--green);cursor:pointer;width:14px;height:14px" ${p.done?'checked':''} onchange="PROG_PHASES[${i}].done=this.checked;renderProgramme()"></td>
+    </tr>`).join('');
+}
+
+// Sync Timeline → Programme when Timeline tab changes workers
+const _origRenderTL = renderTL;
+renderTL = function(){
+  _origRenderTL();
+  // Sync workers from PHASES to PROG_PHASES
+  PHASES.forEach((p,i)=>{ if(PROG_PHASES[i]) PROG_PHASES[i].workers = p.w; });
+};
 
 function calcBRRR(){
   const cv=id=>parseFloat(document.getElementById(id).value)||0;
@@ -1891,6 +2164,7 @@ function fmtK(n){
 
 // Init timeline date
 document.getElementById('tlStart').valueAsDate=new Date();
+document.getElementById('progStart').valueAsDate=new Date();
 
 // API key button in topbar
 document.querySelector('.tbar-right').insertAdjacentHTML('afterbegin','<button class="signout-btn" onclick="openApiModal()" title="AI Setup">⚙️ AI</button>');
@@ -2053,75 +2327,194 @@ function calcBRRRScore(price, postcode, type, beds){
 }
 
 // Score a single deal entered by user
-function scoreDeal(){
+function scoutTab(tab, btn){
+  document.querySelectorAll('.stab-content').forEach(p=>p.style.display='none');
+  document.querySelectorAll('#page-scout .ptab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('stab-'+tab).style.display='block';
+  btn.classList.add('on');
+  if(tab==='ranking')renderAreaRanking();
+  if(tab==='yield')renderYieldTable();
+  if(tab==='custom'){loadCustomPostcodes();renderCustomPcList();}
+}
+
+function liveScore(){
+  // just updates sliders when user types
+  const refurb = document.getElementById('ssRefurb');
+  const gdv = document.getElementById('ssGdv');
+  const rent = document.getElementById('ssRent');
+  if(refurb && refurb.value){
+    document.getElementById('ssRefurbSlider').value = refurb.value;
+    document.getElementById('ssGdvSlider').value = gdv.value;
+    document.getElementById('ssRentSlider').value = rent.value;
+  }
+}
+
+function updateScoreFromEdits(){
+  // sync sliders
+  ['ssRefurb','ssGdv','ssRent','ssMortRate','ssLtv','ssCosts'].forEach(id=>{
+    const el = document.getElementById(id);
+    const sl = document.getElementById(id+'Slider');
+    if(el && sl) sl.value = el.value;
+  });
+  renderScoreResult();
+}
+
+function renderYieldTable(){
+  const sort = document.getElementById('yieldSort').value;
+  const minY = +document.getElementById('yieldMin').value || 0;
+  const region = document.getElementById('yieldRegion').value;
+
+  let rows = Object.entries(MARKET_DATA).filter(([pc,d])=>{
+    if(d.yield < minY) return false;
+    if(region !== 'all' && d.region !== region) return false;
+    return true;
+  });
+
+  rows.sort((a,b)=>{
+    const [,ad] = a; const [,bd] = b;
+    if(sort==='yield') return bd.yield - ad.yield;
+    if(sort==='rent') return bd.rent3 - ad.rent3;
+    if(sort==='price') return ad.avgT - bd.avgT;
+    if(sort==='growth') return bd.growth - ad.growth;
+    return 0;
+  });
+
+  const fK = n => n>=1000?'£'+(n/1000).toFixed(0)+'k':'£'+n;
+  const yColor = y => y>=9?'var(--green)':y>=7?'var(--cyan)':y>=5?'var(--amber)':'var(--red)';
+  const rating = (d) => {
+    let s=0;
+    if(d.yield>=8)s+=3;else if(d.yield>=6)s+=2;else s+=1;
+    if(d.growth>=4)s+=2;else if(d.growth>=3)s+=1;
+    if(d.regeneration)s+=2;
+    if(d.auctionFreq==='high')s+=2;else if(d.auctionFreq==='medium')s+=1;
+    const max=9;
+    const pct=Math.round(s/max*10);
+    const col=pct>=7?'var(--green)':pct>=5?'var(--amber)':'var(--red)';
+    return `<span style="color:${col};font-weight:700">${pct}/10</span>`;
+  };
+
+  document.getElementById('yieldTableBody').innerHTML = rows.map(([pc,d])=>`
+    <tr style="cursor:pointer" onclick="document.getElementById('ssPostcode').value='${pc}';scoutTab('score',document.querySelector('#page-scout .ptab'))">
+      <td style="font-weight:700;color:var(--gold)">${pc}</td>
+      <td>${d.area}</td>
+      <td style="color:var(--muted)">${d.region}</td>
+      <td>${fK(d.avgT)}</td>
+      <td style="color:var(--cyan)">${fK(d.rent3)}/mo</td>
+      <td style="font-weight:700;color:${yColor(d.yield)}">${d.yield}%</td>
+      <td style="color:${d.growth>=4?'var(--green)':'var(--amber)'}">${d.growth}%</td>
+      <td><span style="font-size:10px;padding:2px 7px;border-radius:6px;background:${d.auctionFreq==='high'?'rgba(64,208,128,.1)':d.auctionFreq==='medium'?'rgba(240,192,64,.1)':'rgba(255,255,255,.05)'};color:${d.auctionFreq==='high'?'var(--green)':d.auctionFreq==='medium'?'var(--amber)':'var(--muted)'}">${d.auctionFreq}</span></td>
+      <td>${d.regeneration?'✅':'—'}</td>
+      <td>${rating(d)}</td>
+    </tr>`).join('');
+}
+
+function renderScoreResult(){
   const postcode = document.getElementById('ssPostcode').value.trim();
   const price = +document.getElementById('ssPrice').value || 0;
   const type = document.getElementById('ssType').value;
   const beds = +document.getElementById('ssBeds').value || 3;
   const sqm = +document.getElementById('ssSqm').value || 0;
-
-  if(!postcode || !price){
-    alert('Enter postcode and asking price.');
-    return;
-  }
-
-  const r = calcBRRRScore(price, postcode, type, beds);
-  if(!r){
-    document.getElementById('ssDealResult').innerHTML = `
-      <div class="deal-score-wrap">
-        <div style="color:var(--amber);font-family:var(--mono);font-size:12px">⚠️ Postcode not in our scoring database yet.<br><br>
-        <strong style="color:var(--gold)">Use the Sold Prices Engine</strong> — covers entire UK with real Land Registry data.<br><br>
-        <a href="sold-prices.html" target="_blank" style="color:var(--gold);font-weight:600;text-decoration:none">→ Open Sold Prices Engine ↗</a><br><br>
-        Or add this postcode via "My Custom Postcodes" below.</div>
-      </div>`;
-    return;
-  }
+  const refurb = +document.getElementById('ssRefurb').value || 0;
+  const gdv = +document.getElementById('ssGdv').value || 0;
+  const rent = +document.getElementById('ssRent').value || 0;
+  const rate = +document.getElementById('ssMortRate').value || 5.5;
+  const ltv = +document.getElementById('ssLtv').value || 75;
+  const costs = +document.getElementById('ssCosts').value || 5000;
+  if(!price||!gdv||!rent) return;
 
   const fK = n => { n=+n||0; if(Math.abs(n)>=1000000)return'£'+(n/1e6).toFixed(1)+'M'; if(Math.abs(n)>=1000)return'£'+(n/1000).toFixed(0)+'k'; return'£'+Math.round(n); };
-  const scoreColor = r.score>=7?'var(--green)':r.score>=5?'var(--amber)':'var(--red)';
-  const scoreBg = r.score>=7?'rgba(64,208,128,.1)':r.score>=5?'rgba(240,192,64,.1)':'rgba(240,64,64,.1)';
-  const verdict = r.score>=8?'🏆 Excellent — Go for it!':r.score>=6?'✅ Good Deal':r.score>=4?'⚠️ Marginal — Negotiate harder':'❌ Weak Deal — Walk away';
-  const pricePctOfMarket = Math.round(price/r.marketAvg*100);
+  const totalIn = price + refurb + costs;
+  const equity = gdv - totalIn;
+  const cashback = gdv * (ltv/100);
+  const locked = Math.max(0, totalIn - cashback);
+  const recycled = Math.min(100, Math.round(cashback/totalIn*100));
+  const mr = (rate/100)/12;
+  const n = 25*12;
+  const monthlyMtg = cashback*(mr*Math.pow(1+mr,n))/(Math.pow(1+mr,n)-1);
+  const cf = rent - monthlyMtg;
+  const grossYield = (rent*12/gdv)*100;
+  const bmv = price > 0 && gdv > 0 ? ((gdv - price - refurb) / gdv * 100) : 0;
 
-  // Price per m² comparison
-  const pricePerSqm = sqm>0 ? Math.round(price/sqm) : null;
-  const marketPerSqm = sqm>0 ? Math.round(r.marketAvg/75) : null;
+  let score = 0;
+  if(equity>=20000)score+=2;else if(equity>=10000)score+=1;
+  if(locked<=5000)score+=2;else if(locked<=15000)score+=1;
+  if(cf>=200)score+=2;else if(cf>=50)score+=1;
+  if(grossYield>=7)score+=1;else if(grossYield>=5)score+=0.5;
+  if(bmv>=15)score+=2;else if(bmv>=5)score+=1;
+  score = Math.round(Math.min(10,score)*10)/10;
+
+  const scoreColor = score>=7?'var(--green)':score>=5?'var(--amber)':'var(--red)';
+  const verdict = score>=8?'🏆 Excellent — Go for it!':score>=6?'✅ Good Deal':score>=4?'⚠️ Marginal — Negotiate harder':'❌ Weak Deal — Walk away';
+  const pricePerSqm = sqm>0?Math.round(price/sqm):null;
+  const gdvPerSqm = sqm>0?Math.round(gdv/sqm):null;
 
   document.getElementById('ssDealResult').innerHTML = `
-    <div class="deal-score-wrap">
+    <div class="deal-score-wrap" style="margin-top:14px">
       <div class="deal-score-top">
-        <div class="deal-score-num" style="color:${scoreColor}">${r.score}</div>
+        <div class="deal-score-num" style="color:${scoreColor}">${score}</div>
         <div class="deal-score-info">
           <div class="deal-score-title" style="color:${scoreColor}">${verdict}</div>
-          <div class="deal-score-sub">${TYPE_KEY[type]} · ${beds} bed · ${r.data.area} (${r.pc}) · ${r.data.region}</div>
-          <div class="deal-score-sub" style="margin-top:3px">Your price is <strong style="color:${r.bmv>10?'var(--green)':r.bmv>0?'var(--amber)':'var(--red)'}">${pricePctOfMarket}% of market average</strong> (avg: ${fK(r.marketAvg)}) — ${r.bmv>0?`${r.bmv.toFixed(1)}% below market ✅`:`${Math.abs(r.bmv).toFixed(1)}% ABOVE market ⚠️`}</div>
-          ${sqm>0?`<div class="deal-score-sub" style="margin-top:2px">Price/m²: <strong>£${pricePerSqm}</strong> vs market avg £${marketPerSqm}/m² — ${pricePerSqm<marketPerSqm?'✅ Good value':'⚠️ Expensive per m²'}</div>`:''}
+          <div class="deal-score-sub">${postcode} · ${type==='T'?'Terraced':type==='S'?'Semi':type==='D'?'Detached':'Flat'} · ${beds} bed</div>
+          ${sqm>0?`<div class="deal-score-sub">£${pricePerSqm}/m² buy · £${gdvPerSqm}/m² GDV</div>`:''}
         </div>
       </div>
       <div class="deal-metrics">
-        <div class="dm-card"><div class="dm-val" style="color:${r.equity>0?'var(--green)':'var(--red)'}">${fK(r.equity)}</div><div class="dm-lbl">Equity Created</div></div>
-        <div class="dm-card"><div class="dm-val" style="color:var(--gold)">${fK(r.cashback)}</div><div class="dm-lbl">Cash Back (75% LTV)</div></div>
-        <div class="dm-card"><div class="dm-val" style="color:${r.locked<15000?'var(--green)':'var(--red)'}">${fK(r.locked)}</div><div class="dm-lbl">Capital Locked</div></div>
-        <div class="dm-card"><div class="dm-val" style="color:${r.cashflow>0?'var(--green)':'var(--red)'}">${r.cashflow>=0?'+':''}£${Math.round(r.cashflow)}/mo</div><div class="dm-lbl">Monthly Cash Flow</div></div>
-        <div class="dm-card"><div class="dm-val" style="color:var(--cyan)">${r.grossYield.toFixed(1)}%</div><div class="dm-lbl">Gross Yield</div></div>
-        <div class="dm-card"><div class="dm-val" style="color:var(--amber)">${fK(r.refurbCost)}</div><div class="dm-lbl">Est. Refurb</div></div>
-        <div class="dm-card"><div class="dm-val" style="color:var(--gold)">${fK(r.gdv)}</div><div class="dm-lbl">Est. GDV</div></div>
-        <div class="dm-card"><div class="dm-val">${r.recycled}%</div><div class="dm-lbl">Capital Recycled</div></div>
+        <div class="dm-card"><div class="dm-val" style="color:${equity>0?'var(--green)':'var(--red)'}">${fK(equity)}</div><div class="dm-lbl">Equity Created</div></div>
+        <div class="dm-card"><div class="dm-val" style="color:var(--gold)">${fK(cashback)}</div><div class="dm-lbl">Cash Back ${ltv}% LTV</div></div>
+        <div class="dm-card"><div class="dm-val" style="color:${locked<15000?'var(--green)':'var(--red)'}">${fK(locked)}</div><div class="dm-lbl">Capital Locked</div></div>
+        <div class="dm-card"><div class="dm-val" style="color:${cf>0?'var(--green)':'var(--red)'}">${cf>=0?'+':''}£${Math.round(cf)}/mo</div><div class="dm-lbl">Cash Flow</div></div>
+        <div class="dm-card"><div class="dm-val" style="color:var(--cyan)">${grossYield.toFixed(1)}%</div><div class="dm-lbl">Gross Yield</div></div>
+        <div class="dm-card"><div class="dm-val">${recycled}%</div><div class="dm-lbl">Capital Recycled</div></div>
+        <div class="dm-card"><div class="dm-val" style="color:var(--amber)">${fK(refurb)}</div><div class="dm-lbl">Refurb Cost</div></div>
+        <div class="dm-card"><div class="dm-val" style="color:var(--gold)">${fK(gdv)}</div><div class="dm-lbl">Your GDV</div></div>
       </div>
-      <div class="deal-bars">
-        <div class="db-row"><div class="db-label">BMV Discount</div><div class="db-track"><div class="db-fill" style="width:${Math.min(100,Math.max(0,r.bmv*3))}%;background:var(--green)"></div></div><div class="db-val" style="color:var(--green)">${r.bmv.toFixed(1)}%</div></div>
-        <div class="db-row"><div class="db-label">Capital Recycled</div><div class="db-track"><div class="db-fill" style="width:${r.recycled}%;background:var(--gold)"></div></div><div class="db-val" style="color:var(--gold)">${r.recycled}%</div></div>
-        <div class="db-row"><div class="db-label">Area Growth</div><div class="db-track"><div class="db-fill" style="width:${r.data.growth*15}%;background:var(--cyan)"></div></div><div class="db-val" style="color:var(--cyan)">${r.data.growth}%/yr</div></div>
-        <div class="db-row"><div class="db-label">Demand Score</div><div class="db-track"><div class="db-fill" style="width:${r.data.demandScore*10}%;background:var(--amber)"></div></div><div class="db-val" style="color:var(--amber)">${r.data.demandScore}/10</div></div>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn solid" onclick="prefillFromScout(${r.price},${r.refurbCost},${r.gdv},${r.monthlyRent},'${postcode}')">+ Add to Portfolio</button>
-        <a class="btn gold" href="https://www.rightmove.co.uk/house-prices/${r.pc.toLowerCase().replace(' ','-')}.html" target="_blank">Sold prices ${r.pc} ↗</a>
-        <a class="btn" href="https://www.rightmove.co.uk/property-for-sale/find.html?locationIdentifier=POSTCODE%5E${r.pc.replace(' ','')}&maxPrice=${Math.round(price*1.1)}&keywords=modernisation" target="_blank">Rightmove ↗</a>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn solid" onclick="prefillFromScout(${price},${refurb},${gdv},${rent},'${postcode}')">+ Add to Portfolio</button>
+        <a class="btn gold" href="sold-prices.html?pc=${postcode}&price=${price}" target="_blank">🏠 Sold Prices ↗</a>
+        <a class="btn" href="https://www.rightmove.co.uk/house-prices/${postcode.toLowerCase().replace(' ','-')}.html" target="_blank">Rightmove ↗</a>
       </div>
     </div>`;
 }
 
+function scoreDeal(){
+  const postcode = document.getElementById('ssPostcode').value.trim();
+  const price = +document.getElementById('ssPrice').value || 0;
+  const type = document.getElementById('ssType').value;
+  const beds = +document.getElementById('ssBeds').value || 3;
+  if(!postcode||!price){alert('Enter postcode and asking price.');return;}
+
+  const r = calcBRRRScore(price, postcode, type, beds);
+  const fK = n => { n=+n||0; if(Math.abs(n)>=1000000)return'£'+(n/1e6).toFixed(1)+'M'; if(Math.abs(n)>=1000)return'£'+(n/1000).toFixed(0)+'k'; return'£'+Math.round(n); };
+
+  // Show editable assumptions
+  const assumptions = document.getElementById('ssAssumptions');
+  assumptions.style.display = 'block';
+
+  if(r){
+    // Pre-fill with engine estimates
+    document.getElementById('ssRefurb').value = r.refurbCost;
+    document.getElementById('ssRefurbSlider').value = r.refurbCost;
+    document.getElementById('ssGdv').value = r.gdv;
+    document.getElementById('ssGdvSlider').value = r.gdv;
+    document.getElementById('ssRent').value = r.monthlyRent;
+    document.getElementById('ssRentSlider').value = r.monthlyRent;
+    renderScoreResult();
+  } else {
+    // Nationwide — estimate from price
+    const refurbEst = Math.round(price * 0.2 / 1000) * 1000;
+    const gdvEst = Math.round(price * 1.35 / 1000) * 1000;
+    const rentEst = Math.round(gdvEst * 0.072 / 12 / 25) * 25;
+    document.getElementById('ssRefurb').value = refurbEst;
+    document.getElementById('ssRefurbSlider').value = refurbEst;
+    document.getElementById('ssGdv').value = gdvEst;
+    document.getElementById('ssGdvSlider').value = gdvEst;
+    document.getElementById('ssRent').value = rentEst;
+    document.getElementById('ssRentSlider').value = rentEst;
+    renderScoreResult();
+    document.getElementById('ssDealResult').innerHTML += `
+      <div class="note-box" style="margin-top:10px">⚠️ <strong>${postcode}</strong> not in our scoring database — estimates used. Adjust the values above with your own research. <a href="sold-prices.html" target="_blank" style="color:var(--gold)">Check real sold prices ↗</a></div>`;
+  }
+}
 function prefillFromScout(price,refurb,gdv,rent,addr){
   document.getElementById('npAddr').value = addr;
   document.getElementById('npBuy').value = price;
