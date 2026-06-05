@@ -472,7 +472,6 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
       <button class="tnav-btn on" id="tnav-dashboard" onclick="navTo('dashboard')">Dashboard</button>
       <button class="tnav-btn" id="tnav-scout" onclick="navTo('scout')">🔍 Scout</button>
       <button class="tnav-btn" id="tnav-portfolio" onclick="navTo('portfolio')">📊 Portfolio</button>
-      <button class="tnav-btn" id="tnav-analyser" onclick="navTo('analyser')">🤖 Deal AI</button>
       <button class="tnav-btn" id="tnav-contractors" onclick="navTo('contractors')">👷 Contractors</button>
       <button class="tnav-btn" id="tnav-property" onclick="navTo('property')" style="display:none">Property</button>
     </div>
@@ -519,7 +518,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
           <div class="sh-title">Room <span>Planner</span></div>
           <button class="btn gold" onclick="openAddRoom()">+ Add Room</button>
         </div>
-        <div class="note-box">📸 <strong>Upload a photo</strong> of each room → <strong>Analyse with AI</strong> → Claude identifies exactly what needs doing, with costs + urgency. Add your <strong>Anthropic API key</strong> in the top-right ⚙️ to enable AI.</div>
+        <div class="note-box">📸 <strong>Upload a photo</strong> of each room to document condition. Add tasks, costs and dimensions for each room. Tick off tasks as you complete them.</div>
         <div class="rooms-grid" id="roomsGrid"></div>
       </div>
 
@@ -1033,47 +1032,6 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
       <div class="dash-sub">// your full investment picture</div>
     </div>
     <div id="portfolioContent"></div>
-  </div>
-
-  <!-- ═══ DEAL ANALYSER PAGE ═══ -->
-  <div class="page" id="page-analyser">
-    <div class="dash-header">
-      <div class="dash-greeting">🤖 AI Deal <span>Analyser</span></div>
-      <div class="dash-sub">// upload a photo + enter details → Claude analyses the deal</div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px" id="analyserGrid">
-      <div style="grid-column:1/-1">
-        <div class="note-box">📸 <strong>How it works:</strong> Upload a photo of the property exterior or interior, enter the address and asking price → Claude analyses condition, estimates refurb cost, calculates BRRR numbers and gives a Deal Score out of 10.</div>
-      </div>
-      <div class="inp-card">
-        <div class="inp-label">Property Address</div>
-        <input class="inp-field" id="daAddr" placeholder="83 Bishop Road, Sunderland SR2" style="font-size:14px;width:100%">
-      </div>
-      <div class="inp-card">
-        <div class="inp-label">Asking Price £</div>
-        <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="daPrice" type="number" placeholder="100000"></div>
-      </div>
-      <div class="inp-card">
-        <div class="inp-label">Your Max Budget £</div>
-        <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="daBudget" type="number" placeholder="140000"></div>
-      </div>
-      <div class="inp-card">
-        <div class="inp-label">Target Rent £/mo</div>
-        <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="daRent" type="number" placeholder="750"></div>
-      </div>
-      <div style="grid-column:1/-1">
-        <div class="photo-zone" id="daPZ" style="height:180px">
-          <div class="pz-icon">📷</div>
-          <div class="pz-hint">Upload property photo for AI analysis</div>
-          <input type="file" accept="image/*" onchange="loadDaPhoto(event)">
-        </div>
-      </div>
-      <div style="grid-column:1/-1;display:flex;gap:10px;align-items:center">
-        <button class="btn solid" id="daBtn" onclick="analyseDeal()" style="padding:12px 28px;font-size:14px">🤖 Analyse Deal with AI</button>
-        <span id="daStat" style="font-size:12px;color:var(--gold);font-family:var(--mono);display:none">Analysing... give me 15 seconds ⚡</span>
-      </div>
-      <div style="grid-column:1/-1" id="daResult"></div>
-    </div>
   </div>
 
   <!-- ═══ CONTRACTORS PAGE ═══ -->
@@ -2188,13 +2146,9 @@ function renderRooms(){
           <input type="file" accept="image/*" onchange="uploadRoomPhotoAndCache('${r.id}',event)" ${r.photo_url?'style="display:none"':''} id="photoinput-${r.id}">
           ${r.photo_url?`
           <div class="photo-actions">
-            <span id="ast-${r.id}" class="analyzing" style="display:none">🤖 Analysing...</span>
             <button class="photo-action-btn pab-change" onclick="document.getElementById('photochange-${r.id}').click()">📷 Change</button>
             <input type="file" accept="image/*" id="photochange-${r.id}" style="display:none" onchange="uploadRoomPhotoAndCache('${r.id}',event)">
-            <button class="ai-btn" id="abtn-${r.id}" onclick="analyseRoom('${r.id}',event)" ${!localStorage.getItem('aurumApiKey')?'disabled title="Add API key in ⚙️"':''}>
-              ${r.ai_summary?'🔄 Re-analyse':'🤖 AI'}
-            </button>
-            <button class="photo-action-btn pab-delete" onclick="deleteRoomPhoto('${r.id}')">🗑</button>
+            <button class="photo-action-btn pab-delete" onclick="deleteRoomPhoto('${r.id}')">🗑 Remove</button>
           </div>`:
           `<input type="file" accept="image/*" onchange="uploadRoomPhotoAndCache('${r.id}',event)" style="position:absolute;inset:0;opacity:0;cursor:pointer">`}
         </div>
@@ -2696,9 +2650,6 @@ function fmtK(n){
 // Init timeline date
 document.getElementById('tlStart').valueAsDate=new Date();
 document.getElementById('progStart').valueAsDate=new Date();
-
-// API key button in topbar
-document.querySelector('.tbar-right').insertAdjacentHTML('afterbegin','<button class="signout-btn" onclick="openApiModal()" title="AI Setup">⚙️ AI</button>');
 
 // ══════════════════════════════════════════════
 // PROPERTY SCOUT — SMART BRRR ENGINE
