@@ -2074,10 +2074,10 @@ function renderPropHeader(){
       <div>
         <div class="pdh-addr">${p.address}</div>
         <div class="pdh-chips">
-          <div class="chip">Buy £<input class="ti" id="fBuy" value="${p.buy_price}" type="number" style="width:72px" oninput="updatePropField('buy_price',+this.value)" onfocus="this.select()"></div>
-          <div class="chip">Refurb £<input class="ti" id="fRef" value="${p.refurb_budget}" type="number" style="width:72px" oninput="updatePropField('refurb_budget',+this.value)" onfocus="this.select()"></div>
-          <div class="chip gold">GDV £<input class="ti" id="fGdv" value="${p.gdv}" type="number" style="width:72px;color:var(--gold)" oninput="updatePropField('gdv',+this.value)" onfocus="this.select()"></div>
-          <div class="chip">Rent £<input class="ti" id="fRent" value="${p.monthly_rent}" type="number" style="width:55px" oninput="updatePropField('monthly_rent',+this.value)" onfocus="this.select()">/mo</div>
+          <div class="chip">Buy £<input class="ti" id="fBuy" value="${p.buy_price}" type="text" inputmode="numeric" style="width:72px" oninput="updatePropField('buy_price',+this.value)" onfocus="this.select()"></div>
+          <div class="chip">Refurb £<input class="ti" id="fRef" value="${p.refurb_budget}" type="text" inputmode="numeric" style="width:72px" oninput="updatePropField('refurb_budget',+this.value)" onfocus="this.select()"></div>
+          <div class="chip gold">GDV £<input class="ti" id="fGdv" value="${p.gdv}" type="text" inputmode="numeric" style="width:72px;color:var(--gold)" oninput="updatePropField('gdv',+this.value)" onfocus="this.select()"></div>
+          <div class="chip">Rent £<input class="ti" id="fRent" value="${p.monthly_rent}" type="text" inputmode="numeric" style="width:55px" oninput="updatePropField('monthly_rent',+this.value)" onfocus="this.select()">/mo</div>
         </div>
       </div>
       <div class="pdh-kpis">
@@ -2091,11 +2091,13 @@ function renderPropHeader(){
 
 let propUpdateTimer=null;
 function updatePropField(field,val){
-  currentProp[field]=val;
+  // Strip non-numeric characters
+  const num = parseFloat(String(val).replace(/[^0-9.]/g,''))||0;
+  currentProp[field]=num;
   renderPropHeader();
   clearTimeout(propUpdateTimer);
   propUpdateTimer=setTimeout(async()=>{
-    await sb.from('properties').update({[field]:val}).eq('id',currentProp.id);
+    await sb.from('properties').update({[field]:num}).eq('id',currentProp.id);
   },800);
 }
 
