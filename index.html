@@ -629,26 +629,26 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
           <div class="inp-card">
             <div class="inp-label">Purchase Price</div>
             <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="cPurchase" type="number" value="100000" oninput="calcBRRR()"></div>
-            <input class="inp-slider" type="range" min="50000" max="500000" step="5000" value="100000" oninput="document.getElementById('cPurchase').value=this.value;calcBRRR()">
-            <div class="inp-range"><span>£50k</span><span>£500k</span></div>
+            <input class="inp-slider" type="range" min="50000" max="22000000" step="25000" value="100000" oninput="document.getElementById('cPurchase').value=this.value;calcBRRR()">
+            <div class="inp-range"><span>£50k</span><span>£22M</span></div>
           </div>
           <div class="inp-card">
             <div class="inp-label">Refurb Cost</div>
             <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="cRefurb" type="number" value="35000" oninput="calcBRRR()"></div>
-            <input class="inp-slider" type="range" min="5000" max="150000" step="1000" value="35000" oninput="document.getElementById('cRefurb').value=this.value;calcBRRR()">
-            <div class="inp-range"><span>£5k</span><span>£150k</span></div>
+            <input class="inp-slider" type="range" min="5000" max="5000000" step="10000" value="35000" oninput="document.getElementById('cRefurb').value=this.value;calcBRRR()">
+            <div class="inp-range"><span>£5k</span><span>£5M</span></div>
           </div>
           <div class="inp-card">
             <div class="inp-label">GDV After Refurb</div>
             <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="cGdv" type="number" value="165000" oninput="calcBRRR()" style="color:var(--gold)"></div>
-            <input class="inp-slider" type="range" min="50000" max="600000" step="5000" value="165000" oninput="document.getElementById('cGdv').value=this.value;calcBRRR()">
-            <div class="inp-range"><span>£50k</span><span>£600k</span></div>
+            <input class="inp-slider" type="range" min="50000" max="22000000" step="25000" value="165000" oninput="document.getElementById('cGdv').value=this.value;calcBRRR()">
+            <div class="inp-range"><span>£50k</span><span>£22M</span></div>
           </div>
           <div class="inp-card">
             <div class="inp-label">Monthly Rent</div>
             <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="cRent" type="number" value="750" oninput="calcBRRR()"></div>
-            <input class="inp-slider" type="range" min="300" max="3000" step="25" value="750" oninput="document.getElementById('cRent').value=this.value;calcBRRR()">
-            <div class="inp-range"><span>£300</span><span>£3k</span></div>
+            <input class="inp-slider" type="range" min="300" max="50000" step="100" value="750" oninput="document.getElementById('cRent').value=this.value;calcBRRR()">
+            <div class="inp-range"><span>£300</span><span>£50k</span></div>
           </div>
           <div class="inp-card">
             <div class="inp-label">BTL Rate %</div>
@@ -665,8 +665,8 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
           <div class="inp-card">
             <div class="inp-label">Purchase Costs</div>
             <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="cCosts" type="number" value="5000" oninput="calcBRRR()"></div>
-            <input class="inp-slider" type="range" min="1000" max="20000" step="500" value="5000" oninput="document.getElementById('cCosts').value=this.value;calcBRRR()">
-            <div class="inp-range"><span>£1k</span><span>£20k</span></div>
+            <input class="inp-slider" type="range" min="1000" max="500000" step="5000" value="5000" oninput="document.getElementById('cCosts').value=this.value;calcBRRR()">
+            <div class="inp-range"><span>£1k</span><span>£500k</span></div>
           </div>
           <div class="inp-card">
             <div class="inp-label">Mortgage Term</div>
@@ -779,17 +779,17 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
           <div class="inp-card">
             <div class="inp-label">Refurb Cost £</div>
             <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="ssRefurb" type="number" oninput="updateScoreFromEdits()"></div>
-            <input class="inp-slider" type="range" min="5000" max="100000" step="1000" oninput="document.getElementById('ssRefurb').value=this.value;updateScoreFromEdits()" id="ssRefurbSlider">
+            <input class="inp-slider" type="range" min="5000" max="5000000" step="10000" oninput="document.getElementById('ssRefurb').value=this.value;updateScoreFromEdits()" id="ssRefurbSlider">
           </div>
           <div class="inp-card">
             <div class="inp-label">Your GDV Estimate £</div>
             <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="ssGdv" type="number" oninput="updateScoreFromEdits()"></div>
-            <input class="inp-slider" type="range" min="50000" max="600000" step="5000" oninput="document.getElementById('ssGdv').value=this.value;updateScoreFromEdits()" id="ssGdvSlider">
+            <input class="inp-slider" type="range" min="50000" max="22000000" step="25000" oninput="document.getElementById('ssGdv').value=this.value;updateScoreFromEdits()" id="ssGdvSlider">
           </div>
           <div class="inp-card">
             <div class="inp-label">Monthly Rent £</div>
             <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="ssRent" type="number" oninput="updateScoreFromEdits()"></div>
-            <input class="inp-slider" type="range" min="300" max="3000" step="25" oninput="document.getElementById('ssRent').value=this.value;updateScoreFromEdits()" id="ssRentSlider">
+            <input class="inp-slider" type="range" min="300" max="50000" step="100" oninput="document.getElementById('ssRent').value=this.value;updateScoreFromEdits()" id="ssRentSlider">
           </div>
           <div class="inp-card">
             <div class="inp-label">BTL Rate %</div>
@@ -804,7 +804,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
           <div class="inp-card">
             <div class="inp-label">Purchase Costs £</div>
             <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="ssCosts" type="number" value="5000" oninput="updateScoreFromEdits()"></div>
-            <input class="inp-slider" type="range" min="1000" max="20000" step="500" value="5000" oninput="document.getElementById('ssCosts').value=this.value;updateScoreFromEdits()" id="ssCostsSlider">
+            <input class="inp-slider" type="range" min="1000" max="500000" step="5000" value="5000" oninput="document.getElementById('ssCosts').value=this.value;updateScoreFromEdits()" id="ssCostsSlider">
           </div>
         </div>
       </div>
