@@ -509,6 +509,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
         <button class="ptab" onclick="propTab('programme',this)">📋 Programme</button>
         <button class="ptab" onclick="propTab('summary',this)">💰 Summary</button>
         <button class="ptab" onclick="propTab('calculator',this)">⚡ Calculator</button>
+        <button class="ptab" onclick="propTab('finance',this)">🏦 Finance & Risk</button>
         <button class="ptab" onclick="propTab('documents',this)">📄 Documents</button>
       </div>
 
@@ -699,6 +700,130 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
           <div id="calcAmort"></div>
         </div>
       </div>
+      <!-- FINANCE & RISK TAB -->
+      <div id="ptab-finance" class="ptab-content" style="display:none">
+
+        <!-- SUB TABS -->
+        <div style="display:flex;gap:4px;margin-bottom:20px;border-bottom:1px solid var(--border);overflow-x:auto">
+          <button class="ptab on" style="font-size:11px" onclick="finTab('pl',this)">💰 P&L</button>
+          <button class="ptab" style="font-size:11px" onclick="finTab('tax',this)">🏛 Tax & SDLT</button>
+          <button class="ptab" style="font-size:11px" onclick="finTab('cashflow',this)">📊 Cash Flow</button>
+          <button class="ptab" style="font-size:11px" onclick="finTab('risk',this)">⚠️ Risk</button>
+          <button class="ptab" style="font-size:11px" onclick="finTab('legal',this)">⚖️ Legal</button>
+        </div>
+
+        <!-- P&L TAB -->
+        <div id="ftab-pl" class="ftab-content">
+          <div class="note-box">💰 <strong>Full Deal P&L</strong> — every cost included. Numbers auto-filled from your property. Edit any value.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+
+            <!-- COSTS -->
+            <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden">
+              <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;color:var(--red)">📤 All Costs</div>
+              <div id="plCosts"></div>
+              <div style="padding:10px 16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;background:var(--s2)">
+                <span style="font-size:12px;color:var(--muted);font-family:var(--mono)">Total Costs</span>
+                <span style="font-size:15px;font-weight:700;color:var(--red)" id="plTotalCosts">£0</span>
+              </div>
+            </div>
+
+            <!-- INCOME -->
+            <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden">
+              <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;color:var(--green)">📥 Income & Returns</div>
+              <div id="plIncome"></div>
+              <div style="padding:10px 16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;background:var(--s2)">
+                <span style="font-size:12px;color:var(--muted);font-family:var(--mono)">Total Income</span>
+                <span style="font-size:15px;font-weight:700;color:var(--green)" id="plTotalIncome">£0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- NET P&L -->
+          <div id="plResult" style="margin-top:14px"></div>
+        </div>
+
+        <!-- TAX TAB -->
+        <div id="ftab-tax" class="ftab-content" style="display:none">
+          <div class="note-box">🏛 <strong>UK Tax Calculator 2025/26</strong> — SDLT, CGT, Income Tax. Auto-calculated based on your property values.</div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+            <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:16px">
+              <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--gold)">🏛 SDLT Calculator</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div class="sf-group"><div class="sf-label">Purchase Type</div>
+                  <select class="sf-input" id="sdltType" onchange="calcTax()">
+                    <option value="additional">Additional Property (BTL) +3%</option>
+                    <option value="first">First Home</option>
+                    <option value="second">Second Home / Moving</option>
+                  </select>
+                </div>
+                <div class="sf-group"><div class="sf-label">Purchase Price £</div>
+                  <input class="sf-input" id="sdltPrice" type="number" oninput="calcTax()">
+                </div>
+              </div>
+              <div id="sdltResult" style="margin-top:12px"></div>
+            </div>
+
+            <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:16px">
+              <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--gold)">📈 CGT Calculator</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div class="sf-group"><div class="sf-label">Sale Price £</div>
+                  <input class="sf-input" id="cgtSale" type="number" oninput="calcTax()">
+                </div>
+                <div class="sf-group"><div class="sf-label">Total Cost Basis £</div>
+                  <input class="sf-input" id="cgtCost" type="number" oninput="calcTax()">
+                </div>
+                <div class="sf-group"><div class="sf-label">Tax Rate</div>
+                  <select class="sf-input" id="cgtRate" onchange="calcTax()">
+                    <option value="18">18% (Basic rate taxpayer)</option>
+                    <option value="24" selected>24% (Higher rate taxpayer)</option>
+                  </select>
+                </div>
+              </div>
+              <div id="cgtResult" style="margin-top:12px"></div>
+            </div>
+          </div>
+
+          <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:16px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--gold)">💷 Rental Income Tax</div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <div class="sf-group"><div class="sf-label">Annual Rental Income £</div><input class="sf-input" id="itRent" type="number" oninput="calcTax()"></div>
+              <div class="sf-group"><div class="sf-label">Annual Mortgage Interest £</div><input class="sf-input" id="itMortgage" type="number" oninput="calcTax()"></div>
+              <div class="sf-group"><div class="sf-label">Other Allowable Costs £</div><input class="sf-input" id="itCosts" type="number" oninput="calcTax()"></div>
+              <div class="sf-group"><div class="sf-label">Tax Band</div>
+                <select class="sf-input" id="itBand" onchange="calcTax()">
+                  <option value="20">20% Basic Rate</option>
+                  <option value="40" selected>40% Higher Rate</option>
+                  <option value="45">45% Additional Rate</option>
+                </select>
+              </div>
+            </div>
+            <div id="itResult" style="margin-top:12px"></div>
+          </div>
+        </div>
+
+        <!-- CASH FLOW TAB -->
+        <div id="ftab-cashflow" class="ftab-content" style="display:none">
+          <div class="note-box">📊 <strong>Cash Flow Timeline</strong> — track every £ in and out during the BRRR process. Warns you when cash runs low.</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:16px" id="cfInputs"></div>
+          <div id="cfTimeline"></div>
+          <div id="cfWarnings"></div>
+        </div>
+
+        <!-- RISK TAB -->
+        <div id="ftab-risk" class="ftab-content" style="display:none">
+          <div class="note-box">⚠️ <strong>Risk Assessment</strong> — every risk scored and colour-coded. Red = action needed before proceeding.</div>
+          <div id="riskGrid"></div>
+        </div>
+
+        <!-- LEGAL TAB -->
+        <div id="ftab-legal" class="ftab-content" style="display:none">
+          <div class="note-box">⚖️ <strong>Legal & Due Diligence Checklist</strong> — tick off each item. Never miss a critical legal step.</div>
+          <div id="legalList"></div>
+        </div>
+
+      </div>
+
       <!-- DOCUMENTS TAB -->
       <div id="ptab-documents" class="ptab-content" style="display:none">
         <div class="sh">
@@ -1203,8 +1328,414 @@ function propTab(tab,btn){
   document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('on'));
   document.getElementById('ptab-'+tab).style.display='block';
   btn.classList.add('on');
-  if(tab==='timeline')renderTL();
-  if(tab==='programme')renderProgramme();
+  if(tab==='finance') renderFinance();
+
+// ══════════════════════════════════════════════
+// FINANCE & RISK HUB
+// ══════════════════════════════════════════════
+function finTab(tab, btn){
+  document.querySelectorAll('.ftab-content').forEach(p=>p.style.display='none');
+  document.querySelectorAll('#ptab-finance .ptab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('ftab-'+tab).style.display='block';
+  btn.classList.add('on');
+  if(tab==='pl') renderPL();
+  if(tab==='tax') initTax();
+  if(tab==='cashflow') renderCashFlow();
+  if(tab==='risk') renderRisk();
+  if(tab==='legal') renderLegal();
+}
+
+function renderFinance(){
+  renderPL();
+}
+
+// ── P&L ──
+function renderPL(){
+  const p = currentProp;
+  if(!p) return;
+  const buy = p.buy_price||0;
+  const refurb = p.refurb_budget||0;
+  const gdv = p.gdv||0;
+  const rent = p.monthly_rent||0;
+  const matTotal = materials.reduce((s,m)=>s+m.quantity*m.unit_cost,0);
+
+  // SDLT calc (BTL additional 3%)
+  const sdlt = calcSDLT(buy, 'additional');
+  const legalBuy = Math.round(buy*0.008+500);
+  const survey = 600;
+  const brokerFee = 500;
+  const bridgingInterest = Math.round(buy*0.01*3); // 1%/month for 3 months
+  const insurance = Math.round((gdv*0.003/12)*6); // 6 months building insurance
+  const councilTax = 1800; // 6 months
+  const utilities = 600;
+  const contingency = Math.round(refurb*0.1);
+  const legalSell = Math.round(gdv*0.01);
+  const agentFee = Math.round(gdv*0.015);
+  const totalCosts = buy+refurb+sdlt+legalBuy+survey+brokerFee+bridgingInterest+insurance+councilTax+utilities+contingency;
+
+  const cashback = gdv*0.75;
+  const annualRent = rent*12;
+  const grossYield = gdv>0?(annualRent/gdv*100).toFixed(1):0;
+  const equity = gdv - totalCosts;
+  const netProfit5yr = (rent*12*5)+(gdv-buy-refurb-sdlt-legalBuy)-Math.round(cashback*0.055*5);
+
+  const fK = n => { n=+n||0; if(Math.abs(n)>=1000000)return'£'+(n/1e6).toFixed(2)+'M'; if(Math.abs(n)>=1000)return'£'+(n/1000).toFixed(0)+'k'; return'£'+Math.round(n); };
+
+  const costRows = [
+    {label:'Purchase Price',val:buy,cat:'purchase'},
+    {label:'SDLT (BTL +3%)',val:sdlt,cat:'purchase',warn:true},
+    {label:'Legal Fees (Buy)',val:legalBuy,cat:'purchase'},
+    {label:'Survey / Valuation',val:survey,cat:'purchase'},
+    {label:'Mortgage Broker Fee',val:brokerFee,cat:'purchase'},
+    {label:'Bridging Interest (3mo)',val:bridgingInterest,cat:'finance'},
+    {label:'Refurbishment Budget',val:refurb,cat:'refurb'},
+    {label:'Materials',val:matTotal,cat:'refurb'},
+    {label:'Contingency (10%)',val:contingency,cat:'refurb',warn:true},
+    {label:'Building Insurance (6mo)',val:insurance,cat:'holding'},
+    {label:'Council Tax (6mo)',val:councilTax,cat:'holding'},
+    {label:'Utilities (6mo)',val:utilities,cat:'holding'},
+  ];
+
+  const incomeRows = [
+    {label:'GDV (After Refurb Value)',val:gdv,cat:'capital'},
+    {label:'Refinance Cash Back (75%)',val:Math.round(cashback),cat:'capital'},
+    {label:'Equity Created',val:Math.round(equity),cat:'capital'},
+    {label:'Annual Rental Income',val:annualRent,cat:'rental'},
+    {label:'Monthly Cash Flow',val:Math.round(rent-(cashback*0.055/12)),cat:'rental'},
+    {label:'5-Year Rental Income',val:rent*12*5,cat:'rental'},
+    {label:'Gross Yield',val:null,txt:grossYield+'%',cat:'yield'},
+  ];
+
+  const catColors = {purchase:'var(--red)',finance:'var(--amber)',refurb:'var(--amber)',holding:'var(--muted)',capital:'var(--green)',rental:'var(--cyan)',yield:'var(--gold)'};
+
+  document.getElementById('plCosts').innerHTML = costRows.map(r=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-bottom:1px solid var(--border)">
+      <div>
+        <span style="font-size:11px;font-family:var(--mono);color:var(--text)">${r.label}</span>
+        ${r.warn?'<span style="font-size:9px;color:var(--amber);margin-left:6px;font-family:var(--mono)">⚠️ often forgotten</span>':''}
+      </div>
+      <span style="font-size:13px;font-weight:600;color:${catColors[r.cat]}">${fK(r.val)}</span>
+    </div>`).join('');
+
+  document.getElementById('plIncome').innerHTML = incomeRows.map(r=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-bottom:1px solid var(--border)">
+      <span style="font-size:11px;font-family:var(--mono);color:var(--text)">${r.label}</span>
+      <span style="font-size:13px;font-weight:600;color:${catColors[r.cat]}">${r.txt||fK(r.val)}</span>
+    </div>`).join('');
+
+  document.getElementById('plTotalCosts').textContent = fK(totalCosts);
+  document.getElementById('plTotalIncome').textContent = fK(gdv+annualRent*5);
+
+  const netEquity = gdv - totalCosts;
+  const netColor = netEquity>0?'var(--green)':'var(--red)';
+  document.getElementById('plResult').innerHTML = `
+    <div style="background:var(--s1);border:1px solid ${netColor};border-radius:var(--r2);padding:18px 20px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
+        <div style="text-align:center">
+          <div style="font-size:28px;font-weight:800;color:${netColor}">${fK(netEquity)}</div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-top:3px">Net Equity (Day 1)</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:28px;font-weight:800;color:var(--gold)">${fK(Math.round(cashback))}</div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-top:3px">Cash Recycled</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:28px;font-weight:800;color:var(--cyan)">${fK(netProfit5yr)}</div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-top:3px">5-Year Net Profit</div>
+        </div>
+        <div style="text-align:center">
+          <div style="font-size:28px;font-weight:800;color:var(--amber)">${fK(totalCosts-buy)}</div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-top:3px">Total Extra Costs</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── SDLT CALC ──
+function calcSDLT(price, type){
+  if(type==='additional'){
+    // 2025/26 BTL rates with 3% surcharge
+    let tax = 0;
+    const bands = [{min:0,max:125000,rate:0.03},{min:125000,max:250000,rate:0.05},{min:250000,max:925000,rate:0.08},{min:925000,max:1500000,rate:0.13},{min:1500000,max:Infinity,rate:0.15}];
+    bands.forEach(b=>{if(price>b.min){tax+=(Math.min(price,b.max)-b.min)*b.rate;}});
+    return Math.round(tax);
+  } else if(type==='first'){
+    if(price<=425000) return 0;
+    let tax = 0;
+    const bands = [{min:425000,max:625000,rate:0.05}];
+    bands.forEach(b=>{if(price>b.min){tax+=(Math.min(price,b.max)-b.min)*b.rate;}});
+    return Math.round(tax);
+  } else {
+    let tax = 0;
+    const bands = [{min:0,max:250000,rate:0},{min:250000,max:925000,rate:0.05},{min:925000,max:1500000,rate:0.10},{min:1500000,max:Infinity,rate:0.12}];
+    bands.forEach(b=>{if(price>b.min){tax+=(Math.min(price,b.max)-b.min)*b.rate;}});
+    return Math.round(tax);
+  }
+}
+
+function initTax(){
+  const p = currentProp;
+  if(p){
+    document.getElementById('sdltPrice').value = p.buy_price||0;
+    document.getElementById('cgtSale').value = p.gdv||0;
+    document.getElementById('cgtCost').value = (p.buy_price||0)+(p.refurb_budget||0)+5000;
+    document.getElementById('itRent').value = (p.monthly_rent||0)*12;
+    document.getElementById('itMortgage').value = Math.round((p.gdv||0)*0.75*0.055);
+  }
+  calcTax();
+}
+
+function calcTax(){
+  const fK = n => { n=+n||0; if(Math.abs(n)>=1000000)return'£'+(n/1e6).toFixed(2)+'M'; if(Math.abs(n)>=1000)return'£'+(n/1000).toFixed(0)+'k'; return'£'+Math.round(n); };
+
+  // SDLT
+  const sdltPrice = +document.getElementById('sdltPrice').value||0;
+  const sdltType = document.getElementById('sdltType').value;
+  const sdlt = calcSDLT(sdltPrice, sdltType);
+  const sdltPct = sdltPrice>0?(sdlt/sdltPrice*100).toFixed(2):0;
+  document.getElementById('sdltResult').innerHTML = `
+    <div style="background:var(--s2);border-radius:var(--r);padding:12px">
+      <div style="font-size:22px;font-weight:800;color:var(--red)">${fK(sdlt)}</div>
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px">${sdltPct}% of purchase price</div>
+      ${sdltType==='additional'?'<div style="font-size:10px;color:var(--amber);margin-top:6px;font-family:var(--mono)">⚠️ Includes 3% BTL surcharge — pay within 14 days of completion</div>':''}
+    </div>`;
+
+  // CGT
+  const cgtSale = +document.getElementById('cgtSale').value||0;
+  const cgtCost = +document.getElementById('cgtCost').value||0;
+  const cgtRate = +document.getElementById('cgtRate').value||24;
+  const gain = Math.max(0, cgtSale-cgtCost);
+  const allowance = 3000; // 2025/26 CGT allowance
+  const taxableGain = Math.max(0, gain-allowance);
+  const cgtDue = Math.round(taxableGain*(cgtRate/100));
+  const netProfit = gain - cgtDue;
+  document.getElementById('cgtResult').innerHTML = `
+    <div style="background:var(--s2);border-radius:var(--r);padding:12px">
+      <div style="font-size:18px;font-weight:800;color:var(--red)">${fK(cgtDue)} CGT</div>
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px">Gain: ${fK(gain)} · After allowance: ${fK(taxableGain)}</div>
+      <div style="font-size:11px;color:var(--green);margin-top:4px;font-family:var(--mono)">Net profit after CGT: ${fK(netProfit)}</div>
+      <div style="font-size:10px;color:var(--amber);margin-top:6px;font-family:var(--mono)">⚠️ Due within 60 days of sale completion</div>
+    </div>`;
+
+  // Income Tax
+  const itRent = +document.getElementById('itRent').value||0;
+  const itMtg = +document.getElementById('itMortgage').value||0;
+  const itCosts = +document.getElementById('itCosts').value||0;
+  const itBand = +document.getElementById('itBand').value||40;
+  const taxableIncome = Math.max(0, itRent-itCosts);
+  const mortgageRelief = Math.round(itMtg*0.20); // 20% basic rate relief only
+  const itDue = Math.round(taxableIncome*(itBand/100)) - mortgageRelief;
+  const netRental = itRent - itCosts - Math.max(0,itDue);
+  document.getElementById('itResult').innerHTML = `
+    <div style="background:var(--s2);border-radius:var(--r);padding:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+      <div><div style="font-size:16px;font-weight:700;color:var(--red)">${fK(Math.max(0,itDue))}</div><div style="font-size:10px;color:var(--muted);font-family:var(--mono)">Tax Due/Year</div></div>
+      <div><div style="font-size:16px;font-weight:700;color:var(--amber)">${fK(mortgageRelief)}</div><div style="font-size:10px;color:var(--muted);font-family:var(--mono)">Mortgage Relief</div></div>
+      <div><div style="font-size:16px;font-weight:700;color:var(--green)">${fK(netRental)}</div><div style="font-size:10px;color:var(--muted);font-family:var(--mono)">Net After Tax</div></div>
+    </div>`;
+}
+
+// ── CASH FLOW ──
+function renderCashFlow(){
+  const p = currentProp;
+  if(!p) return;
+  const buy = p.buy_price||0;
+  const refurb = p.refurb_budget||0;
+  const gdv = p.gdv||0;
+  const rent = p.monthly_rent||0;
+  const sdlt = calcSDLT(buy,'additional');
+  const legal = Math.round(buy*0.008+500);
+  const bridging = Math.round(buy*0.75*0.01); // monthly bridging cost
+  const cashback = Math.round(gdv*0.75);
+  const monthlyMtg = Math.round(cashback*0.055/12);
+  const fK = n => { n=+n||0; if(n>=0)?'£'+Math.abs(n).toLocaleString():'-£'+Math.abs(n).toLocaleString(); };
+  const fKS = n => { n=+n||0; return (n>=0?'+':'')+( Math.abs(n)>=1000 ? (n>=0?'£':'-£')+(Math.abs(n)/1000).toFixed(0)+'k' : (n>=0?'£':'-£')+Math.abs(Math.round(n))); };
+
+  const months = [
+    {mo:'Month 1',label:'Purchase + Deposit',cash:-(buy*0.25+sdlt+legal+500),note:'Deposit 25% + SDLT + legal + broker'},
+    {mo:'Month 2',label:'Refurb starts',cash:-(refurb*0.4+bridging),note:'40% refurb upfront + bridging interest'},
+    {mo:'Month 3',label:'Refurb continues',cash:-(refurb*0.4+bridging),note:'Remaining refurb + bridging interest'},
+    {mo:'Month 4',label:'Refurb complete',cash:-(refurb*0.2+bridging+500),note:'Final 20% refurb + snagging'},
+    {mo:'Month 5',label:'Refinance',cash:cashback-(buy*0.75),note:'BTL mortgage completes — cash back in'},
+    {mo:'Month 6',label:'Let & First Rent',cash:rent-monthlyMtg-500,note:'First rental income minus mortgage + setup'},
+    {mo:'Month 7',label:'Rental',cash:rent-monthlyMtg,note:'Regular monthly cash flow'},
+    {mo:'Month 8',label:'Rental',cash:rent-monthlyMtg,note:'Regular monthly cash flow'},
+    {mo:'Month 9',label:'Rental',cash:rent-monthlyMtg,note:'Regular monthly cash flow'},
+    {mo:'Month 10',label:'Rental',cash:rent-monthlyMtg,note:'Regular monthly cash flow'},
+    {mo:'Month 11',label:'Rental',cash:rent-monthlyMtg,note:'Regular monthly cash flow'},
+    {mo:'Month 12',label:'Rental',cash:rent-monthlyMtg,note:'Regular monthly cash flow'},
+  ];
+
+  let running = 0;
+  let minCash = 0;
+  const rows = months.map(m=>{
+    running += m.cash;
+    minCash = Math.min(minCash, running);
+    const col = running>=0?'var(--green)':'var(--red)';
+    const cashCol = m.cash>=0?'var(--green)':'var(--red)';
+    return `<tr style="border-bottom:1px solid var(--border)">
+      <td style="padding:9px 13px;font-size:12px;font-weight:600;font-family:var(--mono);color:var(--gold)">${m.mo}</td>
+      <td style="padding:9px 13px;font-size:12px;font-family:var(--mono)">${m.label}</td>
+      <td style="padding:9px 13px;font-size:12px;font-weight:700;color:${cashCol};font-family:var(--mono)">${fKS(m.cash)}</td>
+      <td style="padding:9px 13px;font-size:13px;font-weight:800;color:${col};font-family:var(--mono)">${fKS(running)}</td>
+      <td style="padding:9px 13px;font-size:11px;color:var(--muted);font-family:var(--mono)">${m.note}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('cfTimeline').innerHTML = `
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:14px">
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr>
+          <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono)">Period</th>
+          <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono)">Event</th>
+          <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono)">Month Cash</th>
+          <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono)">Running Total</th>
+          <th style="padding:9px 13px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono)">Notes</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+
+  document.getElementById('cfWarnings').innerHTML = `
+    <div style="background:rgba(240,64,64,.06);border:1px solid rgba(240,64,64,.2);border-radius:var(--r2);padding:14px 16px">
+      <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:8px">⚠️ Cash Flow Warnings</div>
+      <div style="font-size:12px;font-family:var(--mono);color:var(--text);line-height:1.7">
+        • Maximum cash out at any point: <strong style="color:var(--red)">£${Math.abs(minCash).toLocaleString()}</strong> — make sure you have this available<br>
+        • You need minimum <strong style="color:var(--amber)">£${Math.round(Math.abs(minCash)*1.2).toLocaleString()}</strong> liquid cash (add 20% buffer)<br>
+        • Bridging loan period: <strong>~4 months</strong> — cost: £${(bridging*4).toLocaleString()}<br>
+        • Cash flow turns positive at <strong style="color:var(--green)">Month 5</strong> after refinance<br>
+        • Annual cash flow after refinance: <strong style="color:var(--green)">£${((rent-monthlyMtg)*12).toLocaleString()}</strong>
+      </div>
+    </div>`;
+}
+
+// ── RISK ──
+function renderRisk(){
+  const p = currentProp;
+  if(!p) return;
+  const buy = p.buy_price||0;
+  const refurb = p.refurb_budget||0;
+  const gdv = p.gdv||0;
+  const bmv = gdv>0?((gdv-buy-refurb)/gdv*100):0;
+
+  const risks = [
+    {cat:'Financial',name:'Refurb Cost Overrun',level:refurb>50000?'high':'medium',prob:'High',impact:'Medium',mitigation:'Add 15-20% contingency. Get 3 quotes. Fix-price contracts where possible.',tip:'Most refurbs overrun by 10-20%. Budget £'+Math.round(refurb*0.15).toLocaleString()+' extra.'},
+    {cat:'Financial',name:'Refinance Valuation Shortfall',level:bmv<15?'high':'low',prob:bmv<15?'Medium':'Low',impact:'High',mitigation:'Buy at minimum 20% BMV. Get RICS valuation before purchase. Use local BTL-friendly lender.',tip:bmv<15?'⚠️ Only '+bmv.toFixed(0)+'% BMV — risky. Negotiate lower or walk away.':'✅ Good BMV at '+bmv.toFixed(0)+'%'},
+    {cat:'Financial',name:'Void Periods',level:'medium',prob:'Medium',impact:'Medium',mitigation:'Instruct letting agent before completion. Target high-demand areas. Set aside 1 month rent reserve.',tip:'Budget for 4-6 weeks void per year.'},
+    {cat:'Financial',name:'Interest Rate Rise',level:'low',prob:'Low',impact:'Medium',mitigation:'Stress test at 7.5% and 8.5%. Consider 5-year fixed rate BTL mortgage.',tip:'Current BTL rates ~5.5%. At 7%: recalculate cash flow.'},
+    {cat:'Property',name:'Structural Issues Found',level:'medium',prob:'Low',impact:'Very High',mitigation:'Always get full structural survey. Include in offer. Budget £5-15k for unknowns.',tip:'Never skip the survey. Cost: £600-900. Could save £20k+.'},
+    {cat:'Property',name:'Damp / Japanese Knotweed',level:'medium',prob:'Medium',impact:'High',mitigation:'Check during viewing. Get specialist report. Knotweed = mortgage refusal risk.',tip:'Damp: £800-5k. Knotweed: £2k-10k to treat. Can affect refinance.'},
+    {cat:'Legal',name:'Planning / Building Regs Issues',level:'low',prob:'Low',impact:'High',mitigation:'Check planning history on council website. Get indemnity insurance for historical works.',tip:'Unpermitted extensions = big problem at refinance.'},
+    {cat:'Legal',name:'Leasehold Issues',level:p.address?.toLowerCase().includes('flat')?'high':'low',prob:'Low',impact:'High',mitigation:'Check lease length (min 85 years for mortgage). Check service charges and ground rent.',tip:'Short lease = unmortgageable. Always check.'},
+    {cat:'Market',name:'Property Value Drop',level:'low',prob:'Low',impact:'High',mitigation:'Focus on strong rental demand areas. BRRR works in all markets if bought at BMV.',tip:'Sunderland, Hull, Liverpool — strong rental demand protects value.'},
+    {cat:'Operational',name:'Bad Tenants / Arrears',level:'medium',prob:'Medium',impact:'Medium',mitigation:'Thorough referencing. Rent Guarantee Insurance. Section 21 served correctly.',tip:'Rent Guarantee Insurance: ~£150/year. Worth every penny.'},
+  ];
+
+  const levelColor = l => l==='high'?'var(--red)':l==='medium'?'var(--amber)':'var(--green)';
+  const levelBg = l => l==='high'?'rgba(240,64,64,.08)':l==='medium'?'rgba(240,192,64,.08)':'rgba(64,208,128,.08)';
+
+  document.getElementById('riskGrid').innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:10px">
+      ${risks.map(r=>`
+      <div style="background:${levelBg(r.level)};border:1px solid ${levelColor(r.level)};border-radius:var(--r2);padding:14px 16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:10px;padding:2px 8px;border-radius:6px;background:${levelBg(r.level)};color:${levelColor(r.level)};border:1px solid ${levelColor(r.level)};font-family:var(--mono);font-weight:600">${r.level.toUpperCase()}</span>
+          <span style="font-size:13px;font-weight:700">${r.name}</span>
+          <span style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-left:auto">${r.cat}</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px">
+          <div style="font-size:11px;font-family:var(--mono);color:var(--muted)">
+            Probability: <strong style="color:var(--text)">${r.prob}</strong><br>
+            Impact: <strong style="color:var(--text)">${r.impact}</strong>
+          </div>
+          <div>
+            <div style="font-size:11px;font-family:var(--mono);color:var(--text);margin-bottom:4px">✅ ${r.mitigation}</div>
+            <div style="font-size:10px;font-family:var(--mono);color:var(--muted)">💡 ${r.tip}</div>
+          </div>
+        </div>
+      </div>`).join('')}
+    </div>`;
+}
+
+// ── LEGAL CHECKLIST ──
+function renderLegal(){
+  const checks = [
+    {phase:'Pre-Offer',items:[
+      'Check planning history on local council website',
+      'Check flood risk at gov.uk/check-flood-risk',
+      'Check Land Registry title for restrictions/covenants',
+      'Check if property is leasehold — minimum 85 years remaining',
+      'Check EPC rating — minimum E for rental',
+      'Verify no Japanese Knotweed on or near property',
+      'Check neighbouring properties for planning applications',
+      'Check property is not listed building (extra refurb restrictions)',
+    ]},
+    {phase:'Offer Accepted',items:[
+      'Instruct solicitor immediately',
+      'Book full structural survey (not just mortgage valuation)',
+      'Arrange bridging finance or cash — have funds ready',
+      'Request all planning permissions and building regs certificates from seller',
+      'Check if any works done without permission — get indemnity insurance',
+      'Verify there are no sitting tenants',
+      'Check service charges and ground rent if leasehold',
+    ]},
+    {phase:'Exchange & Completion',items:[
+      'Buildings insurance in place from exchange date',
+      'SDLT payment ready — due within 14 days of completion',
+      'Final walkthrough on completion day — verify condition matches survey',
+      'Utility meters read and registered in your name',
+      'Change locks on completion day',
+      'Notify council for empty property council tax reduction',
+    ]},
+    {phase:'During Refurb',items:[
+      'Notify council building control for structural works',
+      'Electrical work by Part P certified electrician — EICR certificate',
+      'Gas work by Gas Safe registered engineer',
+      'Planning permission for any extensions or changes to external appearance',
+      'Keep all receipts for tax purposes (allowable expenses)',
+    ]},
+    {phase:'Before Letting',items:[
+      'EPC certificate (minimum E) — £80-120',
+      'EICR (Electrical Installation Condition Report) — £150-200',
+      'Gas safety certificate — £80-100',
+      'Smoke alarms on every floor (tested)',
+      'Carbon monoxide alarm in every room with gas appliance',
+      'Deposit registered with approved scheme within 30 days',
+      'How to Rent guide given to tenant',
+      'Buildings and landlord insurance in place',
+      'Section 21 notice procedures understood',
+    ]},
+    {phase:'Refinance',items:[
+      'Instruct RICS valuer — choose one familiar with BTL',
+      'Provide refurb receipts to support valuation',
+      'Buildings insurance updated to new mortgage lender',
+      'Redemption statement from bridging lender',
+      'Confirm mortgage offer matches expected terms',
+    ]},
+  ];
+
+  const stored = JSON.parse(localStorage.getItem('aurumLegal_'+currentProp?.id)||'{}');
+
+  document.getElementById('legalList').innerHTML = checks.map(phase=>`
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:12px">
+      <div style="padding:10px 16px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--gold);background:var(--s2)">${phase.phase}</div>
+      ${phase.items.map((item,i)=>{
+        const key = phase.phase+'_'+i;
+        const done = stored[key];
+        return `<div class="cl-item${done?' done':''}" id="legal-${key.replace(/[^a-z0-9]/gi,'')}" onclick="toggleLegal('${key}')" style="padding:9px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s">
+          <input type="checkbox" style="accent-color:var(--gold);cursor:pointer;width:14px;height:14px;flex-shrink:0" ${done?'checked':''} onclick="event.stopPropagation();toggleLegal('${key}')">
+          <span style="font-size:12px;font-family:var(--mono);${done?'text-decoration:line-through;color:var(--dim)':''}">${item}</span>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function toggleLegal(key){
+  if(!currentProp) return;
+  const stored = JSON.parse(localStorage.getItem('aurumLegal_'+currentProp.id)||'{}');
+  stored[key] = !stored[key];
+  localStorage.setItem('aurumLegal_'+currentProp.id, JSON.stringify(stored));
+  renderLegal();
+}
   if(tab==='summary')renderSummary();
   if(tab==='materials')renderMaterials();
   if(tab==='calculator'){
@@ -1333,7 +1864,7 @@ function renderProgramme(){
       <div style="flex:1;position:relative;height:44px;min-width:${totalW}px">
         ${weekHeaders}
         ${todayWD>0&&todayWD>=p.startWD&&todayWD<=p.endWD?`<div style="position:absolute;left:${todayWD*DAY_W}px;top:0;bottom:0;width:2px;background:var(--red);opacity:.7;z-index:5"><div style="font-size:8px;color:var(--red);font-family:var(--mono);position:absolute;top:0;left:2px;white-space:nowrap">TODAY</div></div>`:''}
-        <div style="position:absolute;left:${barL}px;width:${barW}px;height:26px;top:9px;border-radius:5px;background:${p.col};opacity:${p.done?.4:.8};display:flex;align-items:center;padding:0 7px;font-size:10px;font-weight:600;color:${isLight?'#000':'#fff'};cursor:pointer;white-space:nowrap;overflow:hidden"
+        <div style="position:absolute;left:${barL}px;width:${barW}px;height:26px;top:9px;border-radius:5px;background:${p.col};opacity:${p.done?0.4:0.8};display:flex;align-items:center;padding:0 7px;font-size:10px;font-weight:600;color:${isLight?'#000':'#fff'};cursor:pointer;white-space:nowrap;overflow:hidden"
           onclick="PROG_PHASES[${i}].done=!PROG_PHASES[${i}].done;renderProgramme()">
           ${p.days}d${p.done?' ✓':''}
         </div>
