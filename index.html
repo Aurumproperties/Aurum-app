@@ -2091,14 +2091,30 @@ function renderPropHeader(){
 
 let propUpdateTimer=null;
 function updatePropField(field,val){
-  // Strip non-numeric characters
   const num = parseFloat(String(val).replace(/[^0-9.]/g,''))||0;
   currentProp[field]=num;
-  renderPropHeader();
+  // Only update KPIs — do NOT re-render full header (loses focus)
+  updateKPIs();
   clearTimeout(propUpdateTimer);
   propUpdateTimer=setTimeout(async()=>{
     await sb.from('properties').update({[field]:num}).eq('id',currentProp.id);
   },800);
+}
+
+function updateKPIs(){
+  const p=currentProp;
+  const totalIn=p.buy_price+p.refurb_budget+5000;
+  const equity=p.gdv-totalIn;
+  const cashback=p.gdv*.75;
+  const locked=Math.max(0,totalIn-cashback);
+  const cf=p.monthly_rent-(cashback*.055/12);
+  // Only update KPI values — inputs keep focus
+  const kpis=document.querySelectorAll('.pdh-kpis .kpi-v');
+  if(kpis[0]) kpis[0].textContent='£'+fmtK(equity);
+  if(kpis[1]) kpis[1].textContent='£'+fmtK(cashback);
+  if(kpis[2]) kpis[2].textContent='£'+fmtK(locked);
+  if(kpis[3]) kpis[3].textContent=(cf>=0?'+':'')+'£'+Math.round(cf)+'/mo';
+  if(kpis[3]) kpis[3].className='kpi-v '+(cf>=0?'g':'r');
 }
 
 async function uploadPropThumb(e){
