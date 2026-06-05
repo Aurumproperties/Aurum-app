@@ -628,25 +628,25 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
         <div class="inputs-grid">
           <div class="inp-card">
             <div class="inp-label">Purchase Price</div>
-            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="cPurchase" type="number" value="100000" oninput="calcBRRR()"></div>
+            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="cPurchase" onfocus="this.select()" type="number" value="100000" oninput="calcBRRR()"></div>
             <input class="inp-slider" type="range" min="50000" max="22000000" step="25000" value="100000" oninput="document.getElementById('cPurchase').value=this.value;calcBRRR()">
             <div class="inp-range"><span>£50k</span><span>£22M</span></div>
           </div>
           <div class="inp-card">
             <div class="inp-label">Refurb Cost</div>
-            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="cRefurb" type="number" value="35000" oninput="calcBRRR()"></div>
+            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="cRefurb" onfocus="this.select()" type="number" value="35000" oninput="calcBRRR()"></div>
             <input class="inp-slider" type="range" min="5000" max="5000000" step="10000" value="35000" oninput="document.getElementById('cRefurb').value=this.value;calcBRRR()">
             <div class="inp-range"><span>£5k</span><span>£5M</span></div>
           </div>
           <div class="inp-card">
             <div class="inp-label">GDV After Refurb</div>
-            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="cGdv" type="number" value="165000" oninput="calcBRRR()" style="color:var(--gold)"></div>
+            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="cGdv" onfocus="this.select()" type="number" value="165000" oninput="calcBRRR()" style="color:var(--gold)"></div>
             <input class="inp-slider" type="range" min="50000" max="22000000" step="25000" value="165000" oninput="document.getElementById('cGdv').value=this.value;calcBRRR()">
             <div class="inp-range"><span>£50k</span><span>£22M</span></div>
           </div>
           <div class="inp-card">
             <div class="inp-label">Monthly Rent</div>
-            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="cRent" type="number" value="750" oninput="calcBRRR()"></div>
+            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="cRent" onfocus="this.select()" type="number" value="750" oninput="calcBRRR()"></div>
             <input class="inp-slider" type="range" min="300" max="50000" step="100" value="750" oninput="document.getElementById('cRent').value=this.value;calcBRRR()">
             <div class="inp-range"><span>£300</span><span>£50k</span></div>
           </div>
@@ -902,17 +902,17 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
         <div class="inputs-grid" style="margin-bottom:0">
           <div class="inp-card">
             <div class="inp-label">Refurb Cost £</div>
-            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="ssRefurb" type="number" oninput="updateScoreFromEdits()"></div>
+            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="ssRefurb" onfocus="this.select()" type="number" oninput="updateScoreFromEdits()"></div>
             <input class="inp-slider" type="range" min="5000" max="5000000" step="10000" oninput="document.getElementById('ssRefurb').value=this.value;updateScoreFromEdits()" id="ssRefurbSlider">
           </div>
           <div class="inp-card">
             <div class="inp-label">Your GDV Estimate £</div>
-            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="ssGdv" type="number" oninput="updateScoreFromEdits()"></div>
+            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="ssGdv" onfocus="this.select()" type="number" oninput="updateScoreFromEdits()"></div>
             <input class="inp-slider" type="range" min="50000" max="22000000" step="25000" oninput="document.getElementById('ssGdv').value=this.value;updateScoreFromEdits()" id="ssGdvSlider">
           </div>
           <div class="inp-card">
             <div class="inp-label">Monthly Rent £</div>
-            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="ssRent" type="number" oninput="updateScoreFromEdits()"></div>
+            <div class="inp-wrap"><span class="inp-prefix">£</span><input class="inp-field" id="ssRent" onfocus="this.select()" type="number" oninput="updateScoreFromEdits()"></div>
             <input class="inp-slider" type="range" min="300" max="50000" step="100" oninput="document.getElementById('ssRent').value=this.value;updateScoreFromEdits()" id="ssRentSlider">
           </div>
           <div class="inp-card">
@@ -2074,10 +2074,10 @@ function renderPropHeader(){
       <div>
         <div class="pdh-addr">${p.address}</div>
         <div class="pdh-chips">
-          <div class="chip">Buy £<input class="ti" id="fBuy" value="${p.buy_price}" type="number" style="width:72px" oninput="updatePropField('buy_price',+this.value)"></div>
-          <div class="chip">Refurb £<input class="ti" id="fRef" value="${p.refurb_budget}" type="number" style="width:72px" oninput="updatePropField('refurb_budget',+this.value)"></div>
-          <div class="chip gold">GDV £<input class="ti" id="fGdv" value="${p.gdv}" type="number" style="width:72px;color:var(--gold)" oninput="updatePropField('gdv',+this.value)"></div>
-          <div class="chip">Rent £<input class="ti" id="fRent" value="${p.monthly_rent}" type="number" style="width:55px" oninput="updatePropField('monthly_rent',+this.value)">/mo</div>
+          <div class="chip">Buy £<input class="ti" id="fBuy" value="${p.buy_price}" type="number" style="width:72px" oninput="updatePropField('buy_price',+this.value)" onfocus="this.select()"></div>
+          <div class="chip">Refurb £<input class="ti" id="fRef" value="${p.refurb_budget}" type="number" style="width:72px" oninput="updatePropField('refurb_budget',+this.value)" onfocus="this.select()"></div>
+          <div class="chip gold">GDV £<input class="ti" id="fGdv" value="${p.gdv}" type="number" style="width:72px;color:var(--gold)" oninput="updatePropField('gdv',+this.value)" onfocus="this.select()"></div>
+          <div class="chip">Rent £<input class="ti" id="fRent" value="${p.monthly_rent}" type="number" style="width:55px" oninput="updatePropField('monthly_rent',+this.value)" onfocus="this.select()">/mo</div>
         </div>
       </div>
       <div class="pdh-kpis">
