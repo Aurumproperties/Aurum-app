@@ -1505,7 +1505,7 @@ function renderCashFlow(){
   const bridging = Math.round(buy*0.75*0.01); // monthly bridging cost
   const cashback = Math.round(gdv*0.75);
   const monthlyMtg = Math.round(cashback*0.055/12);
-  const fK = n => { n=+n||0; if(n>=0)?'£'+Math.abs(n).toLocaleString():'-£'+Math.abs(n).toLocaleString(); };
+  const fK = n => { n=+n||0; return n>=0?'£'+Math.abs(n).toLocaleString():'-£'+Math.abs(n).toLocaleString(); };
   const fKS = n => { n=+n||0; return (n>=0?'+':'')+( Math.abs(n)>=1000 ? (n>=0?'£':'-£')+(Math.abs(n)/1000).toFixed(0)+'k' : (n>=0?'£':'-£')+Math.abs(Math.round(n))); };
 
   const months = [
