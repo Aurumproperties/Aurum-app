@@ -747,18 +747,33 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
             <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:16px">
-              <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--gold)">🏛 SDLT Calculator</div>
-              <div style="display:flex;flex-direction:column;gap:8px">
-                <div class="sf-group"><div class="sf-label">Purchase Type</div>
-                  <select class="sf-input" id="sdltType" onchange="calcTax()">
-                    <option value="additional">Additional Property (BTL) +3%</option>
-                    <option value="first">First Home</option>
-                    <option value="second">Second Home / Moving</option>
-                  </select>
-                </div>
-                <div class="sf-group"><div class="sf-label">Purchase Price £</div>
-                  <input class="sf-input" id="sdltPrice" type="number" oninput="calcTax()">
-                </div>
+              <div style="font-size:13px;font-weight:700;margin-bottom:12px;color:var(--gold)">🏛 SDLT Calculator — 2025/26</div>
+
+              <!-- Buyer Type Buttons -->
+              <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:8px">Select Buyer Type</div>
+              <div style="display:grid;grid-template-columns:1fr;gap:6px;margin-bottom:14px">
+                <button id="sdlt-btn-first" onclick="setSdltType('first')" style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;color:var(--muted);font-family:var(--font);font-size:12px;cursor:pointer;text-align:left;transition:all .15s">
+                  🏠 <strong>First Time Buyer</strong>
+                  <div style="font-size:10px;font-family:var(--mono);margin-top:2px;color:var(--dim)">0% up to £425k · 5% £425k-£625k · Relief available</div>
+                </button>
+                <button id="sdlt-btn-second" onclick="setSdltType('second')" style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;color:var(--muted);font-family:var(--font);font-size:12px;cursor:pointer;text-align:left;transition:all .15s">
+                  🔑 <strong>Moving Home / Next Home</strong>
+                  <div style="font-size:10px;font-family:var(--mono);margin-top:2px;color:var(--dim)">0% up to £250k · 5% £250k-£925k · Standard rates</div>
+                </button>
+                <button id="sdlt-btn-additional" onclick="setSdltType('additional')" style="background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);padding:10px 14px;color:var(--gold);font-family:var(--font);font-size:12px;cursor:pointer;text-align:left;transition:all .15s">
+                  🏗 <strong>Additional Property / BTL</strong>
+                  <div style="font-size:10px;font-family:var(--mono);margin-top:2px;color:var(--amber)">Standard rates +3% surcharge on entire price</div>
+                </button>
+                <button id="sdlt-btn-company" onclick="setSdltType('company')" style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;color:var(--muted);font-family:var(--font);font-size:12px;cursor:pointer;text-align:left;transition:all .15s">
+                  🏢 <strong>Limited Company Purchase</strong>
+                  <div style="font-size:10px;font-family:var(--mono);margin-top:2px;color:var(--dim)">Standard rates +3% surcharge · No FTB relief</div>
+                </button>
+              </div>
+
+              <input type="hidden" id="sdltType" value="additional">
+              <div class="sf-group">
+                <div class="sf-label">Purchase Price £</div>
+                <input class="sf-input" id="sdltPrice" type="number" oninput="calcTax()" onfocus="this.select()" style="font-size:16px;font-weight:600">
               </div>
               <div id="sdltResult" style="margin-top:12px"></div>
             </div>
@@ -1307,8 +1322,41 @@ function renderFinance(){
   renderPL();
 }
 
-// ── P&L ──
-function renderPL(){
+// ── P&L — Editable ──
+// Store custom values in memory
+let plValues = {};
+
+function initPLValues(p){
+  const buy = p.buy_price||0;
+  const refurb = p.refurb_budget||0;
+  const gdv = p.gdv||0;
+  const matTotal = materials.reduce((s,m)=>s+m.quantity*m.unit_cost,0);
+  // Only init if not already set
+  if(!plValues.init){
+    plValues = {
+      init: true,
+      sdlt: calcSDLT(buy,'additional'),
+      legalBuy: Math.round(buy*0.008+500),
+      survey: 600,
+      brokerFee: 500,
+      bridging: Math.round(buy*0.01*3),
+      insurance: Math.round((gdv*0.003/12)*6),
+      councilTax: 1800,
+      utilities: 600,
+      contingency: Math.round(refurb*0.1),
+      otherCosts: 0,
+      ltvPct: 75,
+      mortgageRate: 5.5,
+    };
+  }
+}
+
+function updatePL(field, val){
+  plValues[field] = parseFloat(String(val).replace(/[^0-9.]/g,''))||0;
+  recalcPL();
+}
+
+function recalcPL(){
   const p = currentProp;
   if(!p) return;
   const buy = p.buy_price||0;
@@ -1316,116 +1364,154 @@ function renderPL(){
   const gdv = p.gdv||0;
   const rent = p.monthly_rent||0;
   const matTotal = materials.reduce((s,m)=>s+m.quantity*m.unit_cost,0);
+  const v = plValues;
 
-  // SDLT calc (BTL additional 3%)
-  const sdlt = calcSDLT(buy, 'additional');
-  const legalBuy = Math.round(buy*0.008+500);
-  const survey = 600;
-  const brokerFee = 500;
-  const bridgingInterest = Math.round(buy*0.01*3); // 1%/month for 3 months
-  const insurance = Math.round((gdv*0.003/12)*6); // 6 months building insurance
-  const councilTax = 1800; // 6 months
-  const utilities = 600;
-  const contingency = Math.round(refurb*0.1);
-  const legalSell = Math.round(gdv*0.01);
-  const agentFee = Math.round(gdv*0.015);
-  const totalCosts = buy+refurb+sdlt+legalBuy+survey+brokerFee+bridgingInterest+insurance+councilTax+utilities+contingency;
-
-  const cashback = gdv*0.75;
+  const totalCosts = buy+refurb+v.sdlt+v.legalBuy+v.survey+v.brokerFee+v.bridging+v.insurance+v.councilTax+v.utilities+v.contingency+(v.otherCosts||0);
+  const cashback = gdv*(v.ltvPct/100);
   const annualRent = rent*12;
   const grossYield = gdv>0?(annualRent/gdv*100).toFixed(1):0;
   const equity = gdv - totalCosts;
-  const netProfit5yr = (rent*12*5)+(gdv-buy-refurb-sdlt-legalBuy)-Math.round(cashback*0.055*5);
+  const monthlyMtg = cashback*((v.mortgageRate/100)/12*Math.pow(1+(v.mortgageRate/100)/12,300))/(Math.pow(1+(v.mortgageRate/100)/12,300)-1);
+  const monthlyCF = rent - monthlyMtg;
+  const netProfit5yr = (rent*12*5)+(gdv-totalCosts)-Math.round(cashback*(v.mortgageRate/100)*5);
 
   const fK = n => { n=+n||0; if(Math.abs(n)>=1000000)return'£'+(n/1e6).toFixed(2)+'M'; if(Math.abs(n)>=1000)return'£'+(n/1000).toFixed(0)+'k'; return'£'+Math.round(n); };
+  const netColor = equity>0?'var(--green)':'var(--red)';
 
-  const costRows = [
-    {label:'Purchase Price',val:buy,cat:'purchase'},
-    {label:'SDLT (BTL +3%)',val:sdlt,cat:'purchase',warn:true},
-    {label:'Legal Fees (Buy)',val:legalBuy,cat:'purchase'},
-    {label:'Survey / Valuation',val:survey,cat:'purchase'},
-    {label:'Mortgage Broker Fee',val:brokerFee,cat:'purchase'},
-    {label:'Bridging Interest (3mo)',val:bridgingInterest,cat:'finance'},
-    {label:'Refurbishment Budget',val:refurb,cat:'refurb'},
-    {label:'Materials',val:matTotal,cat:'refurb'},
-    {label:'Contingency (10%)',val:contingency,cat:'refurb',warn:true},
-    {label:'Building Insurance (6mo)',val:insurance,cat:'holding'},
-    {label:'Council Tax (6mo)',val:councilTax,cat:'holding'},
-    {label:'Utilities (6mo)',val:utilities,cat:'holding'},
-  ];
-
-  const incomeRows = [
-    {label:'GDV (After Refurb Value)',val:gdv,cat:'capital'},
-    {label:'Refinance Cash Back (75%)',val:Math.round(cashback),cat:'capital'},
-    {label:'Equity Created',val:Math.round(equity),cat:'capital'},
-    {label:'Annual Rental Income',val:annualRent,cat:'rental'},
-    {label:'Monthly Cash Flow',val:Math.round(rent-(cashback*0.055/12)),cat:'rental'},
-    {label:'5-Year Rental Income',val:rent*12*5,cat:'rental'},
-    {label:'Gross Yield',val:null,txt:grossYield+'%',cat:'yield'},
-  ];
-
-  const catColors = {purchase:'var(--red)',finance:'var(--amber)',refurb:'var(--amber)',holding:'var(--muted)',capital:'var(--green)',rental:'var(--cyan)',yield:'var(--gold)'};
-
-  document.getElementById('plCosts').innerHTML = costRows.map(r=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-bottom:1px solid var(--border)">
-      <div>
-        <span style="font-size:11px;font-family:var(--mono);color:var(--text)">${r.label}</span>
-        ${r.warn?'<span style="font-size:9px;color:var(--amber);margin-left:6px;font-family:var(--mono)">⚠️ often forgotten</span>':''}
-      </div>
-      <span style="font-size:13px;font-weight:600;color:${catColors[r.cat]}">${fK(r.val)}</span>
-    </div>`).join('');
-
-  document.getElementById('plIncome').innerHTML = incomeRows.map(r=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 16px;border-bottom:1px solid var(--border)">
-      <span style="font-size:11px;font-family:var(--mono);color:var(--text)">${r.label}</span>
-      <span style="font-size:13px;font-weight:600;color:${catColors[r.cat]}">${r.txt||fK(r.val)}</span>
-    </div>`).join('');
-
+  // Update totals and result
   document.getElementById('plTotalCosts').textContent = fK(totalCosts);
   document.getElementById('plTotalIncome').textContent = fK(gdv+annualRent*5);
-
-  const netEquity = gdv - totalCosts;
-  const netColor = netEquity>0?'var(--green)':'var(--red)';
   document.getElementById('plResult').innerHTML = `
-    <div style="background:var(--s1);border:1px solid ${netColor};border-radius:var(--r2);padding:18px 20px">
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px">
-        <div style="text-align:center">
-          <div style="font-size:28px;font-weight:800;color:${netColor}">${fK(netEquity)}</div>
-          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-top:3px">Net Equity (Day 1)</div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-size:28px;font-weight:800;color:var(--gold)">${fK(Math.round(cashback))}</div>
-          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-top:3px">Cash Recycled</div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-size:28px;font-weight:800;color:var(--cyan)">${fK(netProfit5yr)}</div>
-          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-top:3px">5-Year Net Profit</div>
-        </div>
-        <div style="text-align:center">
-          <div style="font-size:28px;font-weight:800;color:var(--amber)">${fK(totalCosts-buy)}</div>
-          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;margin-top:3px">Total Extra Costs</div>
-        </div>
+    <div style="background:var(--s1);border:1px solid ${netColor};border-radius:var(--r2);padding:16px 18px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px">
+        <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:${netColor}">${fK(equity)}</div><div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;margin-top:2px">Net Equity Day 1</div></div>
+        <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:var(--gold)">${fK(cashback)}</div><div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;margin-top:2px">Cash Recycled</div></div>
+        <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:var(--cyan)">${fK(netProfit5yr)}</div><div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;margin-top:2px">5-Year Net Profit</div></div>
+        <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:${monthlyCF>=0?'var(--green)':'var(--red)'}">${monthlyCF>=0?'+':''}£${Math.round(monthlyCF)}/mo</div><div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;margin-top:2px">Monthly CF</div></div>
+        <div style="text-align:center"><div style="font-size:24px;font-weight:800;color:var(--cyan)">${grossYield}%</div><div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;margin-top:2px">Gross Yield</div></div>
       </div>
     </div>`;
 }
 
+function renderPL(){
+  const p = currentProp;
+  if(!p) return;
+  initPLValues(p);
+  const v = plValues;
+  const buy = p.buy_price||0;
+  const refurb = p.refurb_budget||0;
+  const gdv = p.gdv||0;
+  const rent = p.monthly_rent||0;
+  const matTotal = materials.reduce((s,m)=>s+m.quantity*m.unit_cost,0);
+
+  const editInput = (field, val, color='var(--text)', width='70px') =>
+    `<input type="text" inputmode="numeric" value="${val}"
+      style="background:var(--s3);border:1px solid var(--border);border-radius:5px;padding:3px 7px;color:${color};font-family:var(--mono);font-size:12px;font-weight:600;width:${width};outline:none;text-align:right"
+      onfocus="this.select()"
+      oninput="updatePL('${field}',this.value)"
+      onblur="this.value=Math.round(plValues['${field}'])">`;
+
+  const costRows = [
+    {label:'Purchase Price',val:buy,color:'var(--red)',fixed:true},
+    {label:'SDLT',val:v.sdlt,field:'sdlt',color:'var(--red)',warn:'⚠️ often forgotten'},
+    {label:'Legal Fees (Buy)',val:v.legalBuy,field:'legalBuy',color:'var(--red)'},
+    {label:'Survey / Valuation',val:v.survey,field:'survey',color:'var(--red)'},
+    {label:'Mortgage Broker Fee',val:v.brokerFee,field:'brokerFee',color:'var(--amber)'},
+    {label:'Bridging Interest',val:v.bridging,field:'bridging',color:'var(--amber)',warn:'⚠️ often forgotten'},
+    {label:'Refurbishment Budget',val:refurb,color:'var(--amber)',fixed:true},
+    {label:'Materials (from list)',val:matTotal,color:'var(--amber)',fixed:true},
+    {label:'Contingency',val:v.contingency,field:'contingency',color:'var(--amber)',warn:'⚠️ add 10-15%'},
+    {label:'Building Insurance',val:v.insurance,field:'insurance',color:'var(--muted)'},
+    {label:'Council Tax (void)',val:v.councilTax,field:'councilTax',color:'var(--muted)'},
+    {label:'Utilities (void)',val:v.utilities,field:'utilities',color:'var(--muted)'},
+    {label:'Other Costs',val:v.otherCosts||0,field:'otherCosts',color:'var(--muted)'},
+  ];
+
+  document.getElementById('plCosts').innerHTML = costRows.map(r=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 14px;border-bottom:1px solid var(--border)">
+      <div>
+        <span style="font-size:11px;font-family:var(--mono);color:var(--text)">${r.label}</span>
+        ${r.warn?`<span style="font-size:9px;color:var(--amber);margin-left:5px;font-family:var(--mono)">${r.warn}</span>`:''}
+        ${r.fixed?'<span style="font-size:9px;color:var(--dim);margin-left:5px;font-family:var(--mono)">auto</span>':'<span style="font-size:9px;color:var(--gold);margin-left:5px;font-family:var(--mono)">✏️ edit</span>'}
+      </div>
+      ${r.fixed
+        ? `<span style="font-size:13px;font-weight:600;color:${r.color}">£${Math.round(r.val).toLocaleString()}</span>`
+        : editInput(r.field, Math.round(r.val), r.color)
+      }
+    </div>`).join('');
+
+  // Income rows — also editable for LTV and rate
+  document.getElementById('plIncome').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 14px;border-bottom:1px solid var(--border)">
+      <span style="font-size:11px;font-family:var(--mono)">GDV (After Refurb)</span>
+      <span style="font-size:13px;font-weight:600;color:var(--green)">£${gdv.toLocaleString()}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 14px;border-bottom:1px solid var(--border)">
+      <span style="font-size:11px;font-family:var(--mono)">LTV % <span style="color:var(--gold);font-size:9px">✏️ edit</span></span>
+      ${editInput('ltvPct', v.ltvPct, 'var(--gold)', '50px')}
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 14px;border-bottom:1px solid var(--border)">
+      <span style="font-size:11px;font-family:var(--mono)">BTL Rate % <span style="color:var(--gold);font-size:9px">✏️ edit</span></span>
+      ${editInput('mortgageRate', v.mortgageRate, 'var(--gold)', '50px')}
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 14px;border-bottom:1px solid var(--border)">
+      <span style="font-size:11px;font-family:var(--mono)">Cash Back (LTV%)</span>
+      <span style="font-size:13px;font-weight:600;color:var(--gold)">£${Math.round(gdv*v.ltvPct/100).toLocaleString()}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 14px;border-bottom:1px solid var(--border)">
+      <span style="font-size:11px;font-family:var(--mono)">Annual Rental Income</span>
+      <span style="font-size:13px;font-weight:600;color:var(--cyan)">£${(rent*12).toLocaleString()}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 14px;border-bottom:1px solid var(--border)">
+      <span style="font-size:11px;font-family:var(--mono)">5-Year Rental Income</span>
+      <span style="font-size:13px;font-weight:600;color:var(--cyan)">£${(rent*12*5).toLocaleString()}</span>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 14px">
+      <span style="font-size:11px;font-family:var(--mono)">Gross Yield</span>
+      <span style="font-size:13px;font-weight:600;color:var(--gold)">${gdv>0?(rent*12/gdv*100).toFixed(1):0}%</span>
+    </div>`;
+
+  recalcPL();
+}
+
 // ── SDLT CALC ──
+function setSdltType(type){
+  document.getElementById('sdltType').value = type;
+  // Update button styles
+  ['first','second','additional','company'].forEach(t=>{
+    const btn = document.getElementById('sdlt-btn-'+t);
+    if(!btn) return;
+    if(t===type){
+      btn.style.background = 'var(--gold-dim)';
+      btn.style.borderColor = 'var(--gold-border)';
+      btn.style.color = 'var(--gold)';
+    } else {
+      btn.style.background = 'var(--s2)';
+      btn.style.borderColor = 'var(--border)';
+      btn.style.color = 'var(--muted)';
+    }
+  });
+  calcTax();
+}
+
 function calcSDLT(price, type){
-  if(type==='additional'){
-    // 2025/26 BTL rates with 3% surcharge
-    let tax = 0;
-    const bands = [{min:0,max:125000,rate:0.03},{min:125000,max:250000,rate:0.05},{min:250000,max:925000,rate:0.08},{min:925000,max:1500000,rate:0.13},{min:1500000,max:Infinity,rate:0.15}];
+  if(type==='first'){
+    if(price<=425000) return 0;
+    if(price<=625000) return Math.round((price-425000)*0.05);
+    // Above £625k — no FTB relief, standard rates apply
+    let tax=0;
+    const bands=[{min:0,max:250000,rate:0},{min:250000,max:925000,rate:0.05},{min:925000,max:1500000,rate:0.10},{min:1500000,max:Infinity,rate:0.12}];
     bands.forEach(b=>{if(price>b.min){tax+=(Math.min(price,b.max)-b.min)*b.rate;}});
     return Math.round(tax);
-  } else if(type==='first'){
-    if(price<=425000) return 0;
-    let tax = 0;
-    const bands = [{min:425000,max:625000,rate:0.05}];
+  } else if(type==='second'){
+    let tax=0;
+    const bands=[{min:0,max:250000,rate:0},{min:250000,max:925000,rate:0.05},{min:925000,max:1500000,rate:0.10},{min:1500000,max:Infinity,rate:0.12}];
     bands.forEach(b=>{if(price>b.min){tax+=(Math.min(price,b.max)-b.min)*b.rate;}});
     return Math.round(tax);
   } else {
-    let tax = 0;
-    const bands = [{min:0,max:250000,rate:0},{min:250000,max:925000,rate:0.05},{min:925000,max:1500000,rate:0.10},{min:1500000,max:Infinity,rate:0.12}];
+    // Additional/BTL/Company — 3% surcharge on ALL
+    let tax=0;
+    const bands=[{min:0,max:125000,rate:0.03},{min:125000,max:250000,rate:0.05},{min:250000,max:925000,rate:0.08},{min:925000,max:1500000,rate:0.13},{min:1500000,max:Infinity,rate:0.15}];
     bands.forEach(b=>{if(price>b.min){tax+=(Math.min(price,b.max)-b.min)*b.rate;}});
     return Math.round(tax);
   }
@@ -1451,11 +1537,17 @@ function calcTax(){
   const sdltType = document.getElementById('sdltType').value;
   const sdlt = calcSDLT(sdltPrice, sdltType);
   const sdltPct = sdltPrice>0?(sdlt/sdltPrice*100).toFixed(2):0;
+  const typeLabels = {first:'First Time Buyer',second:'Moving Home',additional:'BTL / Additional',company:'Limited Company'};
   document.getElementById('sdltResult').innerHTML = `
     <div style="background:var(--s2);border-radius:var(--r);padding:12px">
-      <div style="font-size:22px;font-weight:800;color:var(--red)">${fK(sdlt)}</div>
-      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px">${sdltPct}% of purchase price</div>
-      ${sdltType==='additional'?'<div style="font-size:10px;color:var(--amber);margin-top:6px;font-family:var(--mono)">⚠️ Includes 3% BTL surcharge — pay within 14 days of completion</div>':''}
+      <div style="font-size:26px;font-weight:800;color:var(--red)">£${sdlt.toLocaleString()}</div>
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px">${sdltPct}% effective rate · ${typeLabels[sdltType]||sdltType}</div>
+      ${sdltType==='additional'||sdltType==='company'?'<div style="font-size:10px;color:var(--amber);margin-top:6px;font-family:var(--mono)">⚠️ Includes 3% surcharge · Due within 14 days of completion</div>':''}
+      ${sdltType==='first'&&sdltPrice<=425000?'<div style="font-size:10px;color:var(--green);margin-top:6px;font-family:var(--mono)">✅ No SDLT — First Time Buyer relief applies</div>':''}
+      ${sdltType==='first'&&sdltPrice>625000?'<div style="font-size:10px;color:var(--amber);margin-top:6px;font-family:var(--mono)">⚠️ Above £625k — FTB relief lost, standard rates apply</div>':''}
+      <div style="margin-top:10px;font-size:11px;font-family:var(--mono);color:var(--muted)">
+        💡 Budget this in your deal — often forgotten!
+      </div>
     </div>`;
 
   // CGT
@@ -2050,6 +2142,7 @@ async function loadDashboard(){
 async function openProperty(id){
   const {data:prop}=await sb.from('properties').select('*').eq('id',id).single();
   currentProp=prop;
+  plValues = {}; // Reset P&L edits for new property
   document.getElementById('tnav-property').style.display='';
   renderPropHeader();
   await loadRooms();
