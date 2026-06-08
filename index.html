@@ -275,6 +275,10 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .cl-text{font-size:12px;flex:1;font-family:var(--mono);}
 .cl-item.done .cl-text{text-decoration:line-through;color:var(--dim);}
 
+/* ── PROGRAMME SUMMARY CARDS ── */
+.ss-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;text-align:center;flex:1;min-width:90px;}
+.ss-val{font-size:18px;font-weight:700;letter-spacing:-.3px;}
+.ss-lbl{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
 /* ── CALCULATOR ── */
 .inputs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:10px;margin-bottom:16px;}
 .inp-card{background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;}
@@ -1270,11 +1274,11 @@ async function signOut(){
 }
 
 sb.auth.onAuthStateChange(async(event,session)=>{
-  if(session?.user){
+  if(session && session.user){
     currentUser=session.user;
     document.getElementById('authWrap').style.display='none';
     document.getElementById('app').style.display='flex';
-    const name=session.user.user_metadata?.full_name||session.user.email.split('@')[0];
+    const name=session.user.user_metadata && session.user.user_metadata.full_name||session.user.email.split('@')[0];
     document.getElementById('greetName').textContent=name;
     document.getElementById('userPill').textContent=session.user.email;
     await loadDashboard();
@@ -1301,7 +1305,25 @@ function propTab(tab,btn){
   document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('on'));
   document.getElementById('ptab-'+tab).style.display='block';
   btn.classList.add('on');
-  if(tab==='finance') renderFinance();
+  if(tab==='timeline'){renderTL();}
+  if(tab==='programme'){
+    const tlStart = document.getElementById('tlStart').value;
+    if(tlStart && document.getElementById('progStart')) document.getElementById('progStart').value = tlStart;
+    renderProgramme();
+  }
+  if(tab==='finance'){renderFinance();}
+  if(tab==='summary'){renderSummary();}
+  if(tab==='materials'){renderMaterials();}
+  if(tab==='calculator'){
+    if(currentProp){
+      document.getElementById('cPurchase').value=currentProp.buy_price||100000;
+      document.getElementById('cRefurb').value=currentProp.refurb_budget||35000;
+      document.getElementById('cGdv').value=currentProp.gdv||165000;
+      document.getElementById('cRent').value=currentProp.monthly_rent||750;
+    }
+    calcBRRR();
+  }
+}
 
 // ══════════════════════════════════════════════
 // FINANCE & RISK HUB
@@ -1675,7 +1697,7 @@ function renderRisk(){
     {cat:'Property',name:'Structural Issues Found',level:'medium',prob:'Low',impact:'Very High',mitigation:'Always get full structural survey. Include in offer. Budget £5-15k for unknowns.',tip:'Never skip the survey. Cost: £600-900. Could save £20k+.'},
     {cat:'Property',name:'Damp / Japanese Knotweed',level:'medium',prob:'Medium',impact:'High',mitigation:'Check during viewing. Get specialist report. Knotweed = mortgage refusal risk.',tip:'Damp: £800-5k. Knotweed: £2k-10k to treat. Can affect refinance.'},
     {cat:'Legal',name:'Planning / Building Regs Issues',level:'low',prob:'Low',impact:'High',mitigation:'Check planning history on council website. Get indemnity insurance for historical works.',tip:'Unpermitted extensions = big problem at refinance.'},
-    {cat:'Legal',name:'Leasehold Issues',level:p.address?.toLowerCase().includes('flat')?'high':'low',prob:'Low',impact:'High',mitigation:'Check lease length (min 85 years for mortgage). Check service charges and ground rent.',tip:'Short lease = unmortgageable. Always check.'},
+    {cat:'Legal',name:'Leasehold Issues',level:(p.address&&p.address.toLowerCase().includes('flat'))?'high':'low',prob:'Low',impact:'High',mitigation:'Check lease length (min 85 years for mortgage). Check service charges and ground rent.',tip:'Short lease = unmortgageable. Always check.'},
     {cat:'Market',name:'Property Value Drop',level:'low',prob:'Low',impact:'High',mitigation:'Focus on strong rental demand areas. BRRR works in all markets if bought at BMV.',tip:'Sunderland, Hull, Liverpool — strong rental demand protects value.'},
     {cat:'Operational',name:'Bad Tenants / Arrears',level:'medium',prob:'Medium',impact:'Medium',mitigation:'Thorough referencing. Rent Guarantee Insurance. Section 21 served correctly.',tip:'Rent Guarantee Insurance: ~£150/year. Worth every penny.'},
   ];
@@ -1763,7 +1785,7 @@ function renderLegal(){
     ]},
   ];
 
-  const stored = JSON.parse(localStorage.getItem('aurumLegal_'+currentProp?.id)||'{}');
+  const stored = JSON.parse(localStorage.getItem('aurumLegal_'+currentProp && currentProp.id)||'{}');
 
   document.getElementById('legalList').innerHTML = checks.map(phase=>`
     <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:12px">
@@ -1785,18 +1807,6 @@ function toggleLegal(key){
   stored[key] = !stored[key];
   localStorage.setItem('aurumLegal_'+currentProp.id, JSON.stringify(stored));
   renderLegal();
-}
-  if(tab==='summary')renderSummary();
-  if(tab==='materials')renderMaterials();
-  if(tab==='calculator'){
-    if(currentProp){
-      document.getElementById('cPurchase').value=currentProp.buy_price||100000;
-      document.getElementById('cRefurb').value=currentProp.refurb_budget||35000;
-      document.getElementById('cGdv').value=currentProp.gdv||165000;
-      document.getElementById('cRent').value=currentProp.monthly_rent||750;
-    }
-    calcBRRR();
-  }
 }
 
 // ── PROGRAMME (Gantt inside property) ──
@@ -2326,7 +2336,7 @@ async function addTask(roomId){
   const{data}=await sb.from('tasks').insert({
     room_id:roomId,property_id:currentProp.id,
     name,cost,days:1,urgency:'important',done:false,
-    sort_order:(r?.tasks?.length||0)
+    sort_order:(r && r.tasks && r.tasks.length||0)
   }).select().single();
   if(data){
     if(r){if(!r.tasks)r.tasks=[];r.tasks.push(data);}
@@ -2345,14 +2355,14 @@ async function deleteTask(taskId,roomId){
 async function renameTask(taskId,name){
   if(!name||!name.trim())return;
   await sb.from('tasks').update({name:name.trim()}).eq('id',taskId);
-  rooms.forEach(r=>{const t=r.tasks?.find(t=>t.id===taskId);if(t)t.name=name.trim();});
+  rooms.forEach(r=>{const t=r.tasks && r.tasks.find(t=>t.id===taskId);if(t)t.name=name.trim();});
 }
 
 async function updateTaskCost(taskId,roomId,val){
   const cost=parseInt((val||'').toString().replace(/[^0-9]/g,''))||0;
   await sb.from('tasks').update({cost}).eq('id',taskId);
   const r=rooms.find(r=>r.id===roomId);
-  if(r){const t=r.tasks?.find(t=>t.id===taskId);if(t)t.cost=cost;}
+  if(r){const t=r.tasks && r.tasks.find(t=>t.id===taskId);if(t)t.cost=cost;}
   renderRooms();
 }
 
@@ -2471,7 +2481,7 @@ urgent = safety or structural. important = functional. cosmetic = aesthetic only
 
     if(!resp.ok){
       const err=await resp.json();
-      throw new Error(err.error?.message||`HTTP ${resp.status}`);
+      throw new Error(err.error && err.error.message||`HTTP ${resp.status}`);
     }
 
     const data=await resp.json();
@@ -2490,7 +2500,7 @@ urgent = safety or structural. important = functional. cosmetic = aesthetic only
     }).eq('id',roomId);
 
     // Replace tasks with AI tasks
-    if(parsed.tasks?.length){
+    if(parsed.tasks && parsed.tasks.length){
       await sb.from('tasks').delete().eq('room_id',roomId);
       const newTasks=parsed.tasks.map((t,i)=>({
         room_id:roomId,
