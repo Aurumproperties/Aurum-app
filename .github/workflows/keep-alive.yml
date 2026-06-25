@@ -1,0 +1,23 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    - cron: '0 9 */3 * *'  # Çdo 3 ditë në ora 9:00 UTC
+  workflow_dispatch:        # Mundëson run manual gjithashtu
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" \
+            "https://kxiftobazbjkorpeeufo.supabase.co/rest/v1/users?select=count" \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4aWZ0b2JhemJqa29ycGVldWZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NzQ3MTIsImV4cCI6MjA5NjA1MDcxMn0.wk82-u1VarRevvee61PjgMxCuc8G3kbMwk31_i2TjUs" \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4aWZ0b2JhemJqa29ycGVldWZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NzQ3MTIsImV4cCI6MjA5NjA1MDcxMn0.wk82-u1VarRevvee61PjgMxCuc8G3kbMwk31_i2TjUs")
+          echo "Supabase response: $response"
+          if [ "$response" -ge 200 ] && [ "$response" -lt 500 ]; then
+            echo "✅ Supabase është aktiv"
+          else
+            echo "⚠️ Supabase nuk u përgjigj siç duhet: $response"
+          fi
