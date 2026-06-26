@@ -2,12 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>AURUM — Bill of Quantities</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURUM — NRM2 Bill of Quantities</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 <style>
-/* ── TOKENS (identical to AURUM) ── */
 :root{
   --bg:#080808;--s1:#101010;--s2:#181818;--s3:#222;
   --border:#2a2a2a;--border2:#3a3a3a;
@@ -21,30 +23,23 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font);}
 body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.5;}
-
-/* ── TOPBAR ── */
 .topbar{height:56px;background:rgba(8,8,8,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;}
-.tbar-logo{font-size:20px;font-weight:800;color:var(--gold);letter-spacing:-.5px;cursor:pointer;text-decoration:none;}
-.tbar-title{font-size:13px;color:var(--muted);font-family:var(--mono);}
+.tbar-logo{font-size:20px;font-weight:800;color:var(--gold);letter-spacing:-.5px;text-decoration:none;}
+.tbar-title{font-size:12px;color:var(--muted);font-family:var(--mono);}
 .tbar-actions{display:flex;gap:8px;align-items:center;}
-.btn{font-family:var(--font);font-size:12px;font-weight:600;padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn{font-family:var(--font);font-size:12px;font-weight:600;padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;}
 .btn:hover{border-color:var(--border2);color:var(--text);}
 .btn.gold{border-color:var(--gold);color:var(--gold);}
 .btn.gold:hover{background:var(--gold);color:#000;}
 .btn.solid{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700;}
 .btn.solid:hover{background:var(--gold2);}
-.btn.danger{border-color:rgba(240,64,64,.4);color:var(--red);}
-.btn.danger:hover{background:var(--red);color:#fff;}
-
-/* ── MAIN LAYOUT ── */
-.main{max-width:1200px;margin:0 auto;padding:28px 24px;}
-.section-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px;}
-.section-title span{color:var(--gold);}
-.section-sub{font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:18px;}
-
-/* ── STEPS NAV ── */
-.steps{display:flex;gap:0;margin-bottom:32px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;}
-.step{flex:1;padding:14px 16px;text-align:center;cursor:pointer;transition:all .2s;border-right:1px solid var(--border);position:relative;}
+.btn.green{background:var(--green);color:#000;border-color:var(--green);}
+.btn.green:hover{background:#30b060;}
+.btn.blue{background:#4080f0;color:#fff;border-color:#4080f0;}
+.btn.blue:hover{background:#3060d0;}
+.main{max-width:1300px;margin:0 auto;padding:28px 24px;}
+.steps{display:flex;margin-bottom:32px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;}
+.step{flex:1;padding:14px 16px;text-align:center;cursor:pointer;transition:all .2s;border-right:1px solid var(--border);}
 .step:last-child{border-right:none;}
 .step.active{background:var(--gold-dim);border-bottom:2px solid var(--gold);}
 .step.done{background:rgba(64,208,128,.04);}
@@ -54,1196 +49,975 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .step-label{font-size:12px;font-weight:600;color:var(--muted);}
 .step.active .step-label{color:var(--text);}
 .step.done .step-label{color:var(--green);}
-
-/* ── PROJECT HEADER ── */
-.proj-header{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px 24px;margin-bottom:24px;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:16px;align-items:end;}
+.nrm-badge{display:inline-flex;align-items:center;gap:6px;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:8px;padding:4px 12px;font-size:11px;font-weight:700;color:var(--gold);font-family:var(--mono);}
+.proj-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px 24px;margin-bottom:20px;}
+.proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;}
 .proj-field{display:flex;flex-direction:column;gap:5px;}
 .proj-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono);}
-.proj-input{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;color:var(--text);font-family:var(--font);font-size:14px;font-weight:600;outline:none;transition:border-color .15s;}
+.proj-input{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;outline:none;width:100%;}
 .proj-input:focus{border-color:var(--gold);}
-
-/* ── OPTIONS PANEL ── */
-.options-panel{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px 24px;margin-bottom:24px;}
-.options-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:14px;}
-.opt-card{background:var(--s2);border:2px solid var(--border);border-radius:var(--r);padding:14px 16px;cursor:pointer;transition:all .2s;display:flex;align-items:flex-start;gap:12px;user-select:none;}
+.options-panel{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px 24px;margin-bottom:20px;}
+.options-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-top:14px;}
+.opt-card{background:var(--s2);border:2px solid var(--border);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:all .2s;display:flex;align-items:flex-start;gap:10px;user-select:none;}
 .opt-card.active{border-color:var(--gold);background:var(--gold-dim);}
-.opt-card.active .opt-icon{color:var(--gold);}
+.opt-icon{font-size:20px;flex-shrink:0;}
+.opt-name{font-size:12px;font-weight:700;color:var(--muted);margin-bottom:2px;}
 .opt-card.active .opt-name{color:var(--text);}
-.opt-icon{font-size:22px;flex-shrink:0;margin-top:1px;}
-.opt-content{flex:1;}
-.opt-name{font-size:13px;font-weight:700;color:var(--muted);margin-bottom:3px;}
 .opt-desc{font-size:10px;color:var(--dim);font-family:var(--mono);line-height:1.4;}
-.opt-check{width:16px;height:16px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;margin-top:2px;}
-
-/* ── ROOMS SECTION ── */
-.rooms-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.rooms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px;margin-bottom:24px;}
-.room-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;transition:border-color .2s;}
-.room-card:hover{border-color:var(--border2);}
-.room-header{background:var(--s2);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
-.room-icon-name{display:flex;align-items:center;gap:10px;}
-.room-icon-btn{font-size:20px;cursor:pointer;background:none;border:none;padding:0;}
-.room-name-input{background:none;border:none;color:var(--text);font-family:var(--font);font-size:14px;font-weight:700;outline:none;width:140px;}
-.room-name-input:focus{border-bottom:1px solid var(--gold);}
-.room-type-select{background:var(--s1);border:1px solid var(--border);border-radius:6px;padding:4px 8px;color:var(--muted);font-family:var(--mono);font-size:10px;outline:none;cursor:pointer;}
-.room-type-select:focus{border-color:var(--gold);}
-.room-body{padding:16px;}
-.dims-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
-.dim-field{display:flex;flex-direction:column;gap:4px;}
+.opt-check{width:15px;height:15px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;margin-top:1px;}
+.rooms-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;margin-bottom:24px;}
+.room-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;}
+.room-header{background:var(--s2);padding:11px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.room-name-input{background:none;border:none;color:var(--text);font-family:var(--font);font-size:13px;font-weight:700;outline:none;width:140px;}
+.room-type-select{background:var(--s1);border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--muted);font-family:var(--mono);font-size:10px;outline:none;}
+.room-body{padding:14px;}
+.dims-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+.dim-field{display:flex;flex-direction:column;gap:3px;}
 .dim-label{font-size:9px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);}
-.dim-input{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:9px 10px;color:var(--gold);font-family:var(--mono);font-size:15px;font-weight:600;outline:none;text-align:center;width:100%;transition:border-color .15s;}
+.dim-input{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--gold);font-family:var(--mono);font-size:14px;font-weight:600;outline:none;text-align:center;width:100%;}
 .dim-input:focus{border-color:var(--gold);}
-.dim-input::placeholder{color:var(--dim);font-size:12px;}
-.room-calcs{background:var(--s2);border-radius:var(--r);padding:10px 12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+.room-calcs{background:var(--s2);border-radius:var(--r);padding:8px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px;}
 .calc-item{text-align:center;}
-.calc-val{font-size:13px;font-weight:700;color:var(--cyan);font-family:var(--mono);}
-.calc-lbl{font-size:9px;color:var(--dim);font-family:var(--mono);text-transform:uppercase;margin-top:1px;}
-.room-extras{margin-top:10px;display:flex;flex-wrap:wrap;gap:5px;}
+.calc-val{font-size:12px;font-weight:700;color:var(--cyan);font-family:var(--mono);}
+.calc-lbl{font-size:8px;color:var(--dim);font-family:var(--mono);text-transform:uppercase;margin-top:1px;}
+.room-extras{display:flex;flex-wrap:wrap;gap:5px;}
 .extra-toggle{font-size:10px;font-family:var(--mono);padding:3px 9px;border-radius:6px;border:1px solid var(--border);background:var(--s2);color:var(--muted);cursor:pointer;transition:all .15s;}
 .extra-toggle.on{border-color:var(--gold-border);background:var(--gold-dim);color:var(--gold);}
-.room-delete{background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px;padding:2px 5px;transition:color .15s;}
+.room-delete{background:none;border:none;color:var(--dim);cursor:pointer;font-size:13px;padding:2px 5px;}
 .room-delete:hover{color:var(--red);}
-.add-room-card{background:var(--s1);border:2px dashed var(--border);border-radius:var(--r2);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;cursor:pointer;transition:all .2s;gap:8px;}
+.add-room-card{background:var(--s1);border:2px dashed var(--border);border-radius:var(--r2);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:180px;cursor:pointer;transition:all .2s;gap:8px;}
 .add-room-card:hover{border-color:var(--gold);background:var(--gold-dim);}
-
-/* ── BOQ TABLE ── */
-.boq-section{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:20px;}
-.boq-section-head{padding:12px 18px;background:var(--s2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.boq-section-title{font-size:13px;font-weight:700;}
-.boq-section-total{font-size:13px;font-weight:700;color:var(--gold);font-family:var(--mono);}
-.boq-table{width:100%;border-collapse:collapse;}
-.boq-table thead th{padding:8px 14px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono);}
+/* BOQ TABLE */
+.boq-work-section{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:16px;}
+.ws-header{padding:11px 16px;background:var(--s2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+.ws-ref{font-size:10px;font-weight:700;color:var(--gold);font-family:var(--mono);background:var(--gold-dim);border:1px solid var(--gold-border);padding:2px 8px;border-radius:5px;margin-right:10px;flex-shrink:0;}
+.ws-title{font-size:13px;font-weight:700;flex:1;}
+.ws-total{font-size:13px;font-weight:700;color:var(--gold);font-family:var(--mono);}
+.ws-collapse{font-size:11px;color:var(--muted);margin-left:12px;}
+.ws-body{overflow-x:auto;}
+.boq-table{width:100%;border-collapse:collapse;min-width:900px;}
+.boq-table thead th{padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono);white-space:nowrap;}
+.boq-table thead th.num{text-align:right;}
 .boq-table tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
-.boq-table tbody tr:last-child{border-bottom:none;}
-.boq-table tbody tr:hover{background:var(--s2);}
-.boq-table td{padding:9px 14px;font-size:12px;font-family:var(--mono);}
-.boq-table .col-item{color:var(--text);font-weight:500;}
-.boq-table .col-qty{color:var(--cyan);text-align:right;}
-.boq-table .col-unit{color:var(--muted);}
-.boq-table .col-rate{color:var(--amber);text-align:right;}
-.boq-table .col-total{color:var(--gold);font-weight:700;text-align:right;}
-.boq-table .col-phase{font-size:10px;padding:2px 7px;border-radius:6px;background:var(--s2);border:1px solid var(--border);color:var(--muted);white-space:nowrap;}
-.trade-badge{font-size:9px;padding:2px 7px;border-radius:5px;font-weight:600;font-family:var(--mono);}
+.boq-table tbody tr:hover{background:rgba(255,255,255,.02);}
+.boq-table td{padding:8px 12px;font-size:11px;font-family:var(--mono);vertical-align:middle;}
+.col-ref{color:var(--dim);font-size:10px;width:60px;}
+.col-item{color:var(--text);font-weight:500;min-width:280px;}
+.item-desc{font-size:10px;color:var(--muted);margin-top:2px;line-height:1.4;}
+.col-unit{color:var(--muted);text-align:center;width:50px;}
+.col-total{text-align:right;width:100px;font-weight:700;color:var(--gold);}
+/* Editable qty/rate inputs */
+.qty-input{background:var(--s3);border:1px solid var(--border);border-radius:4px;padding:3px 7px;color:var(--cyan);font-family:var(--mono);font-size:11px;font-weight:600;width:70px;outline:none;text-align:right;}
+.qty-input:focus{border-color:var(--cyan);background:var(--s2);}
+.rate-input{background:var(--s3);border:1px solid var(--border);border-radius:4px;padding:3px 7px;color:var(--amber);font-family:var(--mono);font-size:11px;font-weight:600;width:80px;outline:none;text-align:right;}
+.rate-input:focus{border-color:var(--amber);background:var(--s2);}
+.row-provisional td{background:rgba(64,128,240,.03);}
+.row-provisional .col-item{color:var(--cyan);}
+.row-daywork td{background:rgba(240,160,64,.03);}
+.row-subtotal td{background:var(--s2);border-top:2px solid var(--border2)!important;font-weight:700;}
+/* Trade badges */
+.trade-pill{font-size:9px;padding:2px 6px;border-radius:4px;font-weight:600;font-family:var(--mono);white-space:nowrap;}
+.t-prelim{background:#181008;color:#c09040;border:1px solid #382808;}
+.t-struct{background:#180808;color:#cc6060;border:1px solid #381818;}
 .t-elec{background:#080818;color:#6080cc;border:1px solid #181838;}
 .t-plumb{background:#081818;color:#60cccc;border:1px solid #083838;}
 .t-plast{background:#180818;color:#cc60cc;border:1px solid #381838;}
-.t-build{background:#181808;color:#cccc60;border:1px solid #383808;}
-.t-carp{background:#080818;color:#8060cc;border:1px solid #180838;}
-.t-decor{background:#080808;color:#80c080;border:1px solid #183818;}
-.t-floor{background:#181808;color:#c09040;border:1px solid #383010;}
-.t-roof{background:#180808;color:#cc6060;border:1px solid #381818;}
-
-/* ── SUMMARY STRIP ── */
+.t-carp{background:#080810;color:#8060cc;border:1px solid #180838;}
+.t-decor{background:#081008;color:#80c080;border:1px solid #183818;}
+.t-floor{background:#181008;color:#c09040;border:1px solid #383010;}
+.t-roof{background:#180808;color:#cc4060;border:1px solid #381020;}
+.t-ps{background:#080818;color:#4080cc;border:1px solid #102040;}
+/* Summary */
 .summary-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:24px;}
 .sum-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;}
-.sum-val{font-size:22px;font-weight:700;letter-spacing:-.4px;}
+.sum-val{font-size:20px;font-weight:700;letter-spacing:-.3px;}
 .sum-lbl{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-top:3px;}
-
-/* ── PROGRAMME ── */
-.prog-wrap{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:20px;}
-.prog-head{padding:14px 18px;background:var(--s2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.prog-controls{display:flex;gap:12px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--border);align-items:flex-end;}
-.prog-ctrl{display:flex;flex-direction:column;gap:4px;}
-.prog-ctrl label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono);}
-.prog-ctrl input,.prog-ctrl select{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;}
-.prog-ctrl input:focus,.prog-ctrl select:focus{border-color:var(--gold);}
-.gantt-scroll{overflow-x:auto;}
-.gantt-inner{min-width:900px;}
-.gantt-row{display:flex;align-items:center;border-bottom:1px solid var(--border);min-height:40px;}
-.gantt-row:last-child{border-bottom:none;}
-.gantt-label{width:210px;flex-shrink:0;padding:6px 14px;border-right:1px solid var(--border);font-size:11px;}
-.gantt-label .ph-name{font-weight:600;color:var(--text);}
-.gantt-label .ph-meta{font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
-.gantt-track{flex:1;position:relative;height:40px;}
-.gantt-bar{position:absolute;height:26px;top:7px;border-radius:5px;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:600;white-space:nowrap;overflow:hidden;cursor:pointer;transition:opacity .15s;}
-.gantt-bar:hover{opacity:.85;}
-.gantt-wk-line{position:absolute;top:0;bottom:0;border-left:1px dashed rgba(255,255,255,.06);pointer-events:none;}
-.gantt-today{position:absolute;top:0;bottom:0;width:2px;background:var(--red);opacity:.6;z-index:5;}
-.gantt-header-row{display:flex;border-bottom:1px solid var(--border);background:var(--s2);}
-.gantt-header-label{width:210px;flex-shrink:0;padding:6px 14px;border-right:1px solid var(--border);font-size:9px;color:var(--dim);font-family:var(--mono);text-transform:uppercase;}
-.gantt-header-track{flex:1;position:relative;}
-.gantt-wk-label{position:absolute;top:6px;font-size:9px;color:var(--dim);font-family:var(--mono);}
-
-/* ── NOTES / NOTE BOX ── */
+/* Note boxes */
 .note-box{background:var(--gold-dim);border:1px dashed var(--gold-border);border-radius:var(--r);padding:11px 14px;font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:16px;font-family:var(--mono);}
 .note-box strong{color:var(--gold);}
-
-/* ── MODAL ── */
+.info-box{background:rgba(64,128,240,.08);border:1px solid rgba(64,128,240,.2);border-radius:var(--r);padding:11px 14px;font-size:11px;color:var(--text);line-height:1.6;margin-bottom:16px;font-family:var(--mono);}
+/* Gantt */
+.gantt-row{display:flex;align-items:center;border-bottom:1px solid var(--border);min-height:40px;}
+.gantt-label{width:220px;flex-shrink:0;padding:6px 14px;border-right:1px solid var(--border);}
+.gantt-label .ph-name{font-size:11px;font-weight:600;}
+.gantt-label .ph-meta{font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
+.gantt-track{flex:1;position:relative;height:40px;}
+.gantt-bar{position:absolute;height:26px;top:7px;border-radius:5px;display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:600;white-space:nowrap;overflow:hidden;cursor:pointer;}
+/* Modal */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
-.modal{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:28px;width:100%;max-width:380px;}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:28px;width:100%;max-width:400px;}
 .modal-title{font-size:17px;font-weight:800;margin-bottom:18px;color:var(--gold);}
 .form-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:5px;display:block;margin-top:12px;}
-.form-input{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;transition:border-color .15s;}
+.form-input{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;}
 .form-input:focus{border-color:var(--gold);}
 .modal-btns{display:flex;gap:10px;margin-top:20px;justify-content:flex-end;}
-
-/* ── LOADING ── */
-.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.fade-up{animation:fadeUp .25s ease;}
-
-/* ── PRINT STYLES — A3 ── */
-@media print{
-  @page{size:A3 landscape;margin:15mm 12mm;}
-  body{background:#fff!important;color:#000!important;}
-  body::after{display:none!important;}
-  .topbar,.steps,.options-panel,.rooms-header,.rooms-grid,
-  .add-room-card,.tbar-actions,.btn,.prog-controls,
-  #step1,.note-box{display:none!important;}
-  .main{padding:0!important;max-width:100%!important;}
-  .boq-section,.prog-wrap,.summary-strip,.proj-header{
-    break-inside:avoid;
-    border:1px solid #ccc!important;
-    background:#fff!important;
-    color:#000!important;
-    margin-bottom:8mm!important;
-  }
-  .boq-section-head,.prog-head,.room-header,.gantt-header-row{
-    background:#f5f5f5!important;
-    color:#000!important;
-  }
-  .boq-table td,.boq-table th{color:#000!important;border-color:#ddd!important;}
-  .boq-table .col-item{color:#000!important;}
-  .boq-table .col-qty,.boq-table .col-rate,.boq-table .col-total{color:#333!important;}
-  .sum-card{background:#f9f9f9!important;border:1px solid #ddd!important;}
-  .sum-val,.sum-lbl{color:#000!important;}
-  .gantt-bar{opacity:1!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  .gantt-label .ph-name,.gantt-label .ph-meta{color:#000!important;}
-  .boq-section-title,.prog-head *{color:#000!important;}
-  .print-header{display:block!important;}
-  .section-title{color:#000!important;}
-  .boq-table .col-phase{background:#eee!important;color:#333!important;border-color:#ccc!important;}
-  .trade-badge{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
-  .proj-input{color:#000!important;background:#fff!important;border-color:#ccc!important;}
-  .proj-label{color:#555!important;}
-}
-.print-header{display:none;}
-
-/* ── RESPONSIVE ── */
-@media(max-width:640px){
-  .main{padding:16px 14px;}
-  .proj-header{grid-template-columns:1fr 1fr;}
-  .steps .step-label{font-size:10px;}
-  .gantt-label{width:140px;font-size:10px;}
-  .rooms-grid{grid-template-columns:1fr;}
-}
-@media(max-width:420px){
-  .steps{flex-wrap:wrap;}
-  .step{min-width:50%;}
-  .proj-header{grid-template-columns:1fr;}
-}
+@media(max-width:640px){.main{padding:16px 14px;}.tbar-title{display:none;}.rooms-grid{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
-
-<!-- TOPBAR -->
 <div class="topbar">
   <a class="tbar-logo" href="index.html">AURUM</a>
-  <div class="tbar-title">// bill of quantities engine</div>
+  <div class="tbar-title">// NRM2 Bill of Quantities · BCIS 2026 · RICS Compliant</div>
   <div class="tbar-actions">
+    <span class="nrm-badge">RICS NRM2</span>
     <button class="btn" onclick="clearAll()">↺ Reset</button>
-    <button class="btn gold" onclick="generateBOQ()">⚡ Generate BOQ</button>
-    <button class="btn solid" onclick="window.print()">🖨 Print A3</button>
+    <button class="btn gold" onclick="goStep(3)">⚡ Generate BOQ</button>
+    <button class="btn green" onclick="exportExcel()" id="btnExcel" style="display:none">📊 Excel</button>
+    <button class="btn blue" onclick="exportPDF()" id="btnPDF" style="display:none">📄 PDF</button>
   </div>
 </div>
-
-<!-- PRINT HEADER (only shows on print) -->
-<div class="print-header" style="padding:0 0 12px;border-bottom:2px solid #000;margin-bottom:12px;display:flex;justify-content:space-between;align-items:flex-end">
-  <div>
-    <div style="font-size:22px;font-weight:800;letter-spacing:-1px">AURUM</div>
-    <div style="font-size:11px;color:#666;font-family:monospace">// bill of quantities</div>
-  </div>
-  <div id="printMeta" style="font-size:11px;color:#555;font-family:monospace;text-align:right"></div>
-</div>
-
 <div class="main">
-
-  <!-- STEPS -->
-  <div class="steps" id="stepsNav">
-    <div class="step active" id="step-tab-1" onclick="goStep(1)">
-      <div class="step-num">Step 01</div>
-      <div class="step-label">Project + Options</div>
-    </div>
-    <div class="step" id="step-tab-2" onclick="goStep(2)">
-      <div class="step-num">Step 02</div>
-      <div class="step-label">Room Dimensions</div>
-    </div>
-    <div class="step" id="step-tab-3" onclick="goStep(3)">
-      <div class="step-num">Step 03</div>
-      <div class="step-label">Bill of Quantities</div>
-    </div>
-    <div class="step" id="step-tab-4" onclick="goStep(4)">
-      <div class="step-num">Step 04</div>
-      <div class="step-label">Programme</div>
-    </div>
+  <div class="steps">
+    <div class="step active" id="step-tab-1" onclick="goStep(1)"><div class="step-num">Step 01</div><div class="step-label">Project Info</div></div>
+    <div class="step" id="step-tab-2" onclick="goStep(2)"><div class="step-num">Step 02</div><div class="step-label">Room Dimensions</div></div>
+    <div class="step" id="step-tab-3" onclick="goStep(3)"><div class="step-num">Step 03</div><div class="step-label">NRM2 Bill of Quantities</div></div>
+    <div class="step" id="step-tab-4" onclick="goStep(4)"><div class="step-num">Step 04</div><div class="step-label">Build Programme</div></div>
   </div>
-
-  <!-- ═══ STEP 1: PROJECT + OPTIONS ═══ -->
+  <!-- STEP 1 -->
   <div id="step1">
-    <!-- Project Info -->
-    <div class="proj-header">
-      <div class="proj-field">
-        <div class="proj-label">Property Address</div>
-        <input class="proj-input" id="projAddr" placeholder="83 Bishop Road, Sunderland SR2" style="font-size:13px">
+    <div class="proj-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div><div style="font-size:16px;font-weight:700">Project <span style="color:var(--gold)">Information</span></div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px">NRM2 compliant · BCIS rates 2026 · RICS format</div></div>
+        <span class="nrm-badge">RICS NRM2</span>
       </div>
-      <div class="proj-field">
-        <div class="proj-label">Client / Investor</div>
-        <input class="proj-input" id="projClient" placeholder="Your name or company">
+      <div class="proj-grid">
+        <div class="proj-field"><div class="proj-label">Property Address</div><input class="proj-input" id="projAddr" placeholder="83 Bishop Road, Sunderland SR2"></div>
+        <div class="proj-field"><div class="proj-label">Client Name</div><input class="proj-input" id="projClient" placeholder="Investor name / company"></div>
+        <div class="proj-field"><div class="proj-label">QS / Preparer</div><input class="proj-input" id="projQS" placeholder="AURUM Property Intelligence"></div>
+        <div class="proj-field"><div class="proj-label">Date</div><input class="proj-input" id="projDate" type="date"></div>
+        <div class="proj-field"><div class="proj-label">Contract Type</div>
+          <select class="proj-input" id="projContract">
+            <option>JCT Minor Works 2016</option><option>JCT Intermediate 2016</option>
+            <option>Schedule of Rates</option><option>Lump Sum</option><option>Cost Plus</option>
+          </select>
+        </div>
+        <div class="proj-field"><div class="proj-label">Region (BCIS Factor)</div>
+          <select class="proj-input" id="projRegion">
+            <option value="ne">North East England (×0.88)</option>
+            <option value="nw">North West England (×0.92)</option>
+            <option value="yh">Yorkshire & Humber (×0.90)</option>
+            <option value="em">East Midlands (×0.94)</option>
+            <option value="wm">West Midlands (×0.95)</option>
+            <option value="ee">East of England (×1.02)</option>
+            <option value="lon">Greater London (×1.28)</option>
+            <option value="se">South East (×1.10)</option>
+            <option value="sw">South West (×0.96)</option>
+          </select>
+        </div>
       </div>
-      <div class="proj-field">
-        <div class="proj-label">Date</div>
-        <input class="proj-input" id="projDate" type="date">
-      </div>
-      <button class="btn solid" onclick="goStep(2)" style="align-self:flex-end;padding:11px 20px">Next →</button>
     </div>
-
-    <!-- Options -->
+    <div class="info-box">📐 <strong style="color:var(--cyan)">NRM2 Measurement Rules Applied:</strong> Quantities measured net per RICS NRM2 (2nd Edition). Walls net of openings &gt;0.5m². Floor areas between finished faces. BCIS regional price data 2026. All provisional sums clearly identified. <strong style="color:var(--gold)">Edit any Qty or Rate directly in the BOQ table — totals recalculate automatically.</strong></div>
     <div class="options-panel">
-      <div class="section-title">Scope of <span>Works</span></div>
-      <div class="section-sub">Tick everything included in this project. Untick to remove from BOQ + Programme.</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:4px">Scope of <span style="color:var(--gold)">Works</span></div>
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:14px">Tick to include · Untick to exclude — BOQ and Programme update automatically</div>
       <div class="options-grid" id="optionsGrid"></div>
     </div>
-
-    <div class="note-box">💡 <strong>How it works:</strong> Add your rooms with L × W × H dimensions → AURUM calculates all quantities automatically (plastering, painting, flooring, electrical points, etc.) → generates a priced BOQ and Gantt programme ready to print on A3.</div>
+    <div style="display:flex;justify-content:flex-end;margin-top:8px"><button class="btn solid" onclick="goStep(2)" style="padding:11px 28px">Next: Add Rooms →</button></div>
   </div>
-
-  <!-- ═══ STEP 2: ROOMS ═══ -->
+  <!-- STEP 2 -->
   <div id="step2" style="display:none">
-    <div class="rooms-header">
-      <div>
-        <div class="section-title">Room <span>Dimensions</span></div>
-        <div class="section-sub">Enter L × W × H for each room. AURUM calculates all quantities.</div>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn gold" onclick="openAddRoom()">+ Add Room</button>
-        <button class="btn solid" onclick="goStep(3);generateBOQ()">Generate BOQ →</button>
-      </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+      <div><div style="font-size:16px;font-weight:700">Room <span style="color:var(--gold)">Dimensions</span></div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px">Enter L × W × H — NRM2 quantities calculated automatically</div></div>
+      <div style="display:flex;gap:8px"><button class="btn gold" onclick="openAddRoom()">+ Add Room</button><button class="btn solid" onclick="goStep(3)">Generate BOQ →</button></div>
     </div>
+    <div class="note-box">📐 <strong>NRM2 deductions applied automatically:</strong> Doors deducted at 0.9×2.1m · Windows at 1.2×1.2m from gross wall areas · Net quantities used throughout per NRM2 Section 2.</div>
     <div class="rooms-grid" id="roomsGrid"></div>
   </div>
-
-  <!-- ═══ STEP 3: BOQ ═══ -->
+  <!-- STEP 3 -->
   <div id="step3" style="display:none">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
-      <div>
-        <div class="section-title">Bill of <span>Quantities</span></div>
-        <div class="section-sub">Auto-calculated from your room dimensions · UK 2026 rates · All figures editable</div>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn" onclick="goStep(2)">← Edit Rooms</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+      <div><div style="font-size:16px;font-weight:700">NRM2 Bill of <span style="color:var(--gold)">Quantities</span></div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px">RICS NRM2 · BCIS 2026 · ✏️ Edit Qty or Rate directly in table</div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" onclick="goStep(2)">← Rooms</button>
         <button class="btn gold" onclick="goStep(4)">Programme →</button>
-        <button class="btn solid" onclick="window.print()">🖨 Print A3</button>
+        <button class="btn green" onclick="exportExcel()">📊 Export Excel</button>
+        <button class="btn blue" onclick="exportPDF()">📄 Export PDF</button>
       </div>
     </div>
-
-    <!-- Summary strip -->
     <div class="summary-strip" id="boqSummary"></div>
-
-    <!-- BOQ sections injected here -->
     <div id="boqContent"></div>
   </div>
-
-  <!-- ═══ STEP 4: PROGRAMME ═══ -->
+  <!-- STEP 4 -->
   <div id="step4" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
-      <div>
-        <div class="section-title">Build <span>Programme</span></div>
-        <div class="section-sub">Auto-sequenced from your BOQ · Gantt chart · A3 printable</div>
-      </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn" onclick="goStep(3)">← BOQ</button>
-        <button class="btn solid" onclick="window.print()">🖨 Print A3</button>
-      </div>
+      <div><div style="font-size:16px;font-weight:700">Build <span style="color:var(--gold)">Programme</span></div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px">NRM2 sequenced · Gantt chart · Editable durations + workers</div></div>
+      <div style="display:flex;gap:8px"><button class="btn" onclick="goStep(3)">← BOQ</button><button class="btn green" onclick="exportExcel()">📊 Excel</button><button class="btn blue" onclick="exportPDF()">📄 PDF</button></div>
     </div>
-
-    <div class="prog-wrap">
-      <div class="prog-head">
-        <div style="font-size:14px;font-weight:700">📅 Gantt Chart</div>
-        <div id="progTotals" style="font-size:12px;color:var(--muted);font-family:var(--mono)"></div>
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:20px">
+      <div style="padding:14px 18px;background:var(--s2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between"><div style="font-size:14px;font-weight:700">📅 NRM2 Gantt Chart</div><div id="progTotals" style="font-size:12px;color:var(--muted);font-family:var(--mono)"></div></div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--border);align-items:flex-end">
+        <div style="display:flex;flex-direction:column;gap:4px"><label style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono)">Start Date</label><input type="date" id="progStart" style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none" oninput="renderProgramme()"></div>
+        <div style="display:flex;flex-direction:column;gap:4px"><label style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono)">Days/Week</label><input type="number" id="progWpw" value="5" min="1" max="7" style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;width:60px" oninput="renderProgramme()"></div>
+        <div style="display:flex;flex-direction:column;gap:4px"><label style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono)">Day Rate £</label><input type="number" id="progDayRate" value="220" style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;width:80px" oninput="renderProgramme()"></div>
       </div>
-      <div class="prog-controls">
-        <div class="prog-ctrl">
-          <label>Start Date</label>
-          <input type="date" id="progStart" oninput="renderProgramme()">
-        </div>
-        <div class="prog-ctrl">
-          <label>Working Days / Week</label>
-          <input type="number" id="progWpw" value="5" min="1" max="7" style="width:60px" oninput="renderProgramme()">
-        </div>
-        <div class="prog-ctrl">
-          <label>Day Rate £</label>
-          <input type="number" id="progDayRate" value="220" style="width:80px" oninput="renderProgramme()">
-        </div>
-        <div class="prog-ctrl">
-          <label>Contractor Count</label>
-          <input type="number" id="progWorkers" value="2" min="1" max="10" style="width:60px" oninput="renderProgramme()">
-        </div>
-      </div>
-      <!-- Summary cards -->
       <div id="progSummary" style="display:flex;gap:10px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--border)"></div>
-      <!-- Gantt -->
-      <div class="gantt-scroll">
-        <div class="gantt-inner" id="ganttChart"></div>
-      </div>
+      <div style="overflow-x:auto"><div id="ganttChart"></div></div>
     </div>
-
-    <!-- Phase detail table -->
-    <div class="boq-section">
-      <div class="boq-section-head">
-        <div class="boq-section-title">📋 Phase Detail</div>
-        <div style="font-size:11px;color:var(--muted);font-family:var(--mono)">All phases · Estimated durations · Labour cost</div>
-      </div>
-      <table class="boq-table">
-        <thead><tr>
-          <th>#</th><th>Phase</th><th>Trade</th><th>Days</th><th>Workers</th>
-          <th style="text-align:right">Labour £</th><th>After</th><th>Done</th>
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden">
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600">📋 Phase Details — Edit days and workers</div>
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:700px">
+        <thead><tr style="background:var(--s2)">
+          <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono)">#</th>
+          <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono)">NRM2 Phase</th>
+          <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono)">Trade</th>
+          <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono)">Days</th>
+          <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono)">Workers</th>
+          <th style="padding:8px 12px;text-align:right;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono)">Labour £</th>
+          <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono)">Start</th>
+          <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono)">Finish</th>
+          <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono)">Done</th>
         </tr></thead>
         <tbody id="progTableBody"></tbody>
-      </table>
+      </table></div>
     </div>
   </div>
-
-</div><!-- /main -->
-
-<!-- ADD ROOM MODAL -->
+</div>
+<!-- MODAL -->
 <div class="modal-bg" id="addRoomModal" style="display:none">
   <div class="modal">
     <div class="modal-title">+ Add Room</div>
-    <label class="form-label">Room Name</label>
-    <input class="form-input" id="nrName" placeholder="Kitchen, Bedroom 1, Bathroom...">
+    <label class="form-label">Room Name</label><input class="form-input" id="nrName" placeholder="Kitchen, Bedroom 1...">
     <label class="form-label">Room Type</label>
     <select class="form-input" id="nrType">
-      <option value="living">Living Room</option>
-      <option value="kitchen">Kitchen</option>
-      <option value="bedroom">Bedroom</option>
-      <option value="bathroom">Bathroom</option>
-      <option value="hallway">Hallway / Landing</option>
-      <option value="extension">Extension</option>
-      <option value="loft">Loft Room</option>
-      <option value="other">Other</option>
+      <option value="living">Living Room</option><option value="kitchen">Kitchen</option>
+      <option value="bedroom">Bedroom</option><option value="bathroom">Bathroom</option>
+      <option value="hallway">Hallway / Landing</option><option value="extension">Extension Room</option>
+      <option value="loft">Loft Room</option><option value="other">Other</option>
     </select>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px">
-      <div>
-        <label class="form-label">Length (m)</label>
-        <input class="form-input" id="nrL" type="number" step=".1" placeholder="4.5">
-      </div>
-      <div>
-        <label class="form-label">Width (m)</label>
-        <input class="form-input" id="nrW" type="number" step=".1" placeholder="3.8">
-      </div>
-      <div>
-        <label class="form-label">Height (m)</label>
-        <input class="form-input" id="nrH" type="number" step=".1" placeholder="2.4" value="2.4">
-      </div>
+      <div><label class="form-label">Length (m)</label><input class="form-input" id="nrL" type="number" step=".1" placeholder="4.5"></div>
+      <div><label class="form-label">Width (m)</label><input class="form-input" id="nrW" type="number" step=".1" placeholder="3.8"></div>
+      <div><label class="form-label">Height (m)</label><input class="form-input" id="nrH" type="number" step=".1" placeholder="2.4" value="2.4"></div>
     </div>
-    <div class="modal-btns">
-      <button class="btn" onclick="closeModal()">Cancel</button>
-      <button class="btn solid" onclick="saveRoom()">Add Room</button>
-    </div>
+    <div class="modal-btns"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn solid" onclick="saveRoom()">Add Room</button></div>
   </div>
 </div>
-
 <script>
-// ══════════════════════════════════════════════
 // STATE
-// ══════════════════════════════════════════════
-let rooms = [];
-let boqData = [];
-let progPhases = [];
-let currentStep = 1;
+let rooms=[],progPhases=[],currentStep=1;
+window._boqSections=null;window._grandTotal=0;
 
-// ── OPTIONS ──
-const OPTIONS = [
-  {id:'strip',     icon:'🪚', name:'Strip Out',          desc:'Remove all plaster, floor coverings, kitchen, bathroom, fixtures',    default:true},
-  {id:'replaster', icon:'🏗', name:'Full Replaster',     desc:'Skim all walls and ceilings throughout',                             default:true},
-  {id:'rewire',    icon:'⚡', name:'Full Rewire',         desc:'Consumer unit, all first + second fix electrics, sockets, switches', default:true},
-  {id:'replumb',   icon:'🔧', name:'Full Replumb',        desc:'New boiler, all pipework, radiators, bathroom, kitchen plumbing',    default:true},
-  {id:'kitchen',   icon:'🍳', name:'New Kitchen',         desc:'Full kitchen strip, new units, worktop, tiling, appliances',        default:true},
-  {id:'bathroom',  icon:'🚿', name:'New Bathroom',        desc:'Full bathroom strip, new suite, tiling, plumbing connections',      default:true},
-  {id:'windows',   icon:'🪟', name:'New Windows',         desc:'Replace all single glazed windows with double glazed uPVC',         default:false},
-  {id:'roof',      icon:'🏠', name:'Roof Works',          desc:'Full or partial roof strip, felt, battens, tiles/slates',           default:false},
-  {id:'damp',      icon:'💧', name:'Damp Treatment',      desc:'DPC injection, tanking, waterproofing where needed',                default:true},
-  {id:'insulation',icon:'🌡', name:'Insulation',          desc:'Loft insulation, cavity wall insulation, underfloor',               default:false},
-  {id:'extension', icon:'🏗', name:'Extension',           desc:'Single or double storey extension — adds rooms to BOQ',            default:false},
-  {id:'loft',      icon:'🏚', name:'Loft Conversion',     desc:'Dormer or velux loft conversion — adds loft rooms to BOQ',         default:false},
-  {id:'garage',    icon:'🚗', name:'Garage Conversion',   desc:'Convert existing garage to habitable space',                        default:false},
-  {id:'landscaping',icon:'🌿',name:'Landscaping',         desc:'Front + rear garden, fencing, driveway',                           default:false},
-];
-
-let activeOptions = {};
-OPTIONS.forEach(o => activeOptions[o.id] = o.default);
-
-// ── ROOM TYPES CONFIG ──
-const ROOM_TYPES = {
-  living:   {icon:'🛋', label:'Living Room',    sockets:8,  lights:3, rads:1, hasWetAreas:false},
-  kitchen:  {icon:'🍳', label:'Kitchen',         sockets:10, lights:2, rads:1, hasWetAreas:true},
-  bedroom:  {icon:'🛏', label:'Bedroom',          sockets:6,  lights:2, rads:1, hasWetAreas:false},
-  bathroom: {icon:'🚿', label:'Bathroom',         sockets:2,  lights:2, rads:1, hasWetAreas:true},
-  hallway:  {icon:'🚪', label:'Hallway/Landing',  sockets:2,  lights:2, rads:0, hasWetAreas:false},
-  extension:{icon:'🏗', label:'Extension Room',   sockets:8,  lights:3, rads:1, hasWetAreas:false},
-  loft:     {icon:'🏚', label:'Loft Room',         sockets:6,  lights:2, rads:1, hasWetAreas:false},
-  other:    {icon:'📦', label:'Room',              sockets:4,  lights:2, rads:1, hasWetAreas:false},
-};
-
-// ── UK 2026 RATES ──
-const RATES = {
-  // Plastering
-  plaster_wall_skim:    {rate:12,  unit:'m²', trade:'plast', label:'Wall skim plaster'},
-  plaster_ceil_skim:    {rate:14,  unit:'m²', trade:'plast', label:'Ceiling skim plaster'},
-  plaster_bonding:      {rate:18,  unit:'m²', trade:'plast', label:'Bonding + skim (bare brick)'},
-  // Strip out
-  strip_plaster:        {rate:8,   unit:'m²', trade:'build', label:'Strip plaster to brick'},
-  strip_floor:          {rate:3,   unit:'m²', trade:'build', label:'Strip floor coverings'},
-  skip_hire:            {rate:320, unit:'no', trade:'build', label:'Skip hire 8yd'},
-  // Electrical
-  consumer_unit:        {rate:450, unit:'no', trade:'elec',  label:'Consumer unit replacement'},
-  socket_double:        {rate:55,  unit:'no', trade:'elec',  label:'Double socket (supply + fit)'},
-  light_point:          {rate:65,  unit:'no', trade:'elec',  label:'Light point (supply + fit)'},
-  smoke_alarm:          {rate:38,  unit:'no', trade:'elec',  label:'Smoke alarm (interlinked)'},
-  eicr:                 {rate:180, unit:'no', trade:'elec',  label:'EICR certificate'},
-  // Plumbing
-  boiler_combi:         {rate:2400,unit:'no', trade:'plumb', label:'New combi boiler (supply + fit)'},
-  radiator:             {rate:180, unit:'no', trade:'plumb', label:'Radiator (supply + fit)'},
-  bathroom_suite:       {rate:1800,unit:'no', trade:'plumb', label:'Full bathroom suite (supply + fit)'},
-  kitchen_plumb:        {rate:650, unit:'no', trade:'plumb', label:'Kitchen plumbing connection'},
-  gas_cert:             {rate:95,  unit:'no', trade:'plumb', label:'Gas safety certificate'},
-  // Painting + decorating
-  paint_walls:          {rate:7,   unit:'m²', trade:'decor', label:'Paint walls (2 coats)'},
-  paint_ceiling:        {rate:8,   unit:'m²', trade:'decor', label:'Paint ceiling (2 coats)'},
-  paint_woodwork:       {rate:12,  unit:'m²', trade:'decor', label:'Gloss woodwork (doors, skirtings)'},
-  // Flooring
-  floor_laminate:       {rate:22,  unit:'m²', trade:'floor', label:'Laminate flooring (supply + fit)'},
-  floor_carpet:         {rate:18,  unit:'m²', trade:'floor', label:'Carpet (supply + fit)'},
-  floor_vinyl:          {rate:16,  unit:'m²', trade:'floor', label:'Luxury vinyl tile (supply + fit)'},
-  floor_tile_ceramic:   {rate:35,  unit:'m²', trade:'carp',  label:'Ceramic floor tiles (supply + fit)'},
-  // Carpentry
-  skirting_board:       {rate:14,  unit:'ml', trade:'carp',  label:'Skirting board (supply + fit)'},
-  door_internal:        {rate:180, unit:'no', trade:'carp',  label:'Internal door (supply + fit)'},
-  door_lining:          {rate:95,  unit:'no', trade:'carp',  label:'Door lining/frame'},
-  // Tiling
-  wall_tile_bathroom:   {rate:38,  unit:'m²', trade:'carp',  label:'Bathroom wall tiles (supply + fit)'},
-  wall_tile_kitchen:    {rate:32,  unit:'m²', trade:'carp',  label:'Kitchen splashback tiles'},
-  // Roofing
-  roof_strip_retile:    {rate:55,  unit:'m²', trade:'roof',  label:'Strip + re-tile/slate roof'},
-  roof_felt_batten:     {rate:22,  unit:'m²', trade:'roof',  label:'Replace felt + battens'},
-  fascia_soffit:        {rate:45,  unit:'ml', trade:'roof',  label:'Fascia + soffit board (uPVC)'},
-  // Windows
-  window_upvc_small:    {rate:680, unit:'no', trade:'build', label:'uPVC window small (supply + fit)'},
-  window_upvc_std:      {rate:850, unit:'no', trade:'build', label:'uPVC window standard (supply + fit)'},
-  // Damp
-  dpc_injection:        {rate:28,  unit:'ml', trade:'build', label:'DPC injection (per linear metre)'},
-  tanking_slurry:       {rate:45,  unit:'m²', trade:'build', label:'Tanking slurry (wet areas)'},
-  // Extension / Structure
-  ext_foundation:       {rate:380, unit:'m²', trade:'build', label:'Extension foundations (per m² floor)'},
-  ext_blockwork:        {rate:95,  unit:'m²', trade:'build', label:'External blockwork walls'},
-  ext_roof_flat:        {rate:85,  unit:'m²', trade:'roof',  label:'Flat roof covering (GRP)'},
-  ext_roof_pitched:     {rate:110, unit:'m²', trade:'roof',  label:'Pitched roof (supply + tile)'},
-  // Loft
-  loft_structural:      {rate:4500,unit:'no', trade:'build', label:'Loft structural beam + dormer frame'},
-  loft_velux:           {rate:950, unit:'no', trade:'carp',  label:'Velux roof window (supply + fit)'},
-  loft_stairs:          {rate:1800,unit:'no', trade:'carp',  label:'Loft staircase (supply + fit)'},
-  loft_insulation:      {rate:18,  unit:'m²', trade:'build', label:'Loft insulation (150mm mineral wool)'},
-  // Compliance
-  epc:                  {rate:95,  unit:'no', trade:'build', label:'EPC certificate post refurb'},
-  building_regs:        {rate:750, unit:'no', trade:'build', label:'Building regs application + inspections'},
-  contingency_pct:      {rate:0,   unit:'%',  trade:'build', label:'Contingency 12.5%'},
-};
-
-// ── PROGRAMME PHASES ──
-// Base phases always present. Optional phases added based on options.
-const BASE_PHASES = [
-  {id:'strip',    name:'1. Strip Out + Skip',        days:3, workers:2, col:'#f04040', trade:'build', before:'—',        optional:'strip'},
-  {id:'damp',     name:'2. Damp + Structural',       days:4, workers:2, col:'#f09040', trade:'build', before:'Phase 1',  optional:'damp'},
-  {id:'ffe',      name:'3. First Fix Electrics',     days:3, workers:1, col:'#d4f244', trade:'elec',  before:'Phase 2',  optional:'rewire'},
-  {id:'ffp',      name:'4. First Fix Plumbing',      days:3, workers:1, col:'#40d0b0', trade:'plumb', before:'Phase 2',  optional:'replumb'},
-  {id:'ext',      name:'Extension Build',            days:10,workers:3, col:'#f06040', trade:'build', before:'Phase 2',  optional:'extension'},
-  {id:'loft',     name:'Loft Conversion',            days:8, workers:2, col:'#c040f0', trade:'build', before:'Phase 2',  optional:'loft'},
-  {id:'roof',     name:'Roof Works',                 days:5, workers:2, col:'#f04080', trade:'roof',  before:'Phase 2',  optional:'roof'},
-  {id:'plaster',  name:'5. Plastering',              days:5, workers:2, col:'#9040f0', trade:'plast', before:'Phases 3+4',optional:'replaster'},
-  {id:'dry',      name:'6. Drying Time ⏳',          days:8, workers:0, col:'#404038', trade:'—',    before:'Phase 5',  optional:null},
-  {id:'sfe',      name:'7. Second Fix Electrics',    days:2, workers:1, col:'#d4f244', trade:'elec',  before:'Phase 6',  optional:'rewire'},
-  {id:'sfp',      name:'8. Second Fix Plumbing',     days:2, workers:1, col:'#40d0b0', trade:'plumb', before:'Phase 6',  optional:'replumb'},
-  {id:'tile',     name:'9. Tiling',                  days:3, workers:1, col:'#f044c0', trade:'carp',  before:'Phase 8',  optional:'bathroom'},
-  {id:'kitch',    name:'10. Kitchen Fit',            days:2, workers:2, col:'#f0b840', trade:'carp',  before:'Phase 8',  optional:'kitchen'},
-  {id:'windows',  name:'New Windows',                days:2, workers:2, col:'#40a8f0', trade:'build', before:'Phase 6',  optional:'windows'},
-  {id:'doors',    name:'11. Doors + Skirting',       days:2, workers:1, col:'#40a0f0', trade:'carp',  before:'Phase 9',  optional:null},
-  {id:'floor',    name:'12. Flooring',               days:2, workers:1, col:'#f09040', trade:'floor', before:'Phase 11', optional:null},
-  {id:'decor',    name:'13. Decorating',             days:3, workers:2, col:'#f0b840', trade:'decor', before:'Phase 12', optional:null},
-  {id:'snag',     name:'14. Snag + Deep Clean',      days:2, workers:2, col:'#40e0d0', trade:'build', before:'Phase 13', optional:null},
-];
-
-// ══════════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('projDate').valueAsDate = new Date();
-  document.getElementById('progStart').valueAsDate = (() => {
-    const d = new Date(); d.setDate(d.getDate() + 7); return d;
-  })();
-  renderOptions();
-  renderRooms();
-  seedDefaultRooms();
-});
-
-function seedDefaultRooms() {
-  rooms = [
-    {id:uid(), name:'Living Room',  type:'living',   l:4.5, w:3.8, h:2.4, extras:{door:true,  ensuite:false}},
-    {id:uid(), name:'Kitchen',      type:'kitchen',  l:3.2, w:2.8, h:2.4, extras:{door:true,  ensuite:false}},
-    {id:uid(), name:'Bathroom',     type:'bathroom', l:2.2, w:1.8, h:2.4, extras:{door:true,  ensuite:false}},
-    {id:uid(), name:'Bedroom 1',    type:'bedroom',  l:4.0, w:3.5, h:2.4, extras:{door:true,  ensuite:false}},
-    {id:uid(), name:'Bedroom 2',    type:'bedroom',  l:3.2, w:2.8, h:2.4, extras:{door:true,  ensuite:false}},
-    {id:uid(), name:'Hallway',      type:'hallway',  l:4.0, w:1.2, h:2.4, extras:{door:false, ensuite:false}},
-  ];
-  renderRooms();
-}
-
-function uid() { return Math.random().toString(36).slice(2,9); }
-
-// ══════════════════════════════════════════════
-// STEPS
-// ══════════════════════════════════════════════
-function goStep(n) {
-  currentStep = n;
-  [1,2,3,4].forEach(i => {
-    document.getElementById('step'+i).style.display = i===n ? 'block' : 'none';
-    const tab = document.getElementById('step-tab-'+i);
-    tab.className = 'step' + (i===n?' active':i<n?' done':'');
-  });
-  if (n===3) generateBOQ();
-  if (n===4) { generateBOQ(); renderProgramme(); }
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-
-// ══════════════════════════════════════════════
 // OPTIONS
-// ══════════════════════════════════════════════
-function renderOptions() {
-  document.getElementById('optionsGrid').innerHTML = OPTIONS.map(o => `
-    <div class="opt-card ${activeOptions[o.id]?'active':''}" id="opt-${o.id}" onclick="toggleOption('${o.id}')">
+const OPTIONS=[
+  {id:'prelims',   icon:'📋',name:'Preliminaries',         desc:'Site setup, welfare, insurances, management',         default:true},
+  {id:'demolition',icon:'🪚',name:'Demolition & Strip Out', desc:'Full strip, remove plaster, floors, fixtures',        default:true},
+  {id:'damp',      icon:'💧',name:'Damp & Groundworks',     desc:'DPC injection, tanking, drainage works',              default:true},
+  {id:'structure', icon:'🧱',name:'Structural Works',       desc:'Beams, lintels, wall ties, structural repairs',       default:true},
+  {id:'roofing',   icon:'🏠',name:'Roofing',               desc:'Strip, re-felt, re-tile, fascia, soffit, guttering',  default:false},
+  {id:'extension', icon:'🏗',name:'Extension',             desc:'Single/double storey extension — full build',         default:false},
+  {id:'loft',      icon:'🏚',name:'Loft Conversion',       desc:'Structural, dormer, velux, staircase',                default:false},
+  {id:'windows',   icon:'🪟',name:'Windows & Ext. Doors',  desc:'Replace all windows + external doors',               default:false},
+  {id:'masonry',   icon:'🏗',name:'Masonry & Plasterwork', desc:'Brick repairs, full replaster all rooms',             default:true},
+  {id:'carpentry', icon:'🪵',name:'Carpentry & Joinery',   desc:'Internal doors, skirtings, architraves',              default:true},
+  {id:'electrics', icon:'⚡',name:'M&E Services',          desc:'Full rewire, consumer unit, boiler, heating',         default:true},
+  {id:'plumbing',  icon:'🔧',name:'Plumbing & Sanitary',   desc:'Full replumb, bathroom, kitchen connections',         default:true},
+  {id:'kitchen',   icon:'🍳',name:'Kitchen Installation',  desc:'Strip, new units, worktop, appliances',              default:true},
+  {id:'bathroom',  icon:'🚿',name:'Bathroom Installation', desc:'Strip, new suite, full tiling',                      default:true},
+  {id:'finishes',  icon:'🎨',name:'Floor & Wall Finishes', desc:'Flooring, painting & decorating',                    default:true},
+  {id:'external',  icon:'🌿',name:'External Works',        desc:'Fencing, landscaping, driveway, external decor',     default:false},
+];
+let activeOptions={};OPTIONS.forEach(o=>activeOptions[o.id]=o.default);
+
+// ROOM TYPES
+const ROOM_TYPES={
+  living:   {icon:'🛋',label:'Living Room',   sockets:8, lights:3,rads:1,doors:1,windows:2},
+  kitchen:  {icon:'🍳',label:'Kitchen',        sockets:10,lights:2,rads:1,doors:1,windows:1},
+  bedroom:  {icon:'🛏',label:'Bedroom',         sockets:6, lights:2,rads:1,doors:1,windows:1},
+  bathroom: {icon:'🚿',label:'Bathroom',        sockets:2, lights:2,rads:1,doors:1,windows:1},
+  hallway:  {icon:'🚪',label:'Hallway/Landing', sockets:2, lights:2,rads:0,doors:0,windows:0},
+  extension:{icon:'🏗',label:'Extension Room',  sockets:8, lights:3,rads:1,doors:1,windows:2},
+  loft:     {icon:'🏚',label:'Loft Room',        sockets:6, lights:2,rads:1,doors:1,windows:1},
+  other:    {icon:'📦',label:'Room',             sockets:4, lights:2,rads:1,doors:1,windows:1},
+};
+
+// BCIS REGIONAL FACTORS
+const REGIONAL_FACTORS={ne:.88,nw:.92,yh:.90,em:.94,wm:.95,ee:1.02,lon:1.28,se:1.10,sw:.96};
+
+// NRM2 WORK SECTION LABELS
+const WS_LABELS={
+  A:'A — Preliminaries',
+  B:'B — Demolition & Alteration Works',
+  C:'C — Groundworks & Damp Proofing',
+  D:'D — Structural & Masonry Repairs',
+  E:'E — Roofing',
+  F:'F — Extension',
+  G:'G — Loft Conversion',
+  H:'H — Windows & External Doors',
+  I:'I — Masonry & Plasterwork',
+  J:'J — Carpentry & Joinery',
+  K:'K — Mechanical & Electrical Services',
+  L:'L — Plumbing & Sanitary Appliances',
+  M:'M — Kitchen',
+  N:'N — Bathroom & Wetroom Finishes',
+  O:'O — Floor & Wall Finishes / Decorating',
+  P:'P — External Works',
+  Q:'Q — Compliance & Certificates',
+  R:'R — Dayworks Allowance',
+  S:'S — Contingency',
+};
+
+const WS_COLORS={A:'#f0c040',B:'#f04040',C:'#40a0f0',D:'#f06040',E:'#f04080',F:'#f06040',G:'#c040f0',H:'#40a8f0',I:'#9040f0',J:'#8060cc',K:'#d4f244',L:'#40d0b0',M:'#f0b840',N:'#40d0b0',O:'#80c080',P:'#40d080',Q:'#f0c040',R:'#f0a040',S:'#f04040'};
+
+// PROGRAMME PHASES
+const NRM2_PHASES=[
+  {id:'prelims',   name:'A — Prelims & Site Setup',     days:2, w:1,col:'#f0c040',trade:'Prelims',      before:'—',         opt:'prelims',   done:false},
+  {id:'demolish',  name:'B — Demolition & Strip Out',   days:3, w:2,col:'#f04040',trade:'Builder',      before:'Phase A',   opt:'demolition',done:false},
+  {id:'damp',      name:'C — Groundworks & Damp',       days:3, w:2,col:'#40a0f0',trade:'Builder',      before:'Phase B',   opt:'damp',      done:false},
+  {id:'structure', name:'D — Structural Works',         days:4, w:2,col:'#f06040',trade:'Builder',      before:'Phase B',   opt:'structure', done:false},
+  {id:'roofing',   name:'E — Roofing',                  days:5, w:2,col:'#f04080',trade:'Roofer',       before:'Phase D',   opt:'roofing',   done:false},
+  {id:'extension', name:'F — Extension',                days:10,w:3,col:'#f06040',trade:'Builder',      before:'Phase D',   opt:'extension', done:false},
+  {id:'loft',      name:'G — Loft Conversion',          days:8, w:2,col:'#c040f0',trade:'Builder',      before:'Phase D',   opt:'loft',      done:false},
+  {id:'windows',   name:'H — Windows & Ext. Doors',     days:2, w:2,col:'#40a8f0',trade:'Builder',      before:'Phase D',   opt:'windows',   done:false},
+  {id:'ff_elec',   name:'K — First Fix M&E',            days:3, w:1,col:'#d4f244',trade:'Electrician',  before:'Phase D',   opt:'electrics', done:false},
+  {id:'ff_plumb',  name:'L — First Fix Plumbing',       days:3, w:1,col:'#40d0b0',trade:'Plumber',      before:'Phase D',   opt:'plumbing',  done:false},
+  {id:'plaster',   name:'I — Plasterwork',              days:5, w:2,col:'#9040f0',trade:'Plasterer',    before:'Phases K+L',opt:'masonry',   done:false},
+  {id:'dry',       name:'⏳ Drying Time (NRM2 req.)',   days:8, w:0,col:'#404038',trade:'—',            before:'Phase I',   opt:null,        done:false},
+  {id:'sf_elec',   name:'K — Second Fix M&E',           days:2, w:1,col:'#d4f244',trade:'Electrician',  before:'Dry period',opt:'electrics', done:false},
+  {id:'sf_plumb',  name:'L — Second Fix Plumbing',      days:2, w:1,col:'#40d0b0',trade:'Plumber',      before:'Dry period',opt:'plumbing',  done:false},
+  {id:'bathroom',  name:'N — Bathroom & Tiling',        days:3, w:1,col:'#40d0b0',trade:'Tiler',        before:'Phase L',   opt:'bathroom',  done:false},
+  {id:'kitchen',   name:'M — Kitchen Installation',     days:2, w:2,col:'#f0b840',trade:'Kitchen Fitter',before:'Phase L',  opt:'kitchen',   done:false},
+  {id:'carpentry', name:'J — Carpentry & Joinery',      days:2, w:1,col:'#8060cc',trade:'Carpenter',    before:'Phase N',   opt:'carpentry', done:false},
+  {id:'flooring',  name:'O1 — Flooring',                days:2, w:1,col:'#80c080',trade:'Floorer',      before:'Phase J',   opt:'finishes',  done:false},
+  {id:'decorating',name:'O2 — Decorating',              days:3, w:2,col:'#f0c080',trade:'Decorator',    before:'Phase O1',  opt:'finishes',  done:false},
+  {id:'external',  name:'P — External Works',           days:3, w:2,col:'#40d080',trade:'Builder',      before:'Phase O2',  opt:'external',  done:false},
+  {id:'compliance',name:'Q — Compliance & Certs',       days:1, w:1,col:'#f0c040',trade:'Various',      before:'Phase O2',  opt:'prelims',   done:false},
+  {id:'snag',      name:'Snagging & Handover',          days:2, w:2,col:'#40e0d0',trade:'Builder',      before:'Phase Q',   opt:null,        done:false},
+];
+
+// INIT
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('projDate').valueAsDate=new Date();
+  const d=new Date();d.setDate(d.getDate()+14);
+  document.getElementById('progStart').valueAsDate=d;
+  renderOptions();seedRooms();
+});
+function uid(){return Math.random().toString(36).slice(2,9);}
+
+function seedRooms(){
+  rooms=[
+    {id:uid(),name:'Living Room', type:'living',  l:4.5,w:3.8,h:2.4,extras:{}},
+    {id:uid(),name:'Kitchen',     type:'kitchen', l:3.2,w:2.8,h:2.4,extras:{}},
+    {id:uid(),name:'Bathroom',    type:'bathroom',l:2.2,w:1.8,h:2.4,extras:{}},
+    {id:uid(),name:'Bedroom 1',   type:'bedroom', l:4.0,w:3.5,h:2.4,extras:{}},
+    {id:uid(),name:'Bedroom 2',   type:'bedroom', l:3.2,w:2.8,h:2.4,extras:{}},
+    {id:uid(),name:'Hallway',     type:'hallway', l:4.0,w:1.2,h:2.4,extras:{}},
+  ];renderRooms();
+}
+
+// STEPS
+function goStep(n){
+  currentStep=n;
+  [1,2,3,4].forEach(i=>{
+    document.getElementById('step'+i).style.display=i===n?'block':'none';
+    const t=document.getElementById('step-tab-'+i);
+    t.className='step'+(i===n?' active':i<n?' done':'');
+  });
+  if(n===3)generateBOQ();
+  if(n===4){generateBOQ();renderProgramme();}
+  document.getElementById('btnExcel').style.display=n>=3?'':'none';
+  document.getElementById('btnPDF').style.display=n>=3?'':'none';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// OPTIONS
+function renderOptions(){
+  document.getElementById('optionsGrid').innerHTML=OPTIONS.map(o=>`
+    <div class="opt-card ${activeOptions[o.id]?'active':''}" onclick="toggleOption('${o.id}')">
       <input type="checkbox" class="opt-check" ${activeOptions[o.id]?'checked':''} onclick="event.stopPropagation();toggleOption('${o.id}')">
       <div class="opt-icon">${o.icon}</div>
-      <div class="opt-content">
-        <div class="opt-name">${o.name}</div>
-        <div class="opt-desc">${o.desc}</div>
-      </div>
+      <div><div class="opt-name">${o.name}</div><div class="opt-desc">${o.desc}</div></div>
     </div>`).join('');
 }
+function toggleOption(id){activeOptions[id]=!activeOptions[id];renderOptions();}
 
-function toggleOption(id) {
-  activeOptions[id] = !activeOptions[id];
-  const card = document.getElementById('opt-'+id);
-  card.classList.toggle('active', activeOptions[id]);
-  card.querySelector('input').checked = activeOptions[id];
-  // If extension/loft toggled, update rooms
-  if (id==='extension'||id==='loft'||id==='garage') renderRooms();
+// ROOMS
+function getRoomQ(r){
+  const l=+r.l||0,w=+r.w||0,h=+r.h||2.4;
+  const cfg=ROOM_TYPES[r.type]||ROOM_TYPES.other;
+  const ex=r.extras||{};
+  const floor=l*w,perim=2*(l+w);
+  const wallGross=perim*h;
+  const doorArea=cfg.doors*0.9*2.1;
+  const winArea=(ex.bay_window?cfg.windows+1:cfg.windows)*1.2*1.2;
+  const wallNet=Math.max(0,wallGross-doorArea-winArea);
+  return{
+    floor,perim,wallNet,ceilArea:floor,
+    sockets:cfg.sockets+(ex.extra_sockets?4:0),lights:cfg.lights,
+    rads:cfg.rads+(ex.ensuite?1:0),doors:cfg.doors,
+    windows:ex.bay_window?cfg.windows+1:cfg.windows,
+    hasBath:r.type==='bathroom'||(ex.ensuite||false),
+    isKitch:r.type==='kitchen',isBed:r.type==='bedroom',
+    skirtingMl:Math.max(0,perim-cfg.doors*0.9),
+    architraveMl:cfg.doors*2*(2.1+0.9)*2,
+    tileWall:(r.type==='bathroom'||(ex.ensuite||false))?wallNet:r.type==='kitchen'?Math.min(6,wallNet*0.35):0,
+    paintWall:r.type==='bathroom'?0:wallNet,
+    paintCeil:floor,
+    floorType:r.type==='bathroom'?'tile':r.type==='kitchen'?'tile':r.type==='bedroom'?'carpet':'laminate',
+  };
 }
 
-// ══════════════════════════════════════════════
-// ROOMS
-// ══════════════════════════════════════════════
-function renderRooms() {
-  const grid = document.getElementById('roomsGrid');
-  grid.innerHTML = rooms.map((r,i) => {
-    const cfg = ROOM_TYPES[r.type] || ROOM_TYPES.other;
-    const floor = r.l * r.w;
-    const wallArea = 2*(r.l+r.w)*r.h;
-    const ceilArea = floor;
-    return `
-    <div class="room-card fade-up" id="rcard-${r.id}">
+function renderRooms(){
+  const grid=document.getElementById('roomsGrid');
+  grid.innerHTML=rooms.map(r=>{
+    const cfg=ROOM_TYPES[r.type]||ROOM_TYPES.other;
+    const l=+r.l||0,w=+r.w||0,h=+r.h||2.4;
+    const floor=l*w,perim=2*(l+w),wallGross=perim*h;
+    const doorArea=cfg.doors*0.9*2.1,winArea=cfg.windows*1.2*1.2;
+    const wallNet=Math.max(0,wallGross-doorArea-winArea);
+    return`<div class="room-card">
       <div class="room-header">
-        <div class="room-icon-name">
-          <span style="font-size:20px">${cfg.icon}</span>
-          <input class="room-name-input" value="${r.name}" onchange="updateRoom('${r.id}','name',this.value)">
-        </div>
+        <div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">${cfg.icon}</span><input class="room-name-input" value="${r.name}" onchange="updateRoom('${r.id}','name',this.value)"></div>
         <div style="display:flex;align-items:center;gap:8px">
-          <select class="room-type-select" onchange="updateRoom('${r.id}','type',this.value)">
-            ${Object.entries(ROOM_TYPES).map(([k,v])=>`<option value="${k}" ${r.type===k?'selected':''}>${v.label}</option>`).join('')}
-          </select>
+          <select class="room-type-select" onchange="updateRoom('${r.id}','type',this.value)">${Object.entries(ROOM_TYPES).map(([k,v])=>`<option value="${k}" ${r.type===k?'selected':''}>${v.label}</option>`).join('')}</select>
           <button class="room-delete" onclick="deleteRoom('${r.id}')">✕</button>
         </div>
       </div>
       <div class="room-body">
         <div class="dims-grid">
-          <div class="dim-field">
-            <div class="dim-label">Length (m)</div>
-            <input class="dim-input" type="number" step=".1" placeholder="0.0" value="${r.l||''}"
-              oninput="updateRoom('${r.id}','l',+this.value)">
-          </div>
-          <div class="dim-field">
-            <div class="dim-label">Width (m)</div>
-            <input class="dim-input" type="number" step=".1" placeholder="0.0" value="${r.w||''}"
-              oninput="updateRoom('${r.id}','w',+this.value)">
-          </div>
-          <div class="dim-field">
-            <div class="dim-label">Height (m)</div>
-            <input class="dim-input" type="number" step=".1" placeholder="2.4" value="${r.h||2.4}"
-              oninput="updateRoom('${r.id}','h',+this.value)">
-          </div>
+          <div class="dim-field"><div class="dim-label">Length (m)</div><input class="dim-input" type="number" step=".1" placeholder="0.0" value="${r.l||''}" oninput="updateRoom('${r.id}','l',+this.value)"></div>
+          <div class="dim-field"><div class="dim-label">Width (m)</div><input class="dim-input" type="number" step=".1" placeholder="0.0" value="${r.w||''}" oninput="updateRoom('${r.id}','w',+this.value)"></div>
+          <div class="dim-field"><div class="dim-label">Height (m)</div><input class="dim-input" type="number" step=".1" placeholder="2.4" value="${r.h||2.4}" oninput="updateRoom('${r.id}','h',+this.value)"></div>
         </div>
-        ${r.l && r.w && r.h ? `
-        <div class="room-calcs">
-          <div class="calc-item">
-            <div class="calc-val">${floor.toFixed(1)}</div>
-            <div class="calc-lbl">m² floor</div>
-          </div>
-          <div class="calc-item">
-            <div class="calc-val">${wallArea.toFixed(1)}</div>
-            <div class="calc-lbl">m² walls</div>
-          </div>
-          <div class="calc-item">
-            <div class="calc-val">${(floor+wallArea).toFixed(1)}</div>
-            <div class="calc-lbl">m² total</div>
-          </div>
-        </div>` : `<div style="font-size:11px;color:var(--dim);font-family:var(--mono);text-align:center;padding:10px">Enter dimensions above</div>`}
-        <div class="room-extras" style="margin-top:10px">
-          <div style="font-size:9px;color:var(--dim);font-family:var(--mono);text-transform:uppercase;letter-spacing:.06em;width:100%;margin-bottom:4px">Include in this room:</div>
-          ${['Ensuite','Extra Sockets','Wet Underfloor','Coving','Bay Window'].map(e=>{
-            const key = e.toLowerCase().replace(/ /g,'_');
-            const on = r.extras && r.extras[key];
-            return `<button class="extra-toggle ${on?'on':''}" onclick="toggleExtra('${r.id}','${key}')">${e}</button>`;
-          }).join('')}
+        ${l&&w?`<div class="room-calcs">
+          <div class="calc-item"><div class="calc-val">${floor.toFixed(1)}</div><div class="calc-lbl">m² floor</div></div>
+          <div class="calc-item"><div class="calc-val">${wallNet.toFixed(1)}</div><div class="calc-lbl">m² wall net</div></div>
+          <div class="calc-item"><div class="calc-val">${floor.toFixed(1)}</div><div class="calc-lbl">m² ceiling</div></div>
+          <div class="calc-item"><div class="calc-val">${perim.toFixed(1)}</div><div class="calc-lbl">ml perim</div></div>
+        </div>`:'<div style="font-size:10px;color:var(--dim);font-family:var(--mono);text-align:center;padding:8px">Enter dimensions above</div>'}
+        <div class="room-extras">
+          ${['Ensuite','Bay Window','Extra Sockets','Wet UFH'].map(e=>{const k=e.toLowerCase().replace(/ /g,'_');const on=r.extras&&r.extras[k];return`<button class="extra-toggle ${on?'on':''}" onclick="toggleExtra('${r.id}','${k}')">${e}</button>`;}).join('')}
         </div>
       </div>
     </div>`;
-  }).join('') + `
-    <div class="add-room-card" onclick="openAddRoom()">
-      <div style="font-size:32px">+</div>
-      <div style="font-size:13px;color:var(--muted);font-weight:600">Add Room</div>
-      <div style="font-size:11px;color:var(--dim);font-family:var(--mono)">L × W × H</div>
-    </div>`;
+  }).join('')+`<div class="add-room-card" onclick="openAddRoom()"><div style="font-size:28px">+</div><div style="font-size:12px;color:var(--muted);font-weight:600">Add Room</div><div style="font-size:10px;color:var(--dim);font-family:var(--mono)">L × W × H</div></div>`;
 }
-
-function updateRoom(id, field, val) {
-  const r = rooms.find(r=>r.id===id);
-  if (r) { r[field] = val; renderRooms(); }
+function updateRoom(id,field,val){const r=rooms.find(r=>r.id===id);if(r){r[field]=val;renderRooms();}}
+function toggleExtra(id,key){const r=rooms.find(r=>r.id===id);if(r){if(!r.extras)r.extras={};r.extras[key]=!r.extras[key];renderRooms();}}
+function deleteRoom(id){rooms=rooms.filter(r=>r.id!==id);renderRooms();}
+function openAddRoom(){document.getElementById('addRoomModal').style.display='flex';}
+function closeModal(){document.querySelectorAll('.modal-bg').forEach(m=>m.style.display='none');}
+function saveRoom(){
+  const name=document.getElementById('nrName').value.trim();if(!name){alert('Enter a room name.');return;}
+  rooms.push({id:uid(),name,type:document.getElementById('nrType').value,l:+document.getElementById('nrL').value||0,w:+document.getElementById('nrW').value||0,h:+document.getElementById('nrH').value||2.4,extras:{}});
+  closeModal();renderRooms();
+  ['nrName','nrL','nrW'].forEach(id=>document.getElementById(id).value='');document.getElementById('nrH').value='2.4';
 }
-
-function toggleExtra(id, key) {
-  const r = rooms.find(r=>r.id===id);
-  if (r) { if(!r.extras)r.extras={}; r.extras[key]=!r.extras[key]; renderRooms(); }
-}
-
-function deleteRoom(id) {
-  rooms = rooms.filter(r=>r.id!==id);
-  renderRooms();
-}
-
-function openAddRoom() { document.getElementById('addRoomModal').style.display='flex'; }
-function closeModal() { document.querySelectorAll('.modal-bg').forEach(m=>m.style.display='none'); }
-
-function saveRoom() {
-  const name = document.getElementById('nrName').value.trim();
-  if (!name) { alert('Enter a room name.'); return; }
-  rooms.push({
-    id: uid(),
-    name,
-    type: document.getElementById('nrType').value,
-    l: +document.getElementById('nrL').value || 0,
-    w: +document.getElementById('nrW').value || 0,
-    h: +document.getElementById('nrH').value || 2.4,
-    extras: {}
-  });
-  closeModal();
-  renderRooms();
-  // Clear inputs
-  ['nrName','nrL','nrW'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('nrH').value = '2.4';
-}
-
 document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal();}));
 
-// ══════════════════════════════════════════════
-// BOQ CALCULATION ENGINE
-// ══════════════════════════════════════════════
-function calcRoomQuantities(r) {
-  const l=+r.l||0, w=+r.w||0, h=+r.h||2.4;
-  const floor = l*w;
-  const perimeter = 2*(l+w);
-  const wallArea = perimeter*h;
-  const ceilArea = floor;
-  // Deduct openings: ~1.9m² per door, ~1.5m² per window avg
-  const doorDeduct = 1.9;
-  const winCount = l>3?2:1; // rough estimate
-  const winDeduct = winCount * 1.5;
-  const netWall = Math.max(0, wallArea - doorDeduct - winDeduct);
-  const cfg = ROOM_TYPES[r.type] || ROOM_TYPES.other;
-  const extras = r.extras || {};
-  return {
-    floor, perimeter, wallArea:netWall, ceilArea,
-    sockets: cfg.sockets + (extras.extra_sockets?4:0),
-    lights: cfg.lights,
-    rads: cfg.rads + (extras.ensuite?1:0),
-    hasBath: r.type==='bathroom' || extras.ensuite,
-    isKitch: r.type==='kitchen',
-    isHall: r.type==='hallway',
-    hasCovering: !['bathroom'].includes(r.type),
-    floorType: r.type==='bathroom'?'tile':r.type==='kitchen'?'vinyl':r.type==='hallway'?'laminate':r.type==='living'?'laminate':'carpet',
-    skirtingMl: perimeter - doorDeduct/1.9*0.9, // rough deduct for door openings
-    doors: cfg.hasWetAreas || r.type==='hallway' ? 0 : 1,
-    tileWallArea: r.type==='bathroom'?netWall:r.type==='kitchen'?Math.min(6,netWall*0.3):0,
-  };
+// NRM2 BOQ ENGINE
+function getRegFactor(){return REGIONAL_FACTORS[document.getElementById('projRegion').value]||1.0;}
+function applyRF(r){return Math.round(r*getRegFactor()*10)/10;}
+
+function buildBOQSections(){
+  const rf=getRegFactor();
+  const ar=r=>Math.round(r*rf*10)/10;
+  let totalFloor=0,totalWallNet=0,totalCeil=0,totalSkirting=0,totalArchitrave=0;
+  let totalSockets=0,totalLights=0,totalRads=0,totalDoors=0,totalWindows=0;
+  let totalTileWall=0,totalTileFl=0,totalPaintWall=0,totalPaintCeil=0;
+  let totalLaminate=0,totalCarpet=0,totalTileFlO=0;
+  let bathRooms=[],kitchRooms=[];
+  rooms.forEach(r=>{
+    const q=getRoomQ(r);
+    totalFloor+=q.floor;totalWallNet+=q.wallNet;totalCeil+=q.ceilArea;
+    totalSkirting+=q.skirtingMl;totalArchitrave+=q.architraveMl;
+    totalSockets+=q.sockets;totalLights+=q.lights;totalRads+=q.rads;
+    totalDoors+=q.doors;totalWindows+=q.windows;
+    totalTileWall+=q.tileWall;totalPaintWall+=q.paintWall;totalPaintCeil+=q.paintCeil;
+    if(r.type==='bathroom'||(r.extras&&r.extras.ensuite))bathRooms.push(r);
+    if(r.type==='kitchen')kitchRooms.push(r);
+    if(q.floorType==='laminate')totalLaminate+=q.floor;
+    else if(q.floorType==='carpet')totalCarpet+=q.floor;
+    else totalTileFlO+=q.floor;
+  });
+  const roofArea=totalFloor*1.35;
+  const progWeeks=Math.max(8,Math.ceil(totalFloor/6));
+  const skipCount=Math.max(2,Math.ceil(totalFloor/40));
+  const smokeAlarms=Math.ceil(rooms.length/2);
+  const sections=[];
+
+  if(activeOptions.prelims)sections.push({ws:'A',items:[
+    {ref:'A.1.1',desc:'Site manager / working foreman',unit:'week',qty:progWeeks,rate:ar(850),ps:false},
+    {ref:'A.1.2',desc:'Site establishment, welfare facilities, security fencing, signage',unit:'item',qty:1,rate:ar(1200),ps:false},
+    {ref:'A.1.3',desc:`Skip hire 8yd³ (inclusive of disposal) — allow ${skipCount} skips`,unit:'nr',qty:skipCount,rate:ar(340),ps:false},
+    {ref:'A.1.4',desc:'Contract works insurance (JCT Schedule 1 Option A)',unit:'item',qty:1,rate:ar(450),ps:false},
+    {ref:'A.1.5',desc:'Temporary power supply and distribution',unit:'week',qty:progWeeks,rate:ar(120),ps:false},
+    {ref:'A.1.6',desc:'Weekly site clean and rubbish removal',unit:'week',qty:progWeeks,rate:ar(180),ps:false},
+    {ref:'A.1.7',desc:'Construction Phase H&S Plan and F10 notification',unit:'item',qty:1,rate:ar(350),ps:false},
+  ]});
+
+  if(activeOptions.demolition)sections.push({ws:'B',items:[
+    {ref:'B.1.1',desc:'Hack off plaster to brick — walls (net of openings >0.5m²)',unit:'m²',qty:+totalWallNet.toFixed(1),rate:ar(9),ps:false},
+    {ref:'B.1.2',desc:'Strip and remove all floor coverings — all rooms',unit:'m²',qty:+totalFloor.toFixed(1),rate:ar(4),ps:false},
+    ...(kitchRooms.length?[{ref:'B.1.3',desc:'Remove kitchen units, appliances and worktop',unit:'item',qty:kitchRooms.length,rate:ar(280),ps:false}]:[]),
+    ...(bathRooms.length?[{ref:'B.1.4',desc:'Remove bathroom suite(s) — bath, WC, basin',unit:'nr',qty:bathRooms.length,rate:ar(220),ps:false}]:[]),
+    {ref:'B.1.5',desc:'Remove internal doors, frames and ironmongery',unit:'nr',qty:totalDoors,rate:ar(45),ps:false},
+    {ref:'B.1.6',desc:'Remove radiators — all rooms (inc disconnection)',unit:'nr',qty:totalRads,rate:ar(35),ps:false},
+  ]});
+
+  if(activeOptions.damp){
+    const gPerim=Math.round(Math.sqrt(totalFloor)*4*0.9);
+    const bathWet=bathRooms.reduce((s,r)=>s+getRoomQ(r).floor,0);
+    sections.push({ws:'C',items:[
+      {ref:'C.1.1',desc:'Chemical DPC injection to ground floor perimeter walls',unit:'ml',qty:gPerim,rate:ar(28),ps:false},
+      {ref:'C.1.2',desc:'Two-coat tanking slurry to bathroom(s) and kitchen floor',unit:'m²',qty:+(bathWet+totalTileFlO).toFixed(1),rate:ar(48),ps:false},
+      {ref:'C.1.3',desc:'Drainage alterations — Provisional Sum',unit:'item',qty:1,rate:0,ps:true,psNote:'Surveyor to assess and confirm scope'},
+    ]});
+  }
+
+  if(activeOptions.structure)sections.push({ws:'D',items:[
+    {ref:'D.1.1',desc:'Structural survey and written report — Provisional Sum',unit:'item',qty:1,rate:0,ps:true,psNote:'Structural engineer to advise'},
+    {ref:'D.1.2',desc:'New concrete lintel to window/door openings (allow)',unit:'nr',qty:Math.max(1,Math.ceil(totalWindows/2)),rate:ar(380),ps:false},
+    {ref:'D.1.3',desc:'Repair and repoint brickwork (provisional allowance)',unit:'m²',qty:+Math.max(1,(totalWallNet*0.05)).toFixed(1),rate:ar(42),ps:false},
+    {ref:'D.1.4',desc:'Structural steelwork (beams, columns) — Provisional Sum',unit:'item',qty:1,rate:0,ps:true,psNote:'Subject to structural engineers report and design'},
+  ]});
+
+  if(activeOptions.roofing){
+    const ridgeLen=Math.max(3,...rooms.map(r=>+r.l||0));
+    sections.push({ws:'E',items:[
+      {ref:'E.1.1',desc:'Strip and re-tile pitched roof including new underlay',unit:'m²',qty:+roofArea.toFixed(0),rate:ar(58),ps:false},
+      {ref:'E.1.2',desc:'Replace roofing felt and counter battens only',unit:'m²',qty:+roofArea.toFixed(0),rate:ar(24),ps:false},
+      {ref:'E.1.3',desc:'uPVC fascia, soffit and bargeboard (supply and fix)',unit:'ml',qty:+(ridgeLen*2+10).toFixed(0),rate:ar(48),ps:false},
+      {ref:'E.1.4',desc:'uPVC half-round gutter and round downpipe (supply + fix)',unit:'ml',qty:+(ridgeLen*2+8).toFixed(0),rate:ar(22),ps:false},
+      {ref:'E.1.5',desc:'Ridge tiles — re-bed in mortar and repoint',unit:'ml',qty:+ridgeLen.toFixed(0),rate:ar(28),ps:false},
+    ]});
+  }
+
+  if(activeOptions.extension){
+    const extRooms=rooms.filter(r=>r.type==='extension');
+    const extFloor=extRooms.reduce((s,r)=>s+(+r.l||0)*(+r.w||0),0);
+    const extWall=extRooms.reduce((s,r)=>s+getRoomQ(r).wallNet,0);
+    sections.push({ws:'F',items:extFloor>0?[
+      {ref:'F.1.1',desc:'Excavate and pour strip foundations (1200mm deep)',unit:'m²',qty:+extFloor.toFixed(1),rate:ar(420),ps:false},
+      {ref:'F.1.2',desc:'External cavity wall (100mm block/brick, 100mm insulation)',unit:'m²',qty:+extWall.toFixed(1),rate:ar(105),ps:false},
+      {ref:'F.1.3',desc:'Flat roof GRP covering (incl. insulation and firring)',unit:'m²',qty:+(extFloor*1.1).toFixed(1),rate:ar(90),ps:false},
+      {ref:'F.1.4',desc:'Structural steel beam — Provisional Sum',unit:'item',qty:1,rate:0,ps:true,psNote:'Subject to structural engineers design'},
+      {ref:'F.1.5',desc:'Planning permission and building regulations fees',unit:'item',qty:1,rate:ar(1200),ps:false},
+    ]:[{ref:'F.0.1',desc:'No extension rooms added — add rooms of type "Extension Room" in Step 2',unit:'note',qty:0,rate:0,ps:false,note:true}]});
+  }
+
+  if(activeOptions.loft){
+    const loftRooms=rooms.filter(r=>r.type==='loft');
+    const loftFl=loftRooms.reduce((s,r)=>s+(+r.l||0)*(+r.w||0),0)||totalFloor*0.7;
+    sections.push({ws:'G',items:[
+      {ref:'G.1.1',desc:'Structural beam, ridge beam and dormer timber frame',unit:'item',qty:1,rate:ar(4800),ps:false},
+      {ref:'G.1.2',desc:'Loft staircase (supply and fix) including trimmer',unit:'nr',qty:1,rate:ar(1900),ps:false},
+      {ref:'G.1.3',desc:'Velux roof window GGL M06 (supply and fix)',unit:'nr',qty:2,rate:ar(980),ps:false},
+      {ref:'G.1.4',desc:'Loft insulation 200mm mineral wool between joists',unit:'m²',qty:+(loftFl*1.2).toFixed(1),rate:ar(22),ps:false},
+      {ref:'G.1.5',desc:'FD30 fire door to loft stairhead (supply and fix)',unit:'nr',qty:1,rate:ar(320),ps:false},
+    ]});
+  }
+
+  if(activeOptions.windows){
+    sections.push({ws:'H',items:[
+      {ref:'H.1.1',desc:'uPVC double glazed casement window — white (supply and fix)',unit:'nr',qty:Math.max(1,totalWindows-1),rate:ar(880),ps:false},
+      {ref:'H.1.2',desc:'Composite external front door (supply and fix)',unit:'nr',qty:1,rate:ar(1400),ps:false},
+      {ref:'H.1.3',desc:'uPVC rear/side external door (supply and fix)',unit:'nr',qty:1,rate:ar(880),ps:false},
+    ]});
+  }
+
+  if(activeOptions.masonry)sections.push({ws:'I',items:[
+    {ref:'I.1.1',desc:'Plasterboard (12.5mm) and 3mm skim coat to walls',unit:'m²',qty:+totalWallNet.toFixed(1),rate:ar(28),ps:false},
+    {ref:'I.1.2',desc:'Plasterboard (12.5mm) and skim coat to ceilings',unit:'m²',qty:+totalCeil.toFixed(1),rate:ar(32),ps:false},
+    {ref:'I.1.3',desc:'50mm insulated dry lining to external walls (allow)',unit:'m²',qty:+(totalWallNet*0.25).toFixed(1),rate:ar(42),ps:false},
+  ]});
+
+  if(activeOptions.carpentry){
+    const fdDoors=bathRooms.length;const stdDoors=Math.max(0,totalDoors-fdDoors);
+    sections.push({ws:'J',items:[
+      ...(fdDoors>0?[{ref:'J.1.1',desc:'Internal FD30 fire door (supply and fix) — bathroom(s)',unit:'nr',qty:fdDoors,rate:ar(320),ps:false}]:[]),
+      ...(stdDoors>0?[{ref:'J.1.2',desc:'Internal door standard (supply and fix)',unit:'nr',qty:stdDoors,rate:ar(195),ps:false}]:[]),
+      {ref:'J.1.3',desc:'Door lining set (supply and fix)',unit:'nr',qty:totalDoors,rate:ar(105),ps:false},
+      {ref:'J.1.4',desc:'MDF skirting board 100×18mm (supply and fix)',unit:'ml',qty:+totalSkirting.toFixed(0),rate:ar(16),ps:false},
+      {ref:'J.1.5',desc:'MDF architrave 70×15mm (supply and fix)',unit:'ml',qty:+totalArchitrave.toFixed(0),rate:ar(12),ps:false},
+      {ref:'J.1.6',desc:'Door ironmongery — lever handle, 3 hinges, latch per door',unit:'nr',qty:totalDoors,rate:ar(45),ps:false},
+    ]});
+  }
+
+  if(activeOptions.electrics){
+    const rew1=Math.round(totalFloor*4.5*rf);
+    const rew2=Math.round(totalFloor*2.8*rf);
+    sections.push({ws:'K',items:[
+      {ref:'K.1.1',desc:'Consumer unit — 18-way split load RCBO (supply and fix)',unit:'nr',qty:1,rate:ar(480),ps:false},
+      {ref:'K.1.2',desc:'Full rewire — 1st fix all circuits, cabling and conduit',unit:'item',qty:1,rate:rew1,ps:false},
+      {ref:'K.1.3',desc:'2nd fix electrics — all sockets, switches, pendants, fittings',unit:'item',qty:1,rate:rew2,ps:false},
+      {ref:'K.1.4',desc:'Double socket outlet 13A (supply and fix)',unit:'nr',qty:totalSockets,rate:ar(58),ps:false},
+      {ref:'K.1.5',desc:'Lighting point (supply and fix)',unit:'nr',qty:totalLights,rate:ar(68),ps:false},
+      {ref:'K.1.6',desc:`Smoke alarm interlinked mains with battery backup (×${smokeAlarms})`,unit:'nr',qty:smokeAlarms,rate:ar(42),ps:false},
+      {ref:'K.1.7',desc:'CO alarm (supply and fix)',unit:'nr',qty:Math.max(1,Math.ceil((bathRooms.length+kitchRooms.length)/2)),rate:ar(38),ps:false},
+      {ref:'K.1.8',desc:'New combi boiler — supply, fit, flue, commission (RGSA registered)',unit:'nr',qty:1,rate:ar(2600),ps:false},
+      {ref:'K.1.9',desc:'Radiator (supply and fix) including pipework and TRV',unit:'nr',qty:totalRads,rate:ar(195),ps:false},
+      {ref:'K.1.10',desc:'Room thermostat and programmer (supply and fix)',unit:'item',qty:1,rate:ar(280),ps:false},
+      {ref:'K.1.11',desc:'Gas safety inspection and CP12 certificate (RGSA)',unit:'item',qty:1,rate:ar(100),ps:false},
+      {ref:'K.1.12',desc:'EICR electrical installation condition report',unit:'item',qty:1,rate:ar(190),ps:false},
+    ]});
+  }
+
+  if(activeOptions.plumbing){
+    sections.push({ws:'L',items:[
+      {ref:'L.1.1',desc:'Bathroom suite — Provisional Sum (client to select supplier)',unit:'item',qty:bathRooms.length||1,rate:0,ps:true,psNote:'Allow £800–£1,800 per bathroom. Include bath, WC, basin, taps'},
+      {ref:'L.1.2',desc:'Bath — supply and fix',unit:'nr',qty:bathRooms.filter(r=>r.type==='bathroom').length||1,rate:ar(420),ps:false},
+      {ref:'L.1.3',desc:'WC close-coupled suite — supply and fix',unit:'nr',qty:bathRooms.length||1,rate:ar(280),ps:false},
+      {ref:'L.1.4',desc:'Pedestal wash hand basin and taps — supply and fix',unit:'nr',qty:bathRooms.length||1,rate:ar(220),ps:false},
+      {ref:'L.1.5',desc:'Shower enclosure and tray (quadrant 800mm) — supply and fix',unit:'nr',qty:bathRooms.length||1,rate:ar(680),ps:false},
+      {ref:'L.1.6',desc:'Chrome heated towel rail — supply and fix',unit:'nr',qty:bathRooms.length||1,rate:ar(180),ps:false},
+      {ref:'L.1.7',desc:'Kitchen sink (1.5 bowl) and mixer tap — supply and fix',unit:'nr',qty:Math.max(1,kitchRooms.length),rate:ar(280),ps:false},
+      {ref:'L.1.8',desc:'Hot and cold plumbing connections to kitchen and bathrooms',unit:'item',qty:Math.max(1,kitchRooms.length)+bathRooms.length,rate:ar(380),ps:false},
+    ]});
+  }
+
+  if(activeOptions.kitchen){
+    const kq=kitchRooms.length?getRoomQ(kitchRooms[0]):{floor:9,perim:12,wallNet:18};
+    sections.push({ws:'M',items:[
+      {ref:'M.1.1',desc:'Kitchen units (base and wall) — Provisional Sum (client to select)',unit:'item',qty:Math.max(1,kitchRooms.length),rate:0,ps:true,psNote:'Allow £3,500–£7,000. Mid-range supply and fit'},
+      {ref:'M.1.2',desc:'Laminate worktop 40mm (supply and fix)',unit:'ml',qty:Math.round(kq.perim*0.35),rate:ar(120),ps:false},
+      {ref:'M.1.3',desc:'Kitchen splashback tiling (supply and fix)',unit:'m²',qty:+(kq.wallNet*0.3).toFixed(1),rate:ar(68),ps:false},
+      {ref:'M.1.4',desc:'Mechanical extract fan with humidistat (supply and fix)',unit:'nr',qty:Math.max(1,kitchRooms.length),rate:ar(145),ps:false},
+    ]});
+  }
+
+  if(activeOptions.bathroom){
+    const bWall=bathRooms.reduce((s,r)=>s+getRoomQ(r).wallNet,0)||10;
+    const bFl=bathRooms.reduce((s,r)=>s+getRoomQ(r).floor,0)||4;
+    sections.push({ws:'N',items:[
+      {ref:'N.1.1',desc:'Wall tiling — bathroom(s) full height (supply and fix)',unit:'m²',qty:+bWall.toFixed(1),rate:ar(68),ps:false},
+      {ref:'N.1.2',desc:'Floor tiling — porcelain 600×600mm (supply and fix)',unit:'m²',qty:+(bFl*1.1).toFixed(1),rate:ar(65),ps:false},
+      {ref:'N.1.3',desc:'Tile trim / edge bead to all exposed tile edges',unit:'ml',qty:+(bathRooms.length*4*2.4).toFixed(0),rate:ar(18),ps:false},
+    ]});
+  }
+
+  if(activeOptions.finishes){
+    const items=[];
+    if(totalLaminate>0)items.push({ref:'O.1.1',desc:'Laminate flooring 8mm AC4 rated — living/hallway (supply and fix)',unit:'m²',qty:+(totalLaminate*1.1).toFixed(1),rate:ar(28),ps:false});
+    if(totalCarpet>0)items.push({ref:'O.1.2',desc:'Carpet with 10mm underlay — bedrooms (supply and fix)',unit:'m²',qty:+(totalCarpet*1.1).toFixed(1),rate:ar(22),ps:false});
+    if(totalPaintWall>0)items.push({ref:'O.2.1',desc:'Emulsion paint walls — 2 coats (all non-tiled surfaces)',unit:'m²',qty:+totalPaintWall.toFixed(1),rate:ar(8),ps:false});
+    if(totalPaintCeil>0)items.push({ref:'O.2.2',desc:'Emulsion paint ceilings — 2 coats',unit:'m²',qty:+totalPaintCeil.toFixed(1),rate:ar(9),ps:false});
+    items.push({ref:'O.2.3',desc:'Gloss paint woodwork — skirtings, architraves, doors',unit:'ml',qty:+(totalSkirting+totalArchitrave).toFixed(0),rate:ar(7),ps:false});
+    if(items.length)sections.push({ws:'O',items});
+  }
+
+  if(activeOptions.external)sections.push({ws:'P',items:[
+    {ref:'P.1.1',desc:'Garden clearance and general landscaping — Provisional Sum',unit:'item',qty:1,rate:0,ps:true,psNote:'Scope to be agreed on site'},
+    {ref:'P.1.2',desc:'Close board fencing 1.8m — concrete posts (supply and fix)',unit:'ml',qty:20,rate:ar(68),ps:false},
+    {ref:'P.1.3',desc:'Tarmac driveway / pathway',unit:'m²',qty:20,rate:ar(65),ps:false},
+    {ref:'P.1.4',desc:'External masonry paint (supply and apply 2 coats)',unit:'m²',qty:+(totalWallNet*0.3).toFixed(0),rate:ar(14),ps:false},
+  ]});
+
+  sections.push({ws:'Q',items:[
+    {ref:'Q.1.1',desc:'EPC certificate (post-completion, min Band E required for BTL)',unit:'item',qty:1,rate:ar(98),ps:false},
+    {ref:'Q.1.2',desc:'Building regulations full plans application and inspections',unit:'item',qty:1,rate:ar(780),ps:false},
+    {ref:'Q.1.3',desc:'Party wall surveyor (if required) — Provisional Sum',unit:'item',qty:1,rate:0,ps:true,psNote:'Required if works affect party wall'},
+    {ref:'Q.1.4',desc:'Structural engineers report and calculations — Provisional Sum',unit:'item',qty:1,rate:0,ps:true,psNote:'Required for structural works'},
+    {ref:'Q.1.5',desc:'Post-completion snagging inspection (independent surveyor)',unit:'item',qty:1,rate:ar(380),ps:false},
+  ]});
+
+  sections.push({ws:'R',items:[
+    {ref:'R.1.1',desc:'Daywork allowance for unforeseen works — Provisional Sum',unit:'item',qty:1,rate:0,ps:true,psNote:'Recommend allow £2,500. Subject to written instruction only',dw:true},
+  ]});
+
+  const subtotal=sections.reduce((s,sec)=>s+sec.items.reduce((a,it)=>a+(it.qty*it.rate),0),0);
+  sections.push({ws:'S',items:[
+    {ref:'S.1.1',desc:'Design and pricing contingency @ 12.5% of measured works',unit:'item',qty:1,rate:Math.round(subtotal*0.125),ps:false,isContingency:true},
+  ]});
+
+  return sections;
 }
 
-function generateBOQ() {
-  const items = [];
-  const fK = n => n>=1000?'£'+(n/1000).toFixed(1)+'k':'£'+Math.round(n);
+// RENDER BOQ
+function generateBOQ(){
+  const sections=buildBOQSections();
+  window._boqSections=sections;
+  const tradeClass={prelim:'t-prelim',struct:'t-struct',elec:'t-elec',plumb:'t-plumb',plast:'t-plast',carp:'t-carp',decor:'t-decor',floor:'t-floor',roof:'t-roof',ps:'t-ps'};
+  const tradeLabel={prelim:'Prelims',struct:'Builder',elec:'Elec',plumb:'Plumber',plast:'Plasterer',carp:'Joiner',decor:'Decorator',floor:'Floorer',roof:'Roofer',ps:'PS'};
+  let grand=0;
 
-  // ── PRELIMS ──
-  const prelims = [];
-  const totalFloor = rooms.reduce((s,r)=>s+(+r.l||0)*(+r.w||0),0);
-  const skipCount = Math.max(2, Math.ceil(totalFloor/35));
-  prelims.push({item:'Site setup + protection (sheets, temporary lighting)', qty:1, unit:'weeks', rate:350, total:350, phase:'Prelims', trade:'build'});
-  prelims.push({item:`Skip hire × ${skipCount} (8yd)`, qty:skipCount, unit:'no', rate:RATES.skip_hire.rate, total:skipCount*RATES.skip_hire.rate, phase:'Prelims', trade:'build'});
-  prelims.push({item:'Building regulations application + inspections', qty:1, unit:'no', rate:RATES.building_regs.rate, total:RATES.building_regs.rate, phase:'Prelims', trade:'build'});
-
-  // ── STRIP OUT ──
-  const stripItems = [];
-  if (activeOptions.strip) {
-    rooms.forEach(r => {
-      const q = calcRoomQuantities(r);
-      if (q.wallArea>0) stripItems.push({item:`Strip plaster — ${r.name}`, qty:+(q.wallArea).toFixed(1), unit:'m²', rate:RATES.strip_plaster.rate, total:+(q.wallArea*RATES.strip_plaster.rate).toFixed(0), phase:'Strip Out', trade:'build'});
-      if (q.floor>0) stripItems.push({item:`Strip floor coverings — ${r.name}`, qty:+(q.floor).toFixed(1), unit:'m²', rate:RATES.strip_floor.rate, total:+(q.floor*RATES.strip_floor.rate).toFixed(0), phase:'Strip Out', trade:'build'});
-    });
-  }
-
-  // ── DAMP ──
-  const dampItems = [];
-  if (activeOptions.damp) {
-    const groundFloorPerim = rooms.filter(r=>r.type!=='loft').reduce((s,r)=>s+2*(+r.l||0)+(+r.w||0)*2,0)/rooms.length*2;
-    dampItems.push({item:'DPC injection — ground floor perimeter', qty:+(groundFloorPerim).toFixed(0), unit:'ml', rate:RATES.dpc_injection.rate, total:+(groundFloorPerim*RATES.dpc_injection.rate).toFixed(0), phase:'Damp', trade:'build'});
-    const wetRooms = rooms.filter(r=>r.type==='bathroom'||r.type==='kitchen');
-    wetRooms.forEach(r=>{
-      const q = calcRoomQuantities(r);
-      dampItems.push({item:`Tanking / waterproofing — ${r.name}`, qty:+(q.floor+q.wallArea*0.5).toFixed(1), unit:'m²', rate:RATES.tanking_slurry.rate, total:+((q.floor+q.wallArea*0.5)*RATES.tanking_slurry.rate).toFixed(0), phase:'Damp', trade:'build'});
-    });
-  }
-
-  // ── STRUCTURAL / EXTENSION ──
-  const structItems = [];
-  if (activeOptions.extension) {
-    const extRooms = rooms.filter(r=>r.type==='extension');
-    extRooms.forEach(r=>{
-      const q = calcRoomQuantities(r);
-      structItems.push({item:`Extension foundations — ${r.name}`, qty:+(q.floor).toFixed(1), unit:'m²', rate:RATES.ext_foundation.rate, total:+(q.floor*RATES.ext_foundation.rate).toFixed(0), phase:'Extension', trade:'build'});
-      structItems.push({item:`External blockwork walls — ${r.name}`, qty:+(q.wallArea).toFixed(1), unit:'m²', rate:RATES.ext_blockwork.rate, total:+(q.wallArea*RATES.ext_blockwork.rate).toFixed(0), phase:'Extension', trade:'build'});
-      structItems.push({item:`Extension roof (flat GRP) — ${r.name}`, qty:+(q.floor*1.1).toFixed(1), unit:'m²', rate:RATES.ext_roof_flat.rate, total:+(q.floor*1.1*RATES.ext_roof_flat.rate).toFixed(0), phase:'Extension', trade:'roof'});
-    });
-    if (!extRooms.length) {
-      structItems.push({item:'Extension — add rooms with type "Extension" in Step 2', qty:1, unit:'note', rate:0, total:0, phase:'Extension', trade:'build'});
-    }
-  }
-  if (activeOptions.loft) {
-    const loftRooms = rooms.filter(r=>r.type==='loft');
-    structItems.push({item:'Loft conversion — structural beam + dormer frame', qty:1, unit:'no', rate:RATES.loft_structural.rate, total:RATES.loft_structural.rate, phase:'Loft', trade:'build'});
-    structItems.push({item:'Loft staircase (supply + fit)', qty:1, unit:'no', rate:RATES.loft_stairs.rate, total:RATES.loft_stairs.rate, phase:'Loft', trade:'carp'});
-    loftRooms.forEach(r=>{
-      const q = calcRoomQuantities(r);
-      structItems.push({item:`Velux / dormer window — ${r.name}`, qty:2, unit:'no', rate:RATES.loft_velux.rate, total:2*RATES.loft_velux.rate, phase:'Loft', trade:'carp'});
-      structItems.push({item:`Loft insulation (150mm) — ${r.name}`, qty:+(q.floor*1.2).toFixed(1), unit:'m²', rate:RATES.loft_insulation.rate, total:+(q.floor*1.2*RATES.loft_insulation.rate).toFixed(0), phase:'Loft', trade:'build'});
-    });
-  }
-
-  // ── ROOF ──
-  const roofItems = [];
-  if (activeOptions.roof) {
-    const roofArea = totalFloor * 1.35; // pitched roof factor
-    const ridgeLen = rooms.reduce((mx,r)=>Math.max(mx,+r.l||0),0);
-    roofItems.push({item:'Strip + re-tile/slate pitched roof', qty:+(roofArea).toFixed(0), unit:'m²', rate:RATES.roof_strip_retile.rate, total:+(roofArea*RATES.roof_strip_retile.rate).toFixed(0), phase:'Roof', trade:'roof'});
-    roofItems.push({item:'Replace roofing felt + battens', qty:+(roofArea).toFixed(0), unit:'m²', rate:RATES.roof_felt_batten.rate, total:+(roofArea*RATES.roof_felt_batten.rate).toFixed(0), phase:'Roof', trade:'roof'});
-    roofItems.push({item:'Fascia + soffit (uPVC)', qty:+(ridgeLen*2+8).toFixed(0), unit:'ml', rate:RATES.fascia_soffit.rate, total:+((ridgeLen*2+8)*RATES.fascia_soffit.rate).toFixed(0), phase:'Roof', trade:'roof'});
-  }
-
-  // ── ELECTRICS ──
-  const elecItems = [];
-  if (activeOptions.rewire) {
-    elecItems.push({item:'Consumer unit replacement (18-way split load)', qty:1, unit:'no', rate:RATES.consumer_unit.rate, total:RATES.consumer_unit.rate, phase:'1st Fix Electrics', trade:'elec'});
-    let totalSockets = 0, totalLights = 0;
-    rooms.forEach(r=>{
-      const q = calcRoomQuantities(r);
-      totalSockets += q.sockets;
-      totalLights += q.lights;
-      elecItems.push({item:`Sockets — ${r.name}`, qty:q.sockets, unit:'no', rate:RATES.socket_double.rate, total:q.sockets*RATES.socket_double.rate, phase:'2nd Fix Electrics', trade:'elec'});
-      elecItems.push({item:`Light points — ${r.name}`, qty:q.lights, unit:'no', rate:RATES.light_point.rate, total:q.lights*RATES.light_point.rate, phase:'2nd Fix Electrics', trade:'elec'});
-    });
-    const smokeCount = Math.ceil(rooms.length/2);
-    elecItems.push({item:`Smoke alarms interlinked × ${smokeCount}`, qty:smokeCount, unit:'no', rate:RATES.smoke_alarm.rate, total:smokeCount*RATES.smoke_alarm.rate, phase:'2nd Fix Electrics', trade:'elec'});
-    elecItems.push({item:'EICR certificate (post-completion)', qty:1, unit:'no', rate:RATES.eicr.rate, total:RATES.eicr.rate, phase:'Compliance', trade:'elec'});
-  }
-
-  // ── PLUMBING ──
-  const plumbItems = [];
-  if (activeOptions.replumb) {
-    plumbItems.push({item:'New combi boiler (supply + fit + flue)', qty:1, unit:'no', rate:RATES.boiler_combi.rate, total:RATES.boiler_combi.rate, phase:'1st Fix Plumbing', trade:'plumb'});
-    const radCount = rooms.reduce((s,r)=>s+calcRoomQuantities(r).rads,0);
-    plumbItems.push({item:`Radiators — all rooms (× ${radCount})`, qty:radCount, unit:'no', rate:RATES.radiator.rate, total:radCount*RATES.radiator.rate, phase:'2nd Fix Plumbing', trade:'plumb'});
-    if (activeOptions.bathroom) {
-      plumbItems.push({item:'Bathroom suite (bath, WC, basin, shower) supply + fit', qty:1, unit:'no', rate:RATES.bathroom_suite.rate, total:RATES.bathroom_suite.rate, phase:'2nd Fix Plumbing', trade:'plumb'});
-    }
-    if (activeOptions.kitchen) {
-      plumbItems.push({item:'Kitchen plumbing connections (sink, dishwasher, washing machine)', qty:1, unit:'no', rate:RATES.kitchen_plumb.rate, total:RATES.kitchen_plumb.rate, phase:'2nd Fix Plumbing', trade:'plumb'});
-    }
-    plumbItems.push({item:'Gas safety certificate (CP12)', qty:1, unit:'no', rate:RATES.gas_cert.rate, total:RATES.gas_cert.rate, phase:'Compliance', trade:'plumb'});
-  }
-
-  // ── PLASTERING ──
-  const plastItems = [];
-  if (activeOptions.replaster) {
-    rooms.forEach(r=>{
-      const q = calcRoomQuantities(r);
-      if (q.wallArea>0) plastItems.push({item:`Wall skim — ${r.name}`, qty:+(q.wallArea).toFixed(1), unit:'m²', rate:RATES.plaster_wall_skim.rate, total:+(q.wallArea*RATES.plaster_wall_skim.rate).toFixed(0), phase:'Plastering', trade:'plast'});
-      if (q.ceilArea>0) plastItems.push({item:`Ceiling skim — ${r.name}`, qty:+(q.ceilArea).toFixed(1), unit:'m²', rate:RATES.plaster_ceil_skim.rate, total:+(q.ceilArea*RATES.plaster_ceil_skim.rate).toFixed(0), phase:'Plastering', trade:'plast'});
-    });
-  }
-
-  // ── WINDOWS ──
-  const winItems = [];
-  if (activeOptions.windows) {
-    rooms.forEach(r=>{
-      const winCount = +r.l>3?2:1;
-      winItems.push({item:`uPVC double glazed windows — ${r.name}`, qty:winCount, unit:'no', rate:RATES.window_upvc_std.rate, total:winCount*RATES.window_upvc_std.rate, phase:'Windows', trade:'build'});
-    });
-  }
-
-  // ── KITCHEN ──
-  const kitchItems = [];
-  if (activeOptions.kitchen) {
-    const kitchRoom = rooms.find(r=>r.type==='kitchen');
-    const kitchFloor = kitchRoom?(+kitchRoom.l||3.2)*(+kitchRoom.w||2.8):9;
-    const kitchPerim = kitchRoom?2*((+kitchRoom.l||3.2)+(+kitchRoom.w||2.8)):12;
-    kitchItems.push({item:'Kitchen units + worktop (supply + fit, mid-range)', qty:1, unit:'set', rate:3800, total:3800, phase:'Kitchen', trade:'carp'});
-    kitchItems.push({item:'Kitchen splashback tiles', qty:Math.round(kitchPerim*0.3), unit:'m²', rate:RATES.wall_tile_kitchen.rate, total:Math.round(kitchPerim*0.3)*RATES.wall_tile_kitchen.rate, phase:'Kitchen', trade:'carp'});
-    kitchItems.push({item:'Kitchen floor (LVT/vinyl)', qty:+(kitchFloor*1.1).toFixed(1), unit:'m²', rate:RATES.floor_vinyl.rate, total:+(kitchFloor*1.1*RATES.floor_vinyl.rate).toFixed(0), phase:'Kitchen', trade:'floor'});
-  }
-
-  // ── BATHROOM ──
-  const bathItems = [];
-  if (activeOptions.bathroom) {
-    const bathRoom = rooms.find(r=>r.type==='bathroom');
-    const bathQ = bathRoom ? calcRoomQuantities(bathRoom) : {floor:4,wallArea:14,tileWallArea:14};
-    bathItems.push({item:'Bathroom wall tiles (full height)', qty:+(bathQ.wallArea).toFixed(1), unit:'m²', rate:RATES.wall_tile_bathroom.rate, total:+(bathQ.wallArea*RATES.wall_tile_bathroom.rate).toFixed(0), phase:'Tiling', trade:'carp'});
-    bathItems.push({item:'Bathroom floor tiles', qty:+(bathQ.floor*1.1).toFixed(1), unit:'m²', rate:RATES.floor_tile_ceramic.rate, total:+(bathQ.floor*1.1*RATES.floor_tile_ceramic.rate).toFixed(0), phase:'Tiling', trade:'carp'});
-  }
-
-  // ── CARPENTRY ──
-  const carpItems = [];
-  const totalDoors = rooms.filter(r=>r.type!=='hallway').length;
-  const totalSkirting = rooms.reduce((s,r)=>s+Math.max(0,2*(+r.l||0)+2*(+r.w||0)-1.8),0);
-  carpItems.push({item:`Internal doors × ${totalDoors} (supply + fit + ironmongery)`, qty:totalDoors, unit:'no', rate:RATES.door_internal.rate, total:totalDoors*RATES.door_internal.rate, phase:'Carpentry', trade:'carp'});
-  carpItems.push({item:`Door linings × ${totalDoors}`, qty:totalDoors, unit:'no', rate:RATES.door_lining.rate, total:totalDoors*RATES.door_lining.rate, phase:'Carpentry', trade:'carp'});
-  carpItems.push({item:'Skirting boards (MDF 100mm, supply + fit)', qty:+(totalSkirting).toFixed(0), unit:'ml', rate:RATES.skirting_board.rate, total:+(totalSkirting*RATES.skirting_board.rate).toFixed(0), phase:'Carpentry', trade:'carp'});
-
-  // ── FLOORING ──
-  const floorItems = [];
-  rooms.forEach(r=>{
-    if (r.type==='bathroom'||r.type==='kitchen') return; // handled above
-    const q = calcRoomQuantities(r);
-    const floorWithWaste = +(q.floor*1.1).toFixed(1);
-    const isHall = r.type==='hallway';
-    const isBed = r.type==='bedroom';
-    if (isHall) {
-      floorItems.push({item:`Laminate flooring — ${r.name}`, qty:floorWithWaste, unit:'m²', rate:RATES.floor_laminate.rate, total:+(floorWithWaste*RATES.floor_laminate.rate).toFixed(0), phase:'Flooring', trade:'floor'});
-    } else if (isBed) {
-      floorItems.push({item:`Carpet — ${r.name}`, qty:floorWithWaste, unit:'m²', rate:RATES.floor_carpet.rate, total:+(floorWithWaste*RATES.floor_carpet.rate).toFixed(0), phase:'Flooring', trade:'floor'});
-    } else {
-      floorItems.push({item:`Laminate flooring — ${r.name}`, qty:floorWithWaste, unit:'m²', rate:RATES.floor_laminate.rate, total:+(floorWithWaste*RATES.floor_laminate.rate).toFixed(0), phase:'Flooring', trade:'floor'});
-    }
-  });
-
-  // ── DECORATING ──
-  const decorItems = [];
-  rooms.forEach(r=>{
-    const q = calcRoomQuantities(r);
-    if (r.type==='bathroom') return;
-    decorItems.push({item:`Paint walls (2 coats) — ${r.name}`, qty:+(q.wallArea).toFixed(1), unit:'m²', rate:RATES.paint_walls.rate, total:+(q.wallArea*RATES.paint_walls.rate).toFixed(0), phase:'Decorating', trade:'decor'});
-    decorItems.push({item:`Paint ceiling (2 coats) — ${r.name}`, qty:+(q.ceilArea).toFixed(1), unit:'m²', rate:RATES.paint_ceiling.rate, total:+(q.ceilArea*RATES.paint_ceiling.rate).toFixed(0), phase:'Decorating', trade:'decor'});
-  });
-
-  // ── COMPLIANCE ──
-  const compItems = [];
-  compItems.push({item:'EPC certificate (post-refurb, minimum E)', qty:1, unit:'no', rate:RATES.epc.rate, total:RATES.epc.rate, phase:'Compliance', trade:'build'});
-  compItems.push({item:'Deep clean + final inspection', qty:1, unit:'no', rate:350, total:350, phase:'Completion', trade:'build'});
-
-  // ── ASSEMBLE ALL SECTIONS ──
-  const sections = [
-    {title:'🏗 Prelims + Site Setup',         items:prelims,    color:'#f0c040'},
-    {title:'🪚 Strip Out',                     items:stripItems, color:'#f04040', opt:'strip'},
-    {title:'💧 Damp Proofing',                 items:dampItems,  color:'#40a0f0', opt:'damp'},
-    {title:'🏗 Extension',                     items:structItems.filter(i=>i.phase==='Extension'), color:'#f06040', opt:'extension'},
-    {title:'🏚 Loft Conversion',               items:structItems.filter(i=>i.phase==='Loft'),      color:'#c040f0', opt:'loft'},
-    {title:'🏠 Roof Works',                    items:roofItems,  color:'#f04080', opt:'roof'},
-    {title:'⚡ Electrical',                    items:elecItems,  color:'#d4f244', opt:'rewire'},
-    {title:'🔧 Plumbing + Heating',            items:plumbItems, color:'#40d0b0', opt:'replumb'},
-    {title:'🏗 Plastering',                    items:plastItems, color:'#9040f0', opt:'replaster'},
-    {title:'🪟 Windows',                       items:winItems,   color:'#40a8f0', opt:'windows'},
-    {title:'🍳 Kitchen',                       items:kitchItems, color:'#f0b840', opt:'kitchen'},
-    {title:'🚿 Bathroom',                      items:bathItems,  color:'#40d0b0', opt:'bathroom'},
-    {title:'🪵 Carpentry + Joinery',           items:carpItems,  color:'#a06030', opt:null},
-    {title:'🎨 Flooring',                      items:floorItems, color:'#f09040', opt:null},
-    {title:'🖌 Decorating',                    items:decorItems, color:'#80c060', opt:null},
-    {title:'✅ Compliance + Completion',       items:compItems,  color:'#40e0d0', opt:null},
-  ].filter(s=>s.items.length>0 && (s.opt===null||activeOptions[s.opt]!==false));
-
-  // Add contingency as last item
-  const subtotal = sections.reduce((s,sec)=>s+sec.items.reduce((a,i)=>a+i.total,0),0);
-  const contingency = Math.round(subtotal*0.125);
-
-  // Store for programme
-  boqData = sections;
-
-  // ── RENDER BOQ ──
-  const tradeColors = {elec:'t-elec',plumb:'t-plumb',plast:'t-plast',build:'t-build',carp:'t-carp',decor:'t-decor',floor:'t-floor',roof:'t-roof'};
-  const tradeLabels = {elec:'⚡ Elec',plumb:'🔧 Plumb',plast:'🏗 Plast',build:'🧱 Build',carp:'🪵 Carp',decor:'🎨 Decor',floor:'🪵 Floor',roof:'🏠 Roof'};
-
-  document.getElementById('boqContent').innerHTML = sections.map(s=>{
-    const secTotal = s.items.reduce((a,i)=>a+i.total,0);
-    if (!secTotal && s.items.every(i=>i.total===0)) return '';
-    return `
-    <div class="boq-section">
-      <div class="boq-section-head">
-        <div class="boq-section-title" style="color:${s.color}">${s.title}</div>
-        <div class="boq-section-total">£${secTotal.toLocaleString()}</div>
+  const boqHTML=sections.map(sec=>{
+    const secTotal=sec.items.reduce((s,it)=>s+(it.qty*it.rate),0);
+    grand+=secTotal;
+    const color=WS_COLORS[sec.ws]||'var(--gold)';
+    const rows=sec.items.map((item,idx)=>{
+      if(item.note)return`<tr><td class="col-ref" style="color:var(--dim)">${item.ref}</td><td colspan="6" style="color:var(--muted);font-style:italic;padding:8px 12px;font-family:var(--mono);font-size:11px">${item.desc}</td></tr>`;
+      const rowClass=item.ps?'row-provisional':item.dw?'row-daywork':item.isContingency?'row-subtotal':'';
+      const total=item.qty*item.rate;
+      const itemId=`tot_${sec.ws}_${idx}`;
+      const trade=item.ps?'ps':item.trade||(sec.ws==='A'?'prelim':sec.ws==='B'||sec.ws==='D'||sec.ws==='F'||sec.ws==='C'?'struct':sec.ws==='E'?'roof':sec.ws==='I'?'plast':sec.ws==='J'?'carp':sec.ws==='K'&&idx<7?'elec':sec.ws==='K'?'plumb':sec.ws==='L'?'plumb':sec.ws==='M'||sec.ws==='N'?'carp':sec.ws==='O'&&idx<3?'floor':'decor');
+      return`<tr class="${rowClass}">
+        <td class="col-ref">${item.ref}</td>
+        <td class="col-item">${item.desc}${item.ps?`<div class="item-desc">⚡ PROVISIONAL SUM${item.psNote?` — ${item.psNote}`:''}</div>`:''}${item.dw?`<div class="item-desc">📋 DAYWORK — Subject to written instruction only</div>`:''}</td>
+        <td class="col-unit">${item.unit}</td>
+        <td style="text-align:right;width:90px">
+          ${item.ps||item.note?`<span style="color:var(--dim);font-family:var(--mono);font-size:11px">PS</span>`:
+          `<input class="qty-input" type="number" step="0.1" value="${item.qty}" oninput="updateItem('${sec.ws}',${idx},'qty',+this.value)" title="Edit quantity">`}
+        </td>
+        <td style="text-align:right;width:100px">
+          ${item.ps||item.note?`<span style="color:var(--dim);font-family:var(--mono);font-size:11px">—</span>`:
+          `<input class="rate-input" type="number" step="1" value="${item.rate}" oninput="updateItem('${sec.ws}',${idx},'rate',+this.value)" title="Edit rate £">`}
+        </td>
+        <td class="col-total" id="${itemId}">${item.ps||item.note?`<span style="color:var(--cyan);font-size:10px;font-family:var(--mono)">INCL</span>`:fmtGBP(total)}</td>
+        <td><span class="trade-pill ${tradeClass[trade]||'t-prelim'}">${tradeLabel[trade]||trade}</span></td>
+      </tr>`;
+    }).join('');
+    return`<div class="boq-work-section" id="ws-${sec.ws}">
+      <div class="ws-header" onclick="toggleSection('${sec.ws}')">
+        <span class="ws-ref">${sec.ws}</span>
+        <span class="ws-title">${WS_LABELS[sec.ws]||sec.ws}</span>
+        <span class="ws-total" id="ws-total-${sec.ws}">${secTotal>0?fmtGBP(secTotal):'—'}</span>
+        <span class="ws-collapse" id="ws-col-${sec.ws}">▼</span>
       </div>
-      <table class="boq-table">
-        <thead><tr>
-          <th style="width:40%">Item Description</th>
-          <th style="text-align:right">Qty</th><th>Unit</th>
-          <th style="text-align:right">Rate £</th>
-          <th style="text-align:right">Total £</th>
-          <th>Trade</th><th>Phase</th>
-        </tr></thead>
-        <tbody>${s.items.map(item=>`
-          <tr>
-            <td class="col-item">${item.item}</td>
-            <td class="col-qty">${typeof item.qty==='number'&&item.qty%1!==0?item.qty.toFixed(1):item.qty}</td>
-            <td class="col-unit">${item.unit}</td>
-            <td class="col-rate">${item.rate>0?'£'+item.rate.toLocaleString():'—'}</td>
-            <td class="col-total">${item.total>0?'£'+item.total.toLocaleString():'—'}</td>
-            <td><span class="trade-badge ${tradeColors[item.trade]||'t-build'}">${tradeLabels[item.trade]||item.trade}</span></td>
-            <td><span class="boq-table col-phase">${item.phase}</span></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
+      <div class="ws-body" id="ws-body-${sec.ws}">
+        <table class="boq-table">
+          <thead><tr>
+            <th style="width:70px">NRM2 Ref.</th>
+            <th>Item Description</th>
+            <th class="num" style="width:50px">Unit</th>
+            <th class="num" style="width:90px">Qty ✏️</th>
+            <th class="num" style="width:100px">Rate £ ✏️</th>
+            <th class="num" style="width:110px">Total £</th>
+            <th style="width:80px">Trade</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
     </div>`;
   }).join('');
 
-  // Contingency + grand total row
-  document.getElementById('boqContent').innerHTML += `
-    <div class="boq-section">
-      <div class="boq-section-head">
-        <div class="boq-section-title" style="color:var(--amber)">⚠️ Contingency + Grand Total</div>
-      </div>
-      <table class="boq-table">
-        <tbody>
-          <tr><td class="col-item">Subtotal (all works)</td><td></td><td></td><td></td><td class="col-total">£${subtotal.toLocaleString()}</td><td></td><td></td></tr>
-          <tr><td class="col-item">Contingency 12.5%</td><td class="col-qty">12.5</td><td class="col-unit">%</td><td></td><td class="col-total" style="color:var(--amber)">£${contingency.toLocaleString()}</td><td></td><td></td></tr>
-          <tr style="background:var(--gold-dim)">
-            <td class="col-item" style="font-weight:700;font-size:14px;color:var(--gold)">GRAND TOTAL</td>
-            <td></td><td></td><td></td>
-            <td class="col-total" style="font-size:18px;color:var(--gold)">£${(subtotal+contingency).toLocaleString()}</td>
-            <td></td><td></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>`;
+  window._grandTotal=grand;
+  const contingencyTotal=sections.find(s=>s.ws==='S')?.items.reduce((a,i)=>a+i.qty*i.rate,0)||0;
+  const measuredWorks=grand-contingencyTotal;
+  const rf=getRegFactor();
+  const totalFloor=rooms.reduce((s,r)=>s+(+r.l||0)*(+r.w||0),0);
 
-  // ── SUMMARY STRIP ──
-  const grandTotal = subtotal + contingency;
-  const labourTotal = sections.reduce((s,sec)=>s+sec.items.filter(i=>['elec','plumb','plast','build','carp','decor','floor','roof'].includes(i.trade)).reduce((a,i)=>a+i.total,0),0);
-  const matTotal = grandTotal - labourTotal;
-  document.getElementById('boqSummary').innerHTML = [
-    {val:'£'+grandTotal.toLocaleString(),   lbl:'Grand Total',        col:'var(--gold)'},
-    {val:'£'+labourTotal.toLocaleString(),  lbl:'Labour Est.',         col:'var(--amber)'},
-    {val:'£'+Math.round(matTotal*.4).toLocaleString(), lbl:'Materials Est.', col:'var(--cyan)'},
-    {val:rooms.length,                       lbl:'Rooms',              col:'var(--text)'},
-    {val:+(totalFloor).toFixed(0)+'m²',      lbl:'Total Floor Area',   col:'var(--text)'},
-    {val:sections.length,                    lbl:'Work Sections',      col:'var(--muted)'},
+  document.getElementById('boqSummary').innerHTML=[
+    {val:fmtGBP(grand),        lbl:'Grand Total (Exc. VAT)', col:'var(--gold)'},
+    {val:fmtGBP(measuredWorks),lbl:'Measured Works',         col:'var(--amber)'},
+    {val:fmtGBP(contingencyTotal),lbl:'Contingency 12.5%',  col:'var(--red)'},
+    {val:fmtGBP(grand*1.2),    lbl:'Inc. VAT @ 20%',         col:'var(--green)'},
+    {val:rooms.length,          lbl:'Rooms',                  col:'var(--text)'},
+    {val:totalFloor.toFixed(0)+'m²',lbl:'Total Floor Area',  col:'var(--cyan)'},
+    {val:'×'+rf.toFixed(2),    lbl:'BCIS Regional Factor',   col:'var(--muted)'},
+    {val:'NRM2',                lbl:'Measurement Standard',   col:'var(--gold)'},
   ].map(s=>`<div class="sum-card"><div class="sum-val" style="color:${s.col}">${s.val}</div><div class="sum-lbl">${s.lbl}</div></div>`).join('');
 
-  // Print meta
-  const addr = document.getElementById('projAddr').value || 'Property';
-  const dateStr = new Date().toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
-  document.getElementById('printMeta').innerHTML = `${addr}<br>Generated: ${dateStr}<br>Total: £${grandTotal.toLocaleString()}`;
-}
-
-// ══════════════════════════════════════════════
-// PROGRAMME ENGINE
-// ══════════════════════════════════════════════
-function addWorkingDays(startDate, days, wpw) {
-  const d = new Date(startDate);
-  let added = 0, safety = 0;
-  while (added < days && safety < 600) {
-    d.setDate(d.getDate()+1); safety++;
-    if (wpw<=5 && (d.getDay()===0||d.getDay()===6)) continue;
-    added++;
-  }
-  return new Date(d);
-}
-
-function fDate(d) {
-  if (!d||isNaN(d)) return '—';
-  return d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
-}
-
-function renderProgramme() {
-  const sdVal = document.getElementById('progStart').value;
-  const sd = sdVal ? new Date(sdVal) : new Date();
-  const wpw = +document.getElementById('progWpw').value || 5;
-  const dayRate = +document.getElementById('progDayRate').value || 220;
-  const workers = +document.getElementById('progWorkers').value || 2;
-
-  // Build active phases based on options
-  const phases = BASE_PHASES.filter(p => {
-    if (!p.optional) return true;
-    return activeOptions[p.optional] !== false;
-  }).map(p => ({...p, workers: p.workers||workers}));
-
-  // Adjust days based on room count / floor area
-  const totalFloor = rooms.reduce((s,r)=>s+(+r.l||0)*(+r.w||0),0);
-  const roomCount = rooms.length;
-  const scaleFactor = Math.max(1, totalFloor/50); // scale from base of 50m²
-
-  phases.forEach(p => {
-    if (['plaster','strip','decor'].includes(p.id)) {
-      p.days = Math.max(2, Math.round(p.days * scaleFactor));
-    }
-  });
-
-  // Calculate timeline
-  let cursor = 0;
-  phases.forEach(p => {
-    p.startWD = cursor;
-    p.endWD = cursor + p.days - 1;
-    p.startDate = addWorkingDays(sd, cursor, wpw);
-    p.endDate = addWorkingDays(sd, cursor + p.days - 1, wpw);
-    cursor += p.days;
-  });
-
-  const totalDays = cursor;
-  const totalWeeks = Math.ceil(totalDays/wpw);
-  const totalLabour = phases.reduce((s,p)=>s+p.workers*p.days*dayRate,0);
-  const finishDate = phases[phases.length-1].endDate;
-  const doneCount = phases.filter(p=>p.done).length;
-
-  // Store for use
-  progPhases = phases;
-
-  // Totals
-  document.getElementById('progTotals').textContent =
-    `${totalDays} working days · ${totalWeeks} weeks · Labour est. £${totalLabour.toLocaleString()}`;
-
-  // Summary cards
-  document.getElementById('progSummary').innerHTML = [
-    {v:totalDays,                           l:'Working Days',   c:'var(--gold)'},
-    {v:totalWeeks,                          l:'Weeks',          c:'var(--cyan)'},
-    {v:'£'+totalLabour.toLocaleString(),    l:'Labour Cost',    c:'var(--amber)'},
-    {v:fDate(phases[0]&&phases[0].startDate),l:'Start',         c:'var(--text)'},
-    {v:fDate(finishDate),                   l:'Completion',     c:'var(--green)'},
-    {v:doneCount+'/'+phases.length,         l:'Phases Done',    c:doneCount===phases.length?'var(--green)':'var(--gold)'},
-  ].map(s=>`<div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:9px 14px;text-align:center;flex:1;min-width:90px">
-    <div style="font-size:17px;font-weight:700;color:${s.c}">${s.v}</div>
-    <div style="font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-top:2px">${s.l}</div>
-  </div>`).join('');
-
-  // Gantt
-  const DAY_W = 26;
-  const totalW = totalDays * DAY_W;
-  const today = new Date();
-  let todayWD = 0;
-  const cur = new Date(sd);
-  while(cur < today && todayWD < totalDays){ cur.setDate(cur.getDate()+1); if(cur.getDay()!==0&&cur.getDay()!==6) todayWD++; }
-
-  // Week header
-  let wkHeader = '';
-  for (let w=0; w<totalWeeks; w++) {
-    wkHeader += `<div class="gantt-wk-label" style="left:${w*wpw*DAY_W+4}px">W${w+1}</div>`;
-  }
-
-  let wkLines = '';
-  for (let w=1; w<totalWeeks; w++) {
-    wkLines += `<div class="gantt-wk-line" style="left:${w*wpw*DAY_W}px"></div>`;
-  }
-
-  const isLightColor = col => ['#d4f244','#f0b840','#40e0d0','#40d0b0','#40a0f0','#40a8f0'].includes(col);
-
-  const ganttRows = phases.map((p,i) => {
-    const barL = p.startWD * DAY_W;
-    const barW = Math.max(DAY_W, p.days * DAY_W);
-    const lightText = isLightColor(p.col);
-    const labCost = p.workers * p.days * dayRate;
-    return `
-    <div class="gantt-row" style="${p.done?'opacity:.5':''}">
-      <div class="gantt-label">
-        <div class="ph-name">${p.name}</div>
-        <div class="ph-meta">${p.days}d · ${p.workers}w · £${labCost.toLocaleString()}</div>
+  document.getElementById('boqContent').innerHTML=boqHTML+`
+    <div style="background:var(--gold-dim);border:2px solid var(--gold-border);border-radius:var(--r2);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+      <div>
+        <div style="font-size:16px;font-weight:800;color:var(--gold)">GRAND TOTAL</div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:3px">NRM2 compliant · BCIS 2026 rates · 12.5% contingency included · Exclusive of VAT</div>
+        <div style="font-size:10px;color:var(--dim);font-family:var(--mono);margin-top:2px">All quantities measured net per RICS NRM2 (2nd Ed.) · Provisional Sums subject to instruction</div>
       </div>
-      <div class="gantt-track" style="min-width:${totalW}px">
-        ${wkLines}
-        ${todayWD>0?`<div class="gantt-today" style="left:${todayWD*DAY_W}px"></div>`:''}
-        <div class="gantt-bar" style="left:${barL}px;width:${barW}px;background:${p.col};color:${lightText?'#000':'#fff'};opacity:${p.done?.5:.85}"
-          onclick="togglePhaseDone(${i})" title="Click to mark done">
-          ${p.days}d${p.done?' ✓':''}
-        </div>
+      <div style="text-align:right">
+        <div style="font-size:30px;font-weight:800;color:var(--gold)" id="grandTotalDisplay">${fmtGBP(grand)}</div>
+        <div style="font-size:12px;color:var(--green);font-family:var(--mono)">Inc. VAT: ${fmtGBP(grand*1.2)}</div>
       </div>
     </div>`;
-  }).join('');
-
-  document.getElementById('ganttChart').innerHTML = `
-    <div class="gantt-header-row">
-      <div class="gantt-header-label">Phase</div>
-      <div class="gantt-header-track" style="min-width:${totalW}px;position:relative;padding:6px 0">
-        ${wkHeader}
-      </div>
-    </div>
-    ${ganttRows}`;
-
-  // Phase detail table
-  document.getElementById('progTableBody').innerHTML = phases.map((p,i)=>`
-    <tr style="${p.done?'opacity:.5':''}border-bottom:1px solid var(--border)">
-      <td style="font-size:12px;color:var(--muted);font-family:var(--mono)">${i+1}</td>
-      <td style="font-size:12px;font-family:var(--mono)">
-        <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${p.col};margin-right:7px"></span>
-        ${p.name}
-      </td>
-      <td><span class="trade-badge ${{elec:'t-elec',plumb:'t-plumb',plast:'t-plast',build:'t-build',carp:'t-carp',decor:'t-decor',floor:'t-floor',roof:'t-roof'}[p.trade]||'t-build'}">${p.trade}</span></td>
-      <td style="font-size:12px;font-family:var(--mono)">
-        <input type="number" value="${p.days}" min="1" max="90" style="background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--text);font-family:var(--mono);font-size:11px;width:48px;outline:none;text-align:center"
-          oninput="progPhases[${i}].days=+this.value;renderProgramme()">
-      </td>
-      <td style="font-size:12px;font-family:var(--mono)">
-        <input type="number" value="${p.workers}" min="0" max="10" style="background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--gold);font-family:var(--mono);font-size:11px;width:44px;outline:none;text-align:center"
-          oninput="progPhases[${i}].workers=+this.value;renderProgramme()">
-      </td>
-      <td style="font-size:12px;font-family:var(--mono);color:var(--amber);text-align:right">
-        ${p.workers>0?'£'+(p.workers*p.days*dayRate).toLocaleString():'—'}
-      </td>
-      <td style="font-size:11px;font-family:var(--mono)">
-        <span style="font-size:10px;padding:2px 8px;border-radius:6px;background:var(--s2);border:1px solid var(--border);color:var(--muted)">${p.before}</span>
-      </td>
-      <td>
-        <input type="checkbox" style="accent-color:var(--green);cursor:pointer;width:14px;height:14px" ${p.done?'checked':''}
-          onchange="progPhases[${i}].done=this.checked;renderProgramme()">
-      </td>
-    </tr>`).join('');
 }
 
-function togglePhaseDone(i) {
-  if (progPhases[i]) { progPhases[i].done = !progPhases[i].done; renderProgramme(); }
+function toggleSection(ws){
+  const b=document.getElementById('ws-body-'+ws),a=document.getElementById('ws-col-'+ws);
+  if(b.style.display==='none'){b.style.display='';a.textContent='▼';}
+  else{b.style.display='none';a.textContent='▶';}
 }
 
-// ══════════════════════════════════════════════
+function updateItem(ws,idx,field,val){
+  if(!window._boqSections)return;
+  const sec=window._boqSections.find(s=>s.ws===ws);
+  if(!sec||!sec.items[idx])return;
+  sec.items[idx][field]=val;
+  const total=sec.items[idx].qty*sec.items[idx].rate;
+  const el=document.getElementById(`tot_${ws}_${idx}`);
+  if(el&&!sec.items[idx].ps)el.textContent=fmtGBP(total);
+  const secTotal=sec.items.reduce((s,it)=>s+(it.qty*it.rate),0);
+  const se=document.getElementById('ws-total-'+ws);
+  if(se)se.textContent=secTotal>0?fmtGBP(secTotal):'—';
+  const grand=window._boqSections.reduce((s,sec)=>s+sec.items.reduce((a,it)=>a+(it.qty*it.rate),0),0);
+  window._grandTotal=grand;
+  const ge=document.getElementById('grandTotalDisplay');
+  if(ge)ge.textContent=fmtGBP(grand);
+}
+
+// PROGRAMME
+function addProgWD(start,wd,wpw){const d=new Date(start);let added=0,s=0;while(added<wd&&s<600){d.setDate(d.getDate()+1);s++;if(wpw<=5&&(d.getDay()===0||d.getDay()===6))continue;added++;}return new Date(d);}
+function fDate(d){if(!d||isNaN(d))return'—';return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
+
+function renderProgramme(){
+  const sdVal=document.getElementById('progStart').value,sd=sdVal?new Date(sdVal):new Date();
+  const wpw=+document.getElementById('progWpw').value||5,dayRate=+document.getElementById('progDayRate').value||220;
+  const phases=NRM2_PHASES.filter(p=>!p.opt||activeOptions[p.opt]!==false);
+  const totalFloor=rooms.reduce((s,r)=>s+(+r.l||0)*(+r.w||0),0);
+  const scale=Math.max(1,totalFloor/50);
+  phases.forEach(p=>{p.scaledDays=['plaster','demolish','decorating','flooring'].includes(p.id)?Math.max(2,Math.round(p.days*scale)):p.days;});
+  let cursor=0;
+  phases.forEach(p=>{p.startWD=cursor;p.endWD=cursor+p.scaledDays-1;p.startDate=addProgWD(sd,cursor,wpw);p.endDate=addProgWD(sd,cursor+p.scaledDays-1,wpw);cursor+=p.scaledDays;});
+  const totalDays=cursor,totalWeeks=Math.ceil(totalDays/wpw),totalLabour=phases.reduce((s,p)=>s+p.w*p.scaledDays*dayRate,0),finDate=phases[phases.length-1].endDate,doneCount=phases.filter(p=>p.done).length;
+  progPhases=phases;
+  document.getElementById('progTotals').textContent=`${totalDays} working days · ${totalWeeks} weeks · Labour est. £${totalLabour.toLocaleString()}`;
+  document.getElementById('progSummary').innerHTML=[{v:totalDays,l:'Working Days',c:'var(--gold)'},{v:totalWeeks,l:'Weeks',c:'var(--cyan)'},{v:'£'+totalLabour.toLocaleString(),l:'Labour Est.',c:'var(--amber)'},{v:fDate(phases[0]?.startDate),l:'Start',c:'var(--text)'},{v:fDate(finDate),l:'Completion',c:'var(--green)'},{v:doneCount+'/'+phases.length,l:'Done',c:doneCount===phases.length?'var(--green)':'var(--gold)'}].map(s=>`<div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:9px 14px;text-align:center;flex:1;min-width:90px"><div style="font-size:17px;font-weight:700;color:${s.c}">${s.v}</div><div style="font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-top:2px">${s.l}</div></div>`).join('');
+  const DAY_W=26,totalW=totalDays*DAY_W,today=new Date();let todayWD=0;const tc=new Date(sd);while(tc<today&&todayWD<totalDays){tc.setDate(tc.getDate()+1);if(tc.getDay()!==0&&tc.getDay()!==6)todayWD++;}
+  let wkH='';for(let w=0;w<totalWeeks;w++)wkH+=`<div style="position:absolute;left:${w*wpw*DAY_W}px;top:0;bottom:0;border-left:1px dashed rgba(255,255,255,.06);pointer-events:none"><div style="font-size:9px;color:var(--dim);font-family:var(--mono);padding:2px 3px">W${w+1}</div></div>`;
+  const isLight=col=>['#d4f244','#f0b840','#40d0b0','#40a0f0','#40e0d0','#40d080','#f0c080'].includes(col);
+  const hdr=`<div style="display:flex;border-bottom:1px solid var(--border);background:var(--s2)"><div class="gantt-label" style="font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase">Phase · Days · Workers</div><div style="flex:1;padding:6px 8px;font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;min-width:${totalW}px">Timeline (${totalWeeks} wks) →</div></div>`;
+  const rows=phases.map((p,i)=>{const barL=p.startWD*DAY_W,barW=Math.max(DAY_W,p.scaledDays*DAY_W);return`<div class="gantt-row" style="${p.done?'opacity:.5':''}"><div class="gantt-label"><div class="ph-name">${p.name}</div><div class="ph-meta">${p.scaledDays}d · ${p.w}w · ${p.w>0?'£'+(p.w*p.scaledDays*dayRate).toLocaleString():''}</div></div><div class="gantt-track" style="min-width:${totalW}px">${wkH}${todayWD>0?`<div style="position:absolute;left:${todayWD*DAY_W}px;top:0;bottom:0;width:2px;background:var(--red);opacity:.6;z-index:5"></div>`:''}<div class="gantt-bar" style="left:${barL}px;width:${barW}px;background:${p.col};opacity:${p.done?.45:.82};color:${isLight(p.col)?'#000':'#fff'}" onclick="progPhases[${i}].done=!progPhases[${i}].done;renderProgramme()">${p.scaledDays}d${p.done?' ✓':''}</div></div></div>`;}).join('');
+  document.getElementById('ganttChart').innerHTML=hdr+rows;
+  document.getElementById('progTableBody').innerHTML=phases.map((p,i)=>`<tr style="${p.done?'opacity:.5':''}border-bottom:1px solid var(--border)"><td style="padding:8px 12px;font-size:11px;color:var(--muted);font-family:var(--mono)">${i+1}</td><td style="padding:8px 12px;font-size:11px;font-family:var(--mono)"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${p.col};margin-right:7px"></span>${p.name}</td><td style="padding:8px 12px;font-size:11px;color:var(--muted);font-family:var(--mono)">${p.trade}</td><td style="padding:8px 12px"><input style="background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--text);font-family:var(--mono);font-size:11px;width:48px;outline:none;text-align:center" type="number" value="${p.scaledDays}" min="1" max="90" oninput="progPhases[${i}].scaledDays=+this.value;renderProgramme()"></td><td style="padding:8px 12px"><input style="background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--gold);font-family:var(--mono);font-size:11px;width:44px;outline:none;text-align:center" type="number" value="${p.w}" min="0" max="10" oninput="progPhases[${i}].w=+this.value;renderProgramme()"></td><td style="padding:8px 12px;font-size:11px;color:var(--amber);font-family:var(--mono);text-align:right">${p.w>0?'£'+(p.w*p.scaledDays*dayRate).toLocaleString():'—'}</td><td style="padding:8px 12px;font-size:11px;color:var(--gold);font-family:var(--mono)">${fDate(p.startDate)}</td><td style="padding:8px 12px;font-size:11px;font-family:var(--mono)">${fDate(p.endDate)}</td><td style="padding:8px 12px"><input type="checkbox" style="accent-color:var(--green);cursor:pointer;width:14px;height:14px" ${p.done?'checked':''} onchange="progPhases[${i}].done=this.checked;renderProgramme()"></td></tr>`).join('');
+}
+
+// EXPORT EXCEL
+function exportExcel(){
+  if(!window._boqSections){alert('Generate the BOQ first (Step 3).');return;}
+  const wb=XLSX.utils.book_new();
+  const addr=document.getElementById('projAddr').value||'Property';
+  const client=document.getElementById('projClient').value||'';
+  const qs=document.getElementById('projQS').value||'AURUM';
+  const date=document.getElementById('projDate').value||new Date().toISOString().slice(0,10);
+  const region=document.getElementById('projRegion').options[document.getElementById('projRegion').selectedIndex].text;
+  const grand=window._grandTotal||0;
+  const contingencyTotal=window._boqSections.find(s=>s.ws==='S')?.items.reduce((a,i)=>a+i.qty*i.rate,0)||0;
+
+  // Sheet 1: Full BOQ
+  const boqRows=[];
+  boqRows.push(['BILL OF QUANTITIES — NRM2 COMPLIANT']);
+  boqRows.push(['RICS New Rules of Measurement (NRM2) 2nd Edition · BCIS Regional Price Data 2026']);
+  boqRows.push([]);
+  boqRows.push(['Project:',addr,'','','Client:',client]);
+  boqRows.push(['Prepared by:',qs,'','','Date:',date]);
+  boqRows.push(['Region:',region,'','','Contract:',document.getElementById('projContract').value]);
+  boqRows.push([]);
+  boqRows.push(['NOTE: Quantities measured net in accordance with NRM2. Rates based on BCIS 2026. Provisional Sums (PS) subject to instruction.']);
+  boqRows.push([]);
+  boqRows.push(['Ref.','Item Description','Unit','Qty','Rate £','Total £','Trade','Notes']);
+
+  window._boqSections.forEach(sec=>{
+    boqRows.push([]);
+    boqRows.push([sec.ws,WS_LABELS[sec.ws]||sec.ws,'','','','','','']);
+    sec.items.forEach(item=>{
+      const total=item.ps?0:item.qty*item.rate;
+      boqRows.push([item.ref,item.desc+(item.ps?' [PROVISIONAL SUM]':'')+(item.dw?' [DAYWORK]':''),item.unit,item.ps?'PS':item.qty,item.ps?'PS':item.rate,item.ps?'INCL':total,item.trade||'',item.psNote||'']);
+    });
+    const st=sec.items.reduce((s,it)=>s+(it.qty*it.rate),0);
+    boqRows.push(['','TOTAL — '+(WS_LABELS[sec.ws]||sec.ws),'','','',st,'','']);
+  });
+  boqRows.push([]);
+  boqRows.push(['','MEASURED WORKS (excl. contingency)','','','',grand-contingencyTotal,'','']);
+  boqRows.push(['','CONTINGENCY @ 12.5%','','','',contingencyTotal,'','']);
+  boqRows.push(['','GRAND TOTAL (EXCLUSIVE OF VAT)','','','',grand,'','']);
+  boqRows.push(['','VAT @ 20%','','','',grand*0.2,'','']);
+  boqRows.push(['','TOTAL INCLUDING VAT','','','',grand*1.2,'','']);
+
+  const ws1=XLSX.utils.aoa_to_sheet(boqRows);
+  ws1['!cols']=[{wch:12},{wch:62},{wch:8},{wch:10},{wch:12},{wch:14},{wch:12},{wch:38}];
+  XLSX.utils.book_append_sheet(wb,ws1,'NRM2 Bill of Quantities');
+
+  // Sheet 2: Cost Summary
+  const sumRows=[['COST SUMMARY — NRM2'],[],['Work Section','Description','Amount £']];
+  window._boqSections.forEach(sec=>{const st=sec.items.reduce((s,it)=>s+(it.qty*it.rate),0);if(st>0)sumRows.push([sec.ws,WS_LABELS[sec.ws]||sec.ws,st]);});
+  sumRows.push([]);
+  sumRows.push(['','Measured Works (excl. contingency)',grand-contingencyTotal]);
+  sumRows.push(['','Contingency @ 12.5%',contingencyTotal]);
+  sumRows.push(['','GRAND TOTAL (Exc. VAT)',grand]);
+  sumRows.push(['','VAT @ 20%',grand*0.2]);
+  sumRows.push(['','TOTAL INC. VAT',grand*1.2]);
+  const ws2=XLSX.utils.aoa_to_sheet(sumRows);
+  ws2['!cols']=[{wch:12},{wch:50},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Cost Summary');
+
+  // Sheet 3: Room Schedule
+  const roomRows=[['Room','Type','Length (m)','Width (m)','Height (m)','Floor m²','Wall m² (net)','Ceiling m²','Perim (ml)']];
+  rooms.forEach(r=>{const q=getRoomQ(r);roomRows.push([r.name,ROOM_TYPES[r.type]?.label||r.type,r.l||0,r.w||0,r.h||2.4,+q.floor.toFixed(2),+q.wallNet.toFixed(2),+q.ceilArea.toFixed(2),+q.perim.toFixed(2)]);});
+  const ws3=XLSX.utils.aoa_to_sheet(roomRows);
+  ws3['!cols']=[{wch:18},{wch:16},{wch:12},{wch:12},{wch:12},{wch:12},{wch:14},{wch:12},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,ws3,'Room Schedule');
+
+  // Sheet 4: Programme
+  if(progPhases.length){
+    const dayRate=+document.getElementById('progDayRate').value||220;
+    const progRows=[['#','NRM2 Phase','Trade','Duration (days)','Workers','Labour £','Start Date','Finish Date','Done']];
+    progPhases.forEach((p,i)=>progRows.push([i+1,p.name,p.trade,p.scaledDays,p.w,p.w*p.scaledDays*dayRate,p.startDate?fDate(p.startDate):'',p.endDate?fDate(p.endDate):'',p.done?'Yes':'']));
+    const ws4=XLSX.utils.aoa_to_sheet(progRows);
+    ws4['!cols']=[{wch:5},{wch:40},{wch:16},{wch:16},{wch:10},{wch:14},{wch:16},{wch:16},{wch:8}];
+    XLSX.utils.book_append_sheet(wb,ws4,'Build Programme');
+  }
+
+  XLSX.writeFile(wb,`AURUM_NRM2_BOQ_${addr.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30)}_${date}.xlsx`);
+}
+
+// EXPORT PDF
+function exportPDF(){
+  if(!window._boqSections){alert('Generate the BOQ first (Step 3).');return;}
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a3'});
+  const addr=document.getElementById('projAddr').value||'Property';
+  const client=document.getElementById('projClient').value||'';
+  const qs=document.getElementById('projQS').value||'AURUM';
+  const date=document.getElementById('projDate').value||new Date().toISOString().slice(0,10);
+  const region=document.getElementById('projRegion').options[document.getElementById('projRegion').selectedIndex].text;
+  const grand=window._grandTotal||0;
+  const contingencyTotal=window._boqSections.find(s=>s.ws==='S')?.items.reduce((a,i)=>a+i.qty*i.rate,0)||0;
+  const pageW=doc.internal.pageSize.getWidth(),pageH=doc.internal.pageSize.getHeight(),margin=12;
+  let pageNum=1;
+
+  const addHeader=()=>{
+    doc.setFillColor(8,8,8);doc.rect(0,0,pageW,20,'F');
+    doc.setTextColor(240,192,64);doc.setFontSize(14);doc.setFont('helvetica','bold');doc.text('AURUM',margin,13);
+    doc.setTextColor(160,160,140);doc.setFontSize(8);doc.setFont('helvetica','normal');doc.text('// NRM2 Bill of Quantities · BCIS 2026 · RICS Compliant',margin+22,13);
+    doc.setTextColor(100,100,80);doc.text(`Page ${pageNum}`,pageW-margin-15,13);
+    doc.setDrawColor(240,192,64);doc.setLineWidth(0.4);doc.line(margin,20,pageW-margin,20);
+    pageNum++;
+  };
+
+  // Page 1: Cover + Summary
+  addHeader();
+  let y=28;
+  doc.setFillColor(16,16,16);doc.roundedRect(margin,y,pageW-margin*2,32,3,3,'F');
+  doc.setTextColor(240,192,64);doc.setFontSize(13);doc.setFont('helvetica','bold');doc.text('BILL OF QUANTITIES',margin+6,y+10);
+  doc.setTextColor(180,180,160);doc.setFontSize(8);doc.setFont('helvetica','normal');
+  doc.text('In accordance with RICS NRM2 (New Rules of Measurement, 2nd Edition) · BCIS Regional Price Data 2026',margin+6,y+17);
+  const ic=pageW-margin*2-12;
+  doc.setTextColor(160,160,140);doc.setFontSize(8);
+  doc.text(`Project: ${addr}`,margin+6,y+24);doc.text(`Client: ${client}`,margin+6+ic/3,y+24);doc.text(`Prepared by: ${qs}`,margin+6+ic*2/3,y+24);
+  doc.text(`Date: ${date}`,margin+6,y+30);doc.text(`Region: ${region}`,margin+6+ic/3,y+30);doc.text(`Contract: ${document.getElementById('projContract').value}`,margin+6+ic*2/3,y+30);
+  y+=38;
+
+  doc.setTextColor(240,192,64);doc.setFontSize(10);doc.setFont('helvetica','bold');doc.text('COST SUMMARY',margin,y+6);
+  y+=10;
+  const sumRows=[];
+  window._boqSections.forEach(sec=>{const st=sec.items.reduce((s,it)=>s+(it.qty*it.rate),0);if(st>0)sumRows.push([sec.ws,WS_LABELS[sec.ws]||sec.ws,fmtGBP(st)]);});
+  sumRows.push(['','Contingency @ 12.5%',fmtGBP(contingencyTotal)]);
+  sumRows.push(['','GRAND TOTAL (Exc. VAT)',fmtGBP(grand)]);
+  sumRows.push(['','VAT @ 20%',fmtGBP(grand*0.2)]);
+  sumRows.push(['','TOTAL INC. VAT',fmtGBP(grand*1.2)]);
+  doc.autoTable({startY:y,head:[['Sect.','Description','Amount']],body:sumRows,margin:{left:margin,right:margin},styles:{fontSize:8,cellPadding:3,font:'helvetica',textColor:[200,200,180],fillColor:[16,16,16],lineColor:[42,42,42],lineWidth:.3},headStyles:{fillColor:[24,24,24],textColor:[240,192,64],fontStyle:'bold',fontSize:8},columnStyles:{0:{cellWidth:16,textColor:[160,160,120]},1:{cellWidth:'auto'},2:{cellWidth:32,halign:'right',textColor:[240,192,64]}},didParseCell:(d)=>{if(d.row.index>=sumRows.length-3){d.cell.styles.fontStyle='bold';if(d.row.index===sumRows.length-3)d.cell.styles.textColor=[240,192,64];if(d.row.index===sumRows.length-1)d.cell.styles.textColor=[64,208,128];}},theme:'grid'});
+
+  // BOQ sections — one page per section
+  window._boqSections.forEach((sec,si)=>{
+    doc.addPage();addHeader();
+    let y2=28;
+    doc.setFillColor(24,24,24);doc.roundedRect(margin,y2,pageW-margin*2,9,2,2,'F');
+    doc.setTextColor(240,192,64);doc.setFontSize(10);doc.setFont('helvetica','bold');doc.text(`${sec.ws} — ${WS_LABELS[sec.ws]||sec.ws}`,margin+4,y2+6.5);
+    const st=sec.items.reduce((s,it)=>s+(it.qty*it.rate),0);
+    doc.text(`Section Total: ${fmtGBP(st)}`,pageW-margin-55,y2+6.5);y2+=13;
+    const rows=sec.items.map(item=>[item.ref,item.desc+(item.ps?' [PS'+(item.psNote?` — ${item.psNote}`:'')+']':'')+(item.dw?' [DAYWORK]':''),item.unit,item.ps?'PS':item.qty.toString(),item.ps?'—':fmtGBP(item.rate),item.ps?'INCL':fmtGBP(item.qty*item.rate)]);
+    doc.autoTable({startY:y2,head:[['Ref.','Item Description','Unit','Qty','Rate £','Total £']],body:rows,margin:{left:margin,right:margin},styles:{fontSize:8,cellPadding:3,font:'helvetica',textColor:[200,200,180],fillColor:[16,16,16],lineColor:[42,42,42],lineWidth:.3},headStyles:{fillColor:[24,24,24],textColor:[240,192,64],fontStyle:'bold',fontSize:8},columnStyles:{0:{cellWidth:18,textColor:[160,160,120]},1:{cellWidth:'auto'},2:{cellWidth:14,halign:'center'},3:{cellWidth:18,halign:'right',textColor:[64,224,208]},4:{cellWidth:24,halign:'right',textColor:[240,160,64]},5:{cellWidth:28,halign:'right',textColor:[240,192,64],fontStyle:'bold'}},didParseCell:(d)=>{const it=sec.items[d.row.index];if(it&&it.ps)d.cell.styles.textColor=[100,160,200];if(it&&it.isContingency){d.cell.styles.textColor=[240,64,64];d.cell.styles.fontStyle='bold';}},foot:[['','',`Section ${sec.ws} Total`,'','',fmtGBP(st)]],footStyles:{fillColor:[24,24,24],textColor:[240,192,64],fontStyle:'bold'},theme:'grid'});
+  });
+
+  // Programme page
+  if(progPhases.length){
+    doc.addPage();addHeader();
+    let yP=28;
+    doc.setTextColor(240,192,64);doc.setFontSize(10);doc.setFont('helvetica','bold');doc.text('BUILD PROGRAMME — NRM2 SEQUENCED',margin,yP+6);yP+=12;
+    const dayRate=+document.getElementById('progDayRate').value||220;
+    doc.autoTable({startY:yP,head:[['#','NRM2 Phase','Trade','Days','Workers','Labour £','Start','Finish','Done']],body:progPhases.map((p,i)=>[(i+1).toString(),p.name,p.trade,p.scaledDays.toString(),p.w.toString(),p.w>0?'£'+(p.w*p.scaledDays*dayRate).toLocaleString():'—',p.startDate?fDate(p.startDate):'',p.endDate?fDate(p.endDate):'',p.done?'✓':'']),margin:{left:margin,right:margin},styles:{fontSize:7,cellPadding:3,font:'helvetica',textColor:[200,200,180],fillColor:[16,16,16],lineColor:[42,42,42],lineWidth:.3},headStyles:{fillColor:[24,24,24],textColor:[240,192,64],fontStyle:'bold',fontSize:8},columnStyles:{0:{cellWidth:8},1:{cellWidth:'auto'},2:{cellWidth:22},3:{cellWidth:14,halign:'center'},4:{cellWidth:14,halign:'center'},5:{cellWidth:24,halign:'right',textColor:[240,160,64]},6:{cellWidth:24},7:{cellWidth:24},8:{cellWidth:12,halign:'center'}},theme:'grid'});
+  }
+
+  // Footer all pages
+  const tp=doc.internal.getNumberOfPages();
+  for(let i=1;i<=tp;i++){doc.setPage(i);doc.setFillColor(8,8,8);doc.rect(0,pageH-9,pageW,9,'F');doc.setTextColor(80,80,60);doc.setFontSize(7);doc.setFont('helvetica','normal');doc.text(`AURUM // NRM2 BOQ // ${addr} // ${date} // All quantities exc. VAT // PS items subject to instruction`,margin,pageH-3.5);doc.text(`Page ${i} of ${tp}`,pageW-margin-18,pageH-3.5);}
+
+  doc.save(`AURUM_NRM2_BOQ_${addr.replace(/[^a-zA-Z0-9]/g,'_').slice(0,30)}_${date}.pdf`);
+}
+
 // UTILS
-// ══════════════════════════════════════════════
-function clearAll() {
-  if (!confirm('Reset everything and start again?')) return;
-  rooms = [];
-  boqData = [];
-  progPhases = [];
-  OPTIONS.forEach(o => activeOptions[o.id] = o.default);
-  renderOptions();
-  seedDefaultRooms();
-  goStep(1);
-}
+function fmtGBP(n){n=+n||0;if(Math.abs(n)>=1000000)return'£'+(n/1000000).toFixed(2)+'M';if(Math.abs(n)>=1000)return'£'+Math.round(n).toLocaleString('en-GB');return'£'+Math.round(n);}
+function clearAll(){if(!confirm('Reset everything?'))return;rooms=[];progPhases=[];OPTIONS.forEach(o=>activeOptions[o.id]=o.default);renderOptions();seedRooms();goStep(1);}
 </script>
 </body>
 </html>
