@@ -609,6 +609,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
         <button class="ptab" onclick="propTab('summary',this)">💰 Summary</button>
         <button class="ptab" onclick="propTab('calculator',this)">⚡ Calculator</button>
         <button class="ptab" onclick="propTab('finance',this)">🏦 Finance & Risk</button>
+        <button class="ptab" onclick="propTab('works',this)">🔨 Works & BOQ</button>
         <button class="ptab" onclick="propTab('documents',this)">📄 Documents</button>
       </div>
 
@@ -741,6 +742,91 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
         <div id="ftab-cashflow" class="ftab-content" style="display:none"></div>
         <div id="ftab-risk" class="ftab-content" style="display:none"></div>
         <div id="ftab-legal" class="ftab-content" style="display:none"></div>
+      </div>
+
+      <!-- WORKS & BOQ TAB -->
+      <div id="ptab-works" class="ptab-content" style="display:none">
+        <div style="display:flex;gap:0;margin-bottom:24px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;">
+          <div id="ws-tab-1" onclick="worksStep(1)" style="flex:1;padding:12px 16px;text-align:center;cursor:pointer;border-right:1px solid var(--border);background:var(--gold-dim);border-bottom:2px solid var(--gold);">
+            <div style="font-size:9px;font-family:var(--mono);color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Step 01</div>
+            <div style="font-size:12px;font-weight:600;color:var(--text);">Select Works</div>
+          </div>
+          <div id="ws-tab-2" onclick="worksStep(2)" style="flex:1;padding:12px 16px;text-align:center;cursor:pointer;border-right:1px solid var(--border);">
+            <div style="font-size:9px;font-family:var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Step 02</div>
+            <div style="font-size:12px;font-weight:600;color:var(--muted);">Review & Price</div>
+          </div>
+          <div id="ws-tab-3" onclick="worksStep(3)" style="flex:1;padding:12px 16px;text-align:center;cursor:pointer;border-right:1px solid var(--border);">
+            <div style="font-size:9px;font-family:var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Step 03</div>
+            <div style="font-size:12px;font-weight:600;color:var(--muted);">Bill of Quantities</div>
+          </div>
+          <div id="ws-tab-4" onclick="worksStep(4)" style="flex:1;padding:12px 16px;text-align:center;cursor:pointer;">
+            <div style="font-size:9px;font-family:var(--mono);color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;">Step 04</div>
+            <div style="font-size:12px;font-weight:600;color:var(--muted);">Programme</div>
+          </div>
+        </div>
+        <div id="works-step1">
+          <div class="note-box">🔨 <strong>Tick all works required</strong> for this property. AURUM generates a priced BOQ + Build Programme. Amend any quantity or price in Step 2.</div>
+          <div id="worksCategories"></div>
+          <div style="display:flex;justify-content:flex-end;margin-top:16px;gap:8px;">
+            <button class="btn" onclick="clearAllWorks()">Clear All</button>
+            <button class="btn solid" onclick="worksStep(2)" style="padding:11px 28px;">Next: Review & Price →</button>
+          </div>
+        </div>
+        <div id="works-step2" style="display:none">
+          <div class="note-box">✏️ <strong>Edit quantities and rates</strong> — all values amendable. Rates based on BCIS 2026 + online market data. Add custom items as needed.</div>
+          <div id="worksReviewTable"></div>
+          <div style="display:flex;justify-content:space-between;margin-top:16px;gap:8px;flex-wrap:wrap;">
+            <button class="btn" onclick="worksStep(1)">← Back</button>
+            <div style="display:flex;gap:8px;">
+              <button class="btn gold" onclick="addCustomWorkItem()">+ Add Custom Item</button>
+              <button class="btn solid" onclick="worksStep(3)">Generate BOQ →</button>
+            </div>
+          </div>
+        </div>
+        <div id="works-step3" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+            <div><div style="font-size:15px;font-weight:700;">Bill of <span style="color:var(--gold);">Quantities</span></div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">NRM2 · BCIS 2026 · Linked to this property</div></div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn" onclick="worksStep(2)">← Edit</button>
+              <button class="btn gold" onclick="worksStep(4)">Programme →</button>
+              <button class="btn solid" onclick="exportWorksBOQ()">📄 Export PDF</button>
+            </div>
+          </div>
+          <div id="worksBOQSummary" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:20px;"></div>
+          <div id="worksBOQContent"></div>
+        </div>
+        <div id="works-step4" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+            <div><div style="font-size:15px;font-weight:700;">Build <span style="color:var(--gold);">Programme</span></div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">Auto-sequenced · Edit durations + workers</div></div>
+            <div style="display:flex;gap:8px;"><button class="btn" onclick="worksStep(3)">← BOQ</button><button class="btn solid" onclick="window.print()">🖨 Print</button></div>
+          </div>
+          <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:20px;">
+            <div style="padding:12px 18px;background:var(--s2);border-bottom:1px solid var(--border);display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+              <div style="display:flex;flex-direction:column;gap:4px;"><label style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;font-family:var(--mono);">Start Date</label><input type="date" id="worksProgStart" style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;" oninput="renderWorksProgramme()"></div>
+              <div style="display:flex;flex-direction:column;gap:4px;"><label style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;font-family:var(--mono);">Days/Week</label><input type="number" id="worksProgWpw" value="5" min="1" max="7" style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;width:60px;" oninput="renderWorksProgramme()"></div>
+              <div style="display:flex;flex-direction:column;gap:4px;"><label style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;font-family:var(--mono);">Day Rate £</label><input type="number" id="worksProgRate" value="220" style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:7px 11px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;width:80px;" oninput="renderWorksProgramme()"></div>
+            </div>
+            <div id="worksProgrammeSummary" style="display:flex;gap:10px;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid var(--border);"></div>
+            <div style="overflow-x:auto;"><div id="worksGantt"></div></div>
+          </div>
+          <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;">
+            <div style="padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:600;">📋 Phase Details — Edit days and workers</div>
+            <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:650px;">
+              <thead><tr style="background:var(--s2);">
+                <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">#</th>
+                <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Phase</th>
+                <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Trade</th>
+                <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Days</th>
+                <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Workers</th>
+                <th style="padding:8px 12px;text-align:right;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Labour £</th>
+                <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Start</th>
+                <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Finish</th>
+                <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Done</th>
+              </tr></thead>
+              <tbody id="worksProgTableBody"></tbody>
+            </table></div>
+          </div>
+        </div>
       </div>
 
       <!-- DOCUMENTS -->
@@ -1027,6 +1113,9 @@ function finTab(tab,btn){
   if(tab==='pl')renderPL();if(tab==='tax')initTax();if(tab==='cashflow')renderCashFlow();if(tab==='risk')renderRisk();if(tab==='legal')renderLegal();
 }
 function renderFinance(){renderPL();}
+
+// UTILS — must be defined before any function that uses them
+function fmtK(n){n=+n||0;if(Math.abs(n)>=1000000)return(n/1000000).toFixed(1)+'M';if(Math.abs(n)>=1000)return(n/1000).toFixed(0)+'k';return Math.round(n).toString();}
 
 // DASHBOARD
 async function loadDashboard(){
@@ -1651,7 +1740,556 @@ function renderCustomPcList(){
 function deleteCustomPC(pc){delete MARKET_DATA[pc];const saved=JSON.parse(localStorage.getItem('aurumCustomPCs')||'[]').filter(x=>x.pc!==pc);localStorage.setItem('aurumCustomPCs',JSON.stringify(saved));renderCustomPcList();renderAreaRanking();}
 function initScout(){loadCustomPostcodes();renderAreaRanking();renderCustomPcList();}
 
-// LANDING DEMO CALCULATOR
+// ══════════════════════════════════════════════
+// WORKS & BOQ ENGINE
+// ══════════════════════════════════════════════
+let worksItems = []; // all selected+configured work items
+let worksPhases = []; // programme phases
+
+// WORKS CATALOGUE — full list with BCIS 2026 rates
+const WORKS_CATALOGUE = [
+  // STRIP OUT & DEMOLITION
+  {cat:'🪚 Strip Out & Demolition', items:[
+    {id:'strip_plaster',  name:'Hack off plaster to brick walls',     unit:'m²', rate:9,   minW:2, days:0.5, trade:'Builder',     phase:'strip',   seq:1},
+    {id:'strip_floors',   name:'Strip floor coverings (all types)',    unit:'m²', rate:4,   minW:1, days:0.3, trade:'Builder',     phase:'strip',   seq:1},
+    {id:'strip_kitchen',  name:'Remove kitchen units and appliances',  unit:'no', rate:280, minW:2, days:0.5, trade:'Builder',     phase:'strip',   seq:1},
+    {id:'strip_bathroom', name:'Remove bathroom suite',                unit:'no', rate:220, minW:2, days:0.5, trade:'Builder',     phase:'strip',   seq:1},
+    {id:'strip_doors',    name:'Remove internal doors and frames',     unit:'no', rate:45,  minW:1, days:0.2, trade:'Builder',     phase:'strip',   seq:1},
+    {id:'strip_rads',     name:'Remove radiators',                     unit:'no', rate:35,  minW:1, days:0.2, trade:'Builder',     phase:'strip',   seq:1},
+    {id:'strip_ceiling',  name:'Remove suspended ceiling tiles',       unit:'m²', rate:12,  minW:1, days:0.3, trade:'Builder',     phase:'strip',   seq:1},
+    {id:'strip_wall',     name:'Remove non-structural internal wall',  unit:'no', rate:450, minW:2, days:1.0, trade:'Builder',     phase:'strip',   seq:1},
+    {id:'skip_hire',      name:'Skip hire 8yd³ (incl. disposal)',     unit:'no', rate:340, minW:0, days:0,   trade:'Prelims',     phase:'strip',   seq:1},
+  ]},
+  // DAMP & STRUCTURAL
+  {cat:'💧 Damp & Structural', items:[
+    {id:'dpc_injection',  name:'DPC injection to perimeter walls',     unit:'ml', rate:28,  minW:1, days:0.1, trade:'Builder',     phase:'damp',    seq:2},
+    {id:'tanking',        name:'Tanking slurry (wet areas)',           unit:'m²', rate:48,  minW:1, days:0.2, trade:'Builder',     phase:'damp',    seq:2},
+    {id:'new_lintel',     name:'New concrete lintel to opening',       unit:'no', rate:380, minW:2, days:1.0, trade:'Builder',     phase:'structure',seq:2},
+    {id:'repoint_brick',  name:'Repoint external brickwork',           unit:'m²', rate:42,  minW:1, days:0.3, trade:'Builder',     phase:'structure',seq:2},
+    {id:'struct_survey',  name:'Structural engineers survey & report', unit:'no', rate:650, minW:0, days:0,   trade:'Engineer',    phase:'prelims', seq:1},
+    {id:'steel_beam',     name:'Structural steel beam (supply+fix)',   unit:'no', rate:2800,minW:3, days:2.0, trade:'Builder',     phase:'structure',seq:2},
+    {id:'underpinning',   name:'Underpinning (per m run)',             unit:'ml', rate:850, minW:3, days:2.0, trade:'Builder',     phase:'structure',seq:2},
+  ]},
+  // ROOFING
+  {cat:'🏠 Roofing', items:[
+    {id:'roof_retile',    name:'Strip and re-tile pitched roof',       unit:'m²', rate:58,  minW:2, days:0.3, trade:'Roofer',      phase:'roofing', seq:2},
+    {id:'roof_felt',      name:'Replace felt and battens only',        unit:'m²', rate:24,  minW:2, days:0.2, trade:'Roofer',      phase:'roofing', seq:2},
+    {id:'fascia_soffit',  name:'uPVC fascia, soffit, bargeboard',      unit:'ml', rate:48,  minW:2, days:0.1, trade:'Roofer',      phase:'roofing', seq:2},
+    {id:'guttering',      name:'uPVC gutter and downpipe',             unit:'ml', rate:22,  minW:1, days:0.1, trade:'Roofer',      phase:'roofing', seq:2},
+    {id:'ridge_rebed',    name:'Ridge tiles re-bed and repoint',       unit:'ml', rate:28,  minW:2, days:0.1, trade:'Roofer',      phase:'roofing', seq:2},
+    {id:'roof_repair',    name:'Localised roof repair / patch',        unit:'no', rate:480, minW:1, days:0.5, trade:'Roofer',      phase:'roofing', seq:2},
+    {id:'flat_roof',      name:'Flat roof recover (GRP)',              unit:'m²', rate:90,  minW:2, days:0.2, trade:'Roofer',      phase:'roofing', seq:2},
+  ]},
+  // WINDOWS & EXTERNAL DOORS
+  {cat:'🪟 Windows & External Doors', items:[
+    {id:'window_upvc',    name:'uPVC double glazed window (S+F)',      unit:'no', rate:880, minW:2, days:0.5, trade:'Builder',     phase:'windows', seq:3},
+    {id:'door_front',     name:'Composite front door (supply+fix)',    unit:'no', rate:1400,minW:2, days:0.5, trade:'Builder',     phase:'windows', seq:3},
+    {id:'door_back',      name:'uPVC rear/side door (supply+fix)',     unit:'no', rate:880, minW:2, days:0.5, trade:'Builder',     phase:'windows', seq:3},
+    {id:'window_board',   name:'Replace window boards/sills',          unit:'no', rate:85,  minW:1, days:0.2, trade:'Carpenter',   phase:'windows', seq:3},
+  ]},
+  // ELECTRICS (M&E)
+  {cat:'⚡ Electrics & Heating', items:[
+    {id:'consumer_unit',  name:'Consumer unit 18-way RCBO (S+F)',     unit:'no', rate:480, minW:1, days:0.5, trade:'Electrician', phase:'ff_elec', seq:4},
+    {id:'rewire_1st',     name:'Full rewire — 1st fix all circuits',  unit:'item',rate:0,  minW:1, days:3,   trade:'Electrician', phase:'ff_elec', seq:4, calc:true},
+    {id:'rewire_2nd',     name:'2nd fix — sockets, switches, lights', unit:'item',rate:0,  minW:1, days:2,   trade:'Electrician', phase:'sf_elec', seq:8, calc:true},
+    {id:'socket_dbl',     name:'Double socket (supply+fix)',           unit:'no', rate:58,  minW:1, days:0.1, trade:'Electrician', phase:'sf_elec', seq:8},
+    {id:'light_point',    name:'Light point (supply+fix)',             unit:'no', rate:68,  minW:1, days:0.1, trade:'Electrician', phase:'sf_elec', seq:8},
+    {id:'smoke_alarm',    name:'Smoke alarm interlinked (S+F)',        unit:'no', rate:42,  minW:1, days:0.1, trade:'Electrician', phase:'sf_elec', seq:8},
+    {id:'eicr',           name:'EICR electrical certificate',          unit:'no', rate:190, minW:0, days:0,   trade:'Electrician', phase:'compliance',seq:12},
+    {id:'boiler_combi',   name:'New combi boiler (supply+fit+comm.)', unit:'no', rate:2600,minW:1, days:1,   trade:'Plumber',     phase:'ff_plumb',seq:4},
+    {id:'radiator',       name:'Radiator including pipework (S+F)',    unit:'no', rate:195, minW:1, days:0.2, trade:'Plumber',     phase:'ff_plumb',seq:4},
+    {id:'thermostat',     name:'Room thermostat and programmer',       unit:'no', rate:280, minW:1, days:0.3, trade:'Plumber',     phase:'sf_plumb',seq:8},
+    {id:'gas_cert',       name:'Gas safety CP12 certificate',          unit:'no', rate:100, minW:0, days:0,   trade:'Plumber',     phase:'compliance',seq:12},
+    {id:'underfloor',     name:'Electric underfloor heating mat',      unit:'m²', rate:65,  minW:1, days:0.2, trade:'Electrician', phase:'sf_elec', seq:8},
+  ]},
+  // PLUMBING
+  {cat:'🔧 Plumbing & Sanitary', items:[
+    {id:'bath',           name:'Bath — supply and fix',                unit:'no', rate:420, minW:1, days:0.5, trade:'Plumber',     phase:'sf_plumb',seq:8},
+    {id:'wc',             name:'WC close-coupled suite (S+F)',         unit:'no', rate:280, minW:1, days:0.5, trade:'Plumber',     phase:'sf_plumb',seq:8},
+    {id:'basin',          name:'Wash hand basin (supply+fix)',         unit:'no', rate:220, minW:1, days:0.3, trade:'Plumber',     phase:'sf_plumb',seq:8},
+    {id:'shower_enc',     name:'Shower enclosure + tray (S+F)',        unit:'no', rate:680, minW:1, days:1.0, trade:'Plumber',     phase:'sf_plumb',seq:8},
+    {id:'towel_rail',     name:'Chrome heated towel rail (S+F)',       unit:'no', rate:180, minW:1, days:0.3, trade:'Plumber',     phase:'sf_plumb',seq:8},
+    {id:'kitchen_sink',   name:'Kitchen sink + mixer tap (S+F)',       unit:'no', rate:280, minW:1, days:0.5, trade:'Plumber',     phase:'sf_plumb',seq:8},
+    {id:'plumb_connect',  name:'Hot+cold connection (per room)',       unit:'no', rate:380, minW:1, days:0.5, trade:'Plumber',     phase:'ff_plumb',seq:4},
+  ]},
+  // INSULATION
+  {cat:'🌡 Insulation', items:[
+    {id:'loft_insul',     name:'Loft insulation 200mm mineral wool',   unit:'m²', rate:22,  minW:1, days:0.1, trade:'Builder',     phase:'structure',seq:2},
+    {id:'cavity_insul',   name:'Cavity wall insulation (injection)',   unit:'m²', rate:18,  minW:1, days:0.1, trade:'Builder',     phase:'structure',seq:2},
+    {id:'dry_lining',     name:'Insulated dry lining 50mm (S+F)',     unit:'m²', rate:42,  minW:1, days:0.2, trade:'Plasterer',   phase:'plaster',  seq:5},
+    {id:'floor_insul',    name:'Floor insulation board 50mm',          unit:'m²', rate:28,  minW:1, days:0.1, trade:'Builder',     phase:'structure',seq:2},
+    {id:'pipe_lagging',   name:'Pipe lagging to all exposed pipes',   unit:'item',rate:180, minW:1, days:0.5, trade:'Plumber',     phase:'ff_plumb',seq:4},
+  ]},
+  // PLASTERWORK
+  {cat:'🏗 Plasterwork & Masonry', items:[
+    {id:'plaster_wall',   name:'Plasterboard + skim coat to walls',   unit:'m²', rate:28,  minW:2, days:0.2, trade:'Plasterer',   phase:'plaster',  seq:5},
+    {id:'plaster_ceil',   name:'Plasterboard + skim coat to ceilings',unit:'m²', rate:32,  minW:2, days:0.2, trade:'Plasterer',   phase:'plaster',  seq:5},
+    {id:'skim_only',      name:'Skim coat only (existing board)',      unit:'m²', rate:14,  minW:1, days:0.1, trade:'Plasterer',   phase:'plaster',  seq:5},
+    {id:'coving',         name:'Coving / cornice (supply+fix)',        unit:'ml', rate:18,  minW:1, days:0.1, trade:'Plasterer',   phase:'plaster',  seq:5},
+    {id:'artex_remove',   name:'Remove Artex / textured ceiling',     unit:'m²', rate:22,  minW:1, days:0.2, trade:'Plasterer',   phase:'strip',    seq:1},
+    {id:'bonding',        name:'Bonding + skim (bare brick walls)',    unit:'m²', rate:34,  minW:2, days:0.2, trade:'Plasterer',   phase:'plaster',  seq:5},
+  ]},
+  // CARPENTRY & JOINERY
+  {cat:'🪵 Carpentry & Joinery', items:[
+    {id:'door_int_fd30',  name:'Internal FD30 fire door (S+F)',       unit:'no', rate:320, minW:1, days:0.5, trade:'Carpenter',   phase:'carpentry',seq:9},
+    {id:'door_int_std',   name:'Internal door standard (S+F)',        unit:'no', rate:195, minW:1, days:0.4, trade:'Carpenter',   phase:'carpentry',seq:9},
+    {id:'door_lining',    name:'Door lining set (supply+fix)',         unit:'no', rate:105, minW:1, days:0.3, trade:'Carpenter',   phase:'carpentry',seq:9},
+    {id:'skirting',       name:'MDF skirting board 100mm (S+F)',      unit:'ml', rate:16,  minW:1, days:0.1, trade:'Carpenter',   phase:'carpentry',seq:9},
+    {id:'architrave',     name:'MDF architrave 70mm (supply+fix)',    unit:'ml', rate:12,  minW:1, days:0.1, trade:'Carpenter',   phase:'carpentry',seq:9},
+    {id:'ironmongery',    name:'Door ironmongery — handles, hinges',  unit:'no', rate:45,  minW:1, days:0.1, trade:'Carpenter',   phase:'carpentry',seq:9},
+    {id:'staircase',      name:'Staircase refurbish (sand, spindles)',unit:'no', rate:1200,minW:2, days:2.0, trade:'Carpenter',   phase:'carpentry',seq:9},
+    {id:'loft_stairs',    name:'Loft staircase (supply+fix)',         unit:'no', rate:1900,minW:2, days:1.5, trade:'Carpenter',   phase:'carpentry',seq:9},
+    {id:'window_sill',    name:'Window sill board (supply+fix)',      unit:'no', rate:75,  minW:1, days:0.2, trade:'Carpenter',   phase:'carpentry',seq:9},
+  ]},
+  // KITCHEN
+  {cat:'🍳 Kitchen', items:[
+    {id:'kitchen_units',  name:'Kitchen units base+wall (mid-range)', unit:'item',rate:4500,minW:2, days:3.0, trade:'Kitchen Fitter',phase:'kitchen', seq:10},
+    {id:'worktop_lam',    name:'Laminate worktop 40mm (S+F)',         unit:'ml', rate:120, minW:1, days:0.3, trade:'Carpenter',   phase:'kitchen',  seq:10},
+    {id:'worktop_oak',    name:'Solid oak worktop (supply+fix)',      unit:'ml', rate:280, minW:1, days:0.3, trade:'Carpenter',   phase:'kitchen',  seq:10},
+    {id:'splash_tile',    name:'Splashback tiling (supply+fix)',      unit:'m²', rate:68,  minW:1, days:0.5, trade:'Tiler',       phase:'tiling',   seq:9},
+    {id:'extract_fan',    name:'Extract fan with humidistat (S+F)',   unit:'no', rate:145, minW:1, days:0.3, trade:'Electrician', phase:'sf_elec',  seq:8},
+  ]},
+  // BATHROOM
+  {cat:'🚿 Bathroom & Tiling', items:[
+    {id:'wall_tile_bath', name:'Bathroom wall tiles full ht (S+F)',   unit:'m²', rate:68,  minW:1, days:0.3, trade:'Tiler',       phase:'tiling',   seq:9},
+    {id:'floor_tile',     name:'Floor tiles porcelain 600mm (S+F)',   unit:'m²', rate:65,  minW:1, days:0.3, trade:'Tiler',       phase:'tiling',   seq:9},
+    {id:'tile_trim',      name:'Tile trim and edge bead',             unit:'ml', rate:18,  minW:1, days:0.1, trade:'Tiler',       phase:'tiling',   seq:9},
+    {id:'wet_room',       name:'Wet room tanking + tray (S+F)',       unit:'no', rate:850, minW:2, days:1.5, trade:'Tiler',       phase:'tiling',   seq:9},
+    {id:'mastic_seal',    name:'Mastic sealing all junctions',        unit:'item',rate:120, minW:1, days:0.3, trade:'Tiler',       phase:'tiling',   seq:9},
+  ]},
+  // FLOORING
+  {cat:'🪨 Flooring', items:[
+    {id:'floor_laminate', name:'Laminate 8mm AC4 (supply+fix)',       unit:'m²', rate:28,  minW:1, days:0.1, trade:'Floorer',     phase:'flooring', seq:11},
+    {id:'floor_engineered',name:'Engineered wood (supply+fix)',       unit:'m²', rate:48,  minW:1, days:0.1, trade:'Floorer',     phase:'flooring', seq:11},
+    {id:'floor_carpet',   name:'Carpet + 10mm underlay (S+F)',        unit:'m²', rate:22,  minW:1, days:0.1, trade:'Floorer',     phase:'flooring', seq:11},
+    {id:'floor_lvt',      name:'LVT vinyl plank (supply+fix)',        unit:'m²', rate:32,  minW:1, days:0.1, trade:'Floorer',     phase:'flooring', seq:11},
+    {id:'floor_screed',   name:'Floor screed levelling compound',     unit:'m²', rate:18,  minW:1, days:0.2, trade:'Builder',     phase:'plaster',  seq:5},
+  ]},
+  // DECORATING
+  {cat:'🎨 Painting & Decorating', items:[
+    {id:'paint_walls',    name:'Emulsion paint walls 2 coats',        unit:'m²', rate:8,   minW:1, days:0.1, trade:'Decorator',   phase:'decorating',seq:12},
+    {id:'paint_ceiling',  name:'Emulsion paint ceiling 2 coats',      unit:'m²', rate:9,   minW:1, days:0.1, trade:'Decorator',   phase:'decorating',seq:12},
+    {id:'paint_woodwork', name:'Gloss paint woodwork',                 unit:'ml', rate:7,   minW:1, days:0.1, trade:'Decorator',   phase:'decorating',seq:12},
+    {id:'wallpaper',      name:'Hang wallpaper (supply+fix)',          unit:'m²', rate:22,  minW:1, days:0.2, trade:'Decorator',   phase:'decorating',seq:12},
+    {id:'masonry_paint',  name:'External masonry paint 2 coats',      unit:'m²', rate:14,  minW:1, days:0.1, trade:'Decorator',   phase:'decorating',seq:12},
+  ]},
+  // EXTERNAL WORKS
+  {cat:'🌿 External Works', items:[
+    {id:'fencing',        name:'Close board fence 1.8m (S+F)',        unit:'ml', rate:68,  minW:2, days:0.3, trade:'Builder',     phase:'external', seq:13},
+    {id:'driveway',       name:'Tarmac driveway / pathway',            unit:'m²', rate:65,  minW:2, days:0.3, trade:'Builder',     phase:'external', seq:13},
+    {id:'garden_clear',   name:'Garden clearance + turf',             unit:'item',rate:450, minW:2, days:1.0, trade:'Builder',     phase:'external', seq:13},
+    {id:'ext_drain',      name:'External drainage / soakaway',        unit:'item',rate:850, minW:2, days:1.0, trade:'Builder',     phase:'external', seq:13},
+  ]},
+  // COMPLIANCE
+  {cat:'✅ Compliance & Certificates', items:[
+    {id:'epc',            name:'EPC certificate (post-completion)',    unit:'no', rate:98,  minW:0, days:0,   trade:'Assessor',    phase:'compliance',seq:14},
+    {id:'build_regs',     name:'Building regulations application',     unit:'no', rate:780, minW:0, days:0,   trade:'Prelims',     phase:'prelims',  seq:1},
+    {id:'party_wall',     name:'Party wall surveyor agreement',        unit:'no', rate:850, minW:0, days:0,   trade:'Surveyor',    phase:'prelims',  seq:1},
+    {id:'snag_inspect',   name:'Post-completion snagging inspection',  unit:'no', rate:380, minW:0, days:0,   trade:'Surveyor',    phase:'compliance',seq:14},
+  ]},
+];
+
+// Programme phases configuration
+const WORKS_PROG_PHASES = [
+  {id:'prelims',    name:'Prelims & Site Setup',      col:'#f0c040', trade:'Prelims',       before:'—',          baseDays:2,  minW:1},
+  {id:'strip',      name:'Strip Out & Demolition',    col:'#f04040', trade:'Builder',       before:'Prelims',    baseDays:3,  minW:2},
+  {id:'damp',       name:'Damp & Groundworks',        col:'#40a0f0', trade:'Builder',       before:'Strip Out',  baseDays:3,  minW:2},
+  {id:'structure',  name:'Structural Works',          col:'#f06040', trade:'Builder',       before:'Damp',       baseDays:4,  minW:2},
+  {id:'roofing',    name:'Roofing',                   col:'#f04080', trade:'Roofer',        before:'Structural', baseDays:4,  minW:2},
+  {id:'windows',    name:'Windows & External Doors',  col:'#40a8f0', trade:'Builder',       before:'Structural', baseDays:2,  minW:2},
+  {id:'ff_elec',    name:'First Fix Electrics',       col:'#d4f244', trade:'Electrician',   before:'Structural', baseDays:3,  minW:1},
+  {id:'ff_plumb',   name:'First Fix Plumbing',        col:'#40d0b0', trade:'Plumber',       before:'Structural', baseDays:3,  minW:1},
+  {id:'plaster',    name:'Plasterwork',               col:'#9040f0', trade:'Plasterer',     before:'1st Fix',    baseDays:5,  minW:2},
+  {id:'dry',        name:'⏳ Drying Time',            col:'#404038', trade:'—',             before:'Plaster',    baseDays:8,  minW:0},
+  {id:'sf_elec',    name:'Second Fix Electrics',      col:'#d4f244', trade:'Electrician',   before:'Dry Period', baseDays:2,  minW:1},
+  {id:'sf_plumb',   name:'Second Fix Plumbing',       col:'#40d0b0', trade:'Plumber',       before:'Dry Period', baseDays:2,  minW:1},
+  {id:'tiling',     name:'Tiling',                    col:'#f040c0', trade:'Tiler',         before:'2nd Fix',    baseDays:3,  minW:1},
+  {id:'kitchen',    name:'Kitchen Installation',      col:'#f0b840', trade:'Kitchen Fitter',before:'2nd Fix',    baseDays:2,  minW:2},
+  {id:'carpentry',  name:'Carpentry & Joinery',       col:'#8060cc', trade:'Carpenter',     before:'Tiling',     baseDays:2,  minW:1},
+  {id:'flooring',   name:'Flooring',                  col:'#80c080', trade:'Floorer',       before:'Carpentry',  baseDays:2,  minW:1},
+  {id:'decorating', name:'Painting & Decorating',     col:'#f0c080', trade:'Decorator',     before:'Flooring',   baseDays:3,  minW:2},
+  {id:'external',   name:'External Works',            col:'#40d080', trade:'Builder',       before:'Decorating', baseDays:3,  minW:2},
+  {id:'compliance', name:'Compliance & Certs',        col:'#f0c040', trade:'Various',       before:'Decorating', baseDays:1,  minW:1},
+  {id:'snag',       name:'Snag & Handover',           col:'#40e0d0', trade:'Builder',       before:'Compliance', baseDays:2,  minW:2},
+];
+
+let worksCurrentStep = 1;
+let worksSelected = {}; // { item_id: { qty, rate, minW } }
+
+function worksStep(n) {
+  worksCurrentStep = n;
+  [1,2,3,4].forEach(i => {
+    const tab = document.getElementById('ws-tab-'+i);
+    const content = document.getElementById('works-step'+i);
+    if(content) content.style.display = i===n ? 'block' : 'none';
+    if(tab) {
+      const isActive = i===n;
+      const isDone = i<n;
+      tab.style.background = isActive ? 'var(--gold-dim)' : 'transparent';
+      tab.style.borderBottom = isActive ? '2px solid var(--gold)' : '2px solid transparent';
+      const numEl = tab.querySelector('div:first-child');
+      const lblEl = tab.querySelector('div:last-child');
+      if(numEl) numEl.style.color = isActive ? 'var(--gold)' : isDone ? 'var(--green)' : 'var(--dim)';
+      if(lblEl) lblEl.style.color = isActive ? 'var(--text)' : isDone ? 'var(--green)' : 'var(--muted)';
+    }
+  });
+  if(n === 1) renderWorksCategories();
+  if(n === 2) renderWorksReview();
+  if(n === 3) renderWorksBOQ();
+  if(n === 4) {
+    const d = new Date(); d.setDate(d.getDate()+14);
+    if(document.getElementById('worksProgStart')) document.getElementById('worksProgStart').valueAsDate = d;
+    renderWorksProgramme();
+  }
+}
+
+function renderWorksCategories() {
+  const el = document.getElementById('worksCategories');
+  if(!el) return;
+  // Get room totals for auto-qty hints
+  const totalFloor = rooms.reduce((s,r)=>s+(+r.length_m||0)*(+r.width_m||0), 0);
+  const totalWall = rooms.reduce((s,r)=>s+2*((+r.length_m||0)+(+r.width_m||0))*(+r.height_m||2.4), 0);
+
+  el.innerHTML = WORKS_CATALOGUE.map(cat => `
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:14px;">
+      <div style="padding:12px 16px;background:var(--s2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:13px;font-weight:700;">${cat.cat}</div>
+        <div style="display:flex;gap:6px;">
+          <button onclick="selectAllCat('${cat.cat}')" style="font-family:var(--font);font-size:10px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">All</button>
+          <button onclick="clearCat('${cat.cat}')" style="font-family:var(--font);font-size:10px;padding:3px 10px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">None</button>
+        </div>
+      </div>
+      <div style="padding:12px 16px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px;">
+        ${cat.items.map(item => {
+          const sel = worksSelected[item.id];
+          // Auto-suggest qty from room data
+          const suggestQty = item.unit==='m²' && item.id.includes('wall') ? Math.round(totalWall) :
+                             item.unit==='m²' ? Math.round(totalFloor) :
+                             item.unit==='no' ? 1 : 1;
+          return `<div onclick="toggleWorkItem('${item.id}','${cat.cat}')" style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:var(--r);border:2px solid ${sel?'var(--gold)':'var(--border)'};background:${sel?'var(--gold-dim)':'var(--s2)'};cursor:pointer;transition:all .15s;">
+            <input type="checkbox" style="accent-color:var(--gold);cursor:pointer;width:14px;height:14px;flex-shrink:0;" ${sel?'checked':''} onclick="event.stopPropagation();toggleWorkItem('${item.id}','${cat.cat}')">
+            <div style="flex:1;">
+              <div style="font-size:12px;font-weight:600;${sel?'color:var(--text)':'color:var(--muted)'};">${item.name}</div>
+              <div style="font-size:10px;color:var(--dim);font-family:var(--mono);margin-top:2px;">£${item.rate}/${item.unit} · ${item.minW}+ workers · ${item.trade}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function toggleWorkItem(id, catName) {
+  const item = WORKS_CATALOGUE.flatMap(c=>c.items).find(i=>i.id===id);
+  if(!item) return;
+  if(worksSelected[id]) {
+    delete worksSelected[id];
+  } else {
+    // Auto-calculate qty from rooms
+    const totalFloor = rooms.reduce((s,r)=>s+(+r.length_m||0)*(+r.width_m||0), 0);
+    const totalWall = rooms.reduce((s,r)=>{
+      const l=+r.length_m||0,w=+r.width_m||0,h=+r.height_m||2.4;
+      return s+Math.max(0,(2*(l+w)*h)-0.9*2.1-1.2*1.2);
+    }, 0);
+    const totalCeil = totalFloor;
+    const totalPerim = rooms.reduce((s,r)=>s+2*((+r.length_m||0)+(+r.width_m||0)), 0);
+    let qty = 1;
+    if(item.unit==='m²') {
+      if(id.includes('wall')||id.includes('plaster_wall')||id.includes('skim')||id.includes('bonding')||id.includes('dry_lining')||id.includes('lining')) qty = Math.max(1, Math.round(totalWall));
+      else if(id.includes('ceil')) qty = Math.max(1, Math.round(totalCeil));
+      else if(id.includes('floor')||id.includes('carpet')||id.includes('laminate')||id.includes('lvt')||id.includes('engineered')||id.includes('screed')) qty = Math.max(1, Math.round(totalFloor*1.1));
+      else if(id.includes('roof')) qty = Math.max(1, Math.round(totalFloor*1.35));
+      else if(id.includes('loft_insul')) qty = Math.max(1, Math.round(totalFloor));
+      else if(id.includes('cavity')) qty = Math.max(1, Math.round(totalWall*0.5));
+      else qty = Math.max(1, Math.round(totalFloor));
+    } else if(item.unit==='ml') {
+      if(id.includes('skirting')) qty = Math.max(1, Math.round(totalPerim*0.85));
+      else if(id.includes('architrave')) qty = Math.max(1, Math.round(rooms.length*2*(2.1+0.9)*2));
+      else if(id.includes('coving')) qty = Math.max(1, Math.round(totalPerim));
+      else if(id.includes('gutter')||id.includes('fascia')) qty = Math.max(1, Math.round(Math.sqrt(totalFloor)*4));
+      else if(id.includes('dpc')) qty = Math.max(1, Math.round(totalPerim*0.5));
+      else qty = Math.max(1, Math.round(totalPerim));
+    } else if(item.unit==='no') {
+      if(id.includes('door_int')) qty = rooms.filter(r=>r.name!=='Hallway').length||3;
+      else if(id.includes('window')) qty = rooms.length+1||4;
+      else if(id.includes('rad')) qty = rooms.filter(r=>r.name!=='Bathroom'&&r.name!=='Hallway').length||4;
+      else if(id.includes('smoke')) qty = Math.ceil(rooms.length/2)||2;
+      else if(id.includes('socket')) qty = rooms.length*6||24;
+      else if(id.includes('light')) qty = rooms.length*2||10;
+      else qty = 1;
+    }
+    // Auto-calc rewire rates from floor area
+    let rate = item.rate;
+    if(id==='rewire_1st') rate = Math.round(totalFloor*4.5)||1800;
+    if(id==='rewire_2nd') rate = Math.round(totalFloor*2.8)||900;
+    worksSelected[id] = { qty, rate: rate||item.rate, minW: item.minW, days: item.days||1 };
+  }
+  renderWorksCategories();
+}
+
+function selectAllCat(catName) {
+  const cat = WORKS_CATALOGUE.find(c=>c.cat===catName);
+  if(!cat) return;
+  cat.items.forEach(item => { if(!worksSelected[item.id]) toggleWorkItem(item.id, catName); });
+}
+function clearCat(catName) {
+  const cat = WORKS_CATALOGUE.find(c=>c.cat===catName);
+  if(!cat) return;
+  cat.items.forEach(item => { delete worksSelected[item.id]; });
+  renderWorksCategories();
+}
+function clearAllWorks() {
+  worksSelected = {};
+  renderWorksCategories();
+}
+
+function renderWorksReview() {
+  const el = document.getElementById('worksReviewTable');
+  if(!el) return;
+  const selectedItems = WORKS_CATALOGUE.flatMap(c=>c.items).filter(i=>worksSelected[i.id]);
+  if(!selectedItems.length) {
+    el.innerHTML = `<div style="text-align:center;padding:32px;color:var(--muted);font-family:var(--mono);">No works selected — go back and tick the works required.</div>`;
+    return;
+  }
+  // Group by category
+  const byCat = {};
+  selectedItems.forEach(item => {
+    const cat = WORKS_CATALOGUE.find(c=>c.items.some(i=>i.id===item.id))?.cat||'Other';
+    if(!byCat[cat]) byCat[cat] = [];
+    byCat[cat].push(item);
+  });
+
+  el.innerHTML = Object.entries(byCat).map(([cat, items]) => {
+    const catTotal = items.reduce((s,item)=>s+(worksSelected[item.id]?.qty||0)*(worksSelected[item.id]?.rate||item.rate),0);
+    return `<div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:14px;">
+      <div style="padding:10px 16px;background:var(--s2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-size:13px;font-weight:700;">${cat}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--gold);font-family:var(--mono);">£${catTotal.toLocaleString()}</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;min-width:700px;">
+          <thead><tr style="background:var(--s2);">
+            <th style="padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Item</th>
+            <th style="padding:8px 12px;text-align:center;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Unit</th>
+            <th style="padding:8px 12px;text-align:right;font-size:9px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Qty ✏️</th>
+            <th style="padding:8px 12px;text-align:right;font-size:9px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Rate £ ✏️</th>
+            <th style="padding:8px 12px;text-align:right;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Min Workers</th>
+            <th style="padding:8px 12px;text-align:right;font-size:9px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Total £</th>
+            <th style="padding:8px 12px;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);"></th>
+          </tr></thead>
+          <tbody>
+            ${items.map(item => {
+              const sel = worksSelected[item.id]||{qty:1, rate:item.rate, minW:item.minW};
+              const total = (sel.qty||0)*(sel.rate||0);
+              return `<tr style="border-bottom:1px solid var(--border);">
+                <td style="padding:9px 12px;font-size:12px;font-family:var(--mono);">${item.name}</td>
+                <td style="padding:9px 12px;font-size:11px;font-family:var(--mono);color:var(--muted);text-align:center;">${item.unit}</td>
+                <td style="padding:9px 12px;text-align:right;">
+                  <input type="number" step="0.1" value="${sel.qty||1}" min="0" style="background:var(--s3);border:1px solid var(--border);border-radius:4px;padding:3px 7px;color:var(--cyan);font-family:var(--mono);font-size:11px;font-weight:600;width:70px;outline:none;text-align:right;" oninput="updateWorksItem('${item.id}','qty',+this.value)" onfocus="this.select()">
+                </td>
+                <td style="padding:9px 12px;text-align:right;">
+                  <input type="number" step="1" value="${sel.rate||item.rate}" min="0" style="background:var(--s3);border:1px solid var(--border);border-radius:4px;padding:3px 7px;color:var(--amber);font-family:var(--mono);font-size:11px;font-weight:600;width:80px;outline:none;text-align:right;" oninput="updateWorksItem('${item.id}','rate',+this.value)" onfocus="this.select()">
+                </td>
+                <td style="padding:9px 12px;text-align:right;">
+                  <input type="number" step="1" value="${sel.minW||item.minW}" min="0" max="10" style="background:var(--s3);border:1px solid var(--border);border-radius:4px;padding:3px 7px;color:var(--muted);font-family:var(--mono);font-size:11px;width:50px;outline:none;text-align:right;" oninput="updateWorksItem('${item.id}','minW',+this.value)">
+                </td>
+                <td style="padding:9px 12px;text-align:right;font-weight:700;color:var(--gold);font-family:var(--mono);" id="wt-${item.id}">£${total.toLocaleString()}</td>
+                <td style="padding:9px 12px;"><button style="background:none;border:none;color:var(--dim);cursor:pointer;font-size:13px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--dim)'" onclick="delete worksSelected['${item.id}'];renderWorksReview()">✕</button></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('') + renderWorksReviewTotal();
+}
+
+function renderWorksReviewTotal() {
+  const selectedItems = WORKS_CATALOGUE.flatMap(c=>c.items).filter(i=>worksSelected[i.id]);
+  const subtotal = selectedItems.reduce((s,item)=>s+(worksSelected[item.id]?.qty||0)*(worksSelected[item.id]?.rate||item.rate), 0);
+  const contingency = Math.round(subtotal*0.125);
+  return `<div style="background:var(--gold-dim);border:2px solid var(--gold-border);border-radius:var(--r2);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;">
+    <div><div style="font-size:13px;font-weight:700;color:var(--gold);">ESTIMATED TOTAL (excl. VAT)</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">Subtotal £${subtotal.toLocaleString()} + Contingency 12.5% £${contingency.toLocaleString()}</div></div>
+    <div style="font-size:28px;font-weight:800;color:var(--gold);">£${(subtotal+contingency).toLocaleString()}</div>
+  </div>`;
+}
+
+function updateWorksItem(id, field, val) {
+  if(!worksSelected[id]) return;
+  worksSelected[id][field] = val;
+  const item = WORKS_CATALOGUE.flatMap(c=>c.items).find(i=>i.id===id);
+  const sel = worksSelected[id];
+  const total = (sel.qty||0)*(sel.rate||0);
+  const el = document.getElementById('wt-'+id);
+  if(el) el.textContent = '£'+total.toLocaleString();
+}
+
+function addCustomWorkItem() {
+  const name = prompt('Item description:');
+  if(!name) return;
+  const rate = +prompt('Rate £ (per unit):')||0;
+  const unit = prompt('Unit (m², no, ml, item):')||'item';
+  const qty = +prompt('Quantity:')||1;
+  const customId = 'custom_'+Date.now();
+  WORKS_CATALOGUE[0].items.push({ id:customId, name, unit, rate, minW:1, days:1, trade:'Builder', phase:'decorating', seq:12 });
+  worksSelected[customId] = { qty, rate, minW:1, days:1 };
+  renderWorksReview();
+}
+
+function renderWorksBOQ() {
+  const selectedItems = WORKS_CATALOGUE.flatMap(c=>c.items).filter(i=>worksSelected[i.id]);
+  if(!selectedItems.length) {
+    document.getElementById('worksBOQContent').innerHTML = `<div style="text-align:center;padding:32px;color:var(--muted);">No works selected.</div>`;
+    return;
+  }
+  const byCat = {};
+  selectedItems.forEach(item => {
+    const cat = WORKS_CATALOGUE.find(c=>c.items.some(i=>i.id===item.id))?.cat||'Other';
+    if(!byCat[cat]) byCat[cat] = [];
+    byCat[cat].push(item);
+  });
+  const subtotal = selectedItems.reduce((s,item)=>s+(worksSelected[item.id]?.qty||0)*(worksSelected[item.id]?.rate||item.rate),0);
+  const contingency = Math.round(subtotal*0.125);
+  const grand = subtotal+contingency;
+
+  document.getElementById('worksBOQSummary').innerHTML = [
+    {v:'£'+grand.toLocaleString(), l:'Grand Total', c:'var(--gold)'},
+    {v:'£'+subtotal.toLocaleString(), l:'Measured Works', c:'var(--amber)'},
+    {v:'£'+contingency.toLocaleString(), l:'Contingency 12.5%', c:'var(--red)'},
+    {v:'£'+(grand*1.2).toLocaleString(), l:'Inc. VAT @ 20%', c:'var(--green)'},
+    {v:selectedItems.length, l:'Work Items', c:'var(--text)'},
+    {v:currentProp?.address?.split(',')[0]||'—', l:'Property', c:'var(--muted)'},
+  ].map(s=>`<div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;"><div style="font-size:18px;font-weight:700;color:${s.c};">${s.v}</div><div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-top:3px;">${s.l}</div></div>`).join('');
+
+  document.getElementById('worksBOQContent').innerHTML = Object.entries(byCat).map(([cat, items]) => {
+    const catTotal = items.reduce((s,item)=>s+(worksSelected[item.id]?.qty||0)*(worksSelected[item.id]?.rate||item.rate),0);
+    return `<div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:12px;">
+      <div style="padding:10px 16px;background:var(--s2);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;">
+        <div style="font-size:13px;font-weight:700;">${cat}</div>
+        <div style="font-size:13px;font-weight:700;color:var(--gold);font-family:var(--mono);">£${catTotal.toLocaleString()}</div>
+      </div>
+      <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:600px;">
+        <thead><tr style="background:var(--s2);">
+          <th style="padding:7px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);font-family:var(--mono);">Description</th>
+          <th style="padding:7px 12px;text-align:center;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);font-family:var(--mono);">Unit</th>
+          <th style="padding:7px 12px;text-align:right;font-size:9px;font-weight:700;color:var(--cyan);text-transform:uppercase;border-bottom:1px solid var(--border);font-family:var(--mono);">Qty</th>
+          <th style="padding:7px 12px;text-align:right;font-size:9px;font-weight:700;color:var(--amber);text-transform:uppercase;border-bottom:1px solid var(--border);font-family:var(--mono);">Rate £</th>
+          <th style="padding:7px 12px;text-align:right;font-size:9px;font-weight:700;color:var(--gold);text-transform:uppercase;border-bottom:1px solid var(--border);font-family:var(--mono);">Total £</th>
+          <th style="padding:7px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);font-family:var(--mono);">Trade</th>
+        </tr></thead>
+        <tbody>
+          ${items.map(item=>{const sel=worksSelected[item.id]||{};const total=(sel.qty||0)*(sel.rate||item.rate);return`<tr style="border-bottom:1px solid var(--border);"><td style="padding:8px 12px;font-size:12px;font-family:var(--mono);">${item.name}</td><td style="padding:8px 12px;text-align:center;font-size:11px;color:var(--muted);font-family:var(--mono);">${item.unit}</td><td style="padding:8px 12px;text-align:right;font-size:12px;font-family:var(--mono);color:var(--cyan);">${sel.qty||0}</td><td style="padding:8px 12px;text-align:right;font-size:12px;font-family:var(--mono);color:var(--amber);">£${(sel.rate||item.rate).toLocaleString()}</td><td style="padding:8px 12px;text-align:right;font-size:12px;font-weight:700;font-family:var(--mono);color:var(--gold);">£${total.toLocaleString()}</td><td style="padding:8px 12px;font-size:10px;font-family:var(--mono);color:var(--muted);">${item.trade}</td></tr>`;}).join('')}
+        </tbody>
+      </table></div>
+    </div>`;
+  }).join('') + `
+    <div style="background:var(--gold-dim);border:2px solid var(--gold-border);border-radius:var(--r2);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+      <div><div style="font-size:16px;font-weight:800;color:var(--gold);">GRAND TOTAL</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">BCIS 2026 rates · 12.5% contingency · Exc. VAT · Linked to ${currentProp?.address||'this property'}</div></div>
+      <div style="text-align:right;"><div style="font-size:28px;font-weight:800;color:var(--gold);">£${grand.toLocaleString()}</div><div style="font-size:12px;color:var(--green);font-family:var(--mono);">Inc. VAT: £${(grand*1.2).toLocaleString()}</div></div>
+    </div>`;
+}
+
+function exportWorksBOQ() {
+  window.open('boq.html', '_blank');
+}
+
+// PROGRAMME
+function renderWorksProgramme() {
+  const sdVal = document.getElementById('worksProgStart')?.value;
+  const sd = sdVal ? new Date(sdVal) : new Date();
+  const wpw = +document.getElementById('worksProgWpw')?.value||5;
+  const dayRate = +document.getElementById('worksProgRate')?.value||220;
+
+  // Determine which phases are needed from selected works
+  const selectedItems = WORKS_CATALOGUE.flatMap(c=>c.items).filter(i=>worksSelected[i.id]);
+  const neededPhases = new Set(selectedItems.map(i=>i.phase));
+  neededPhases.add('prelims');neededPhases.add('snag');neededPhases.add('dry');
+
+  // Calculate days per phase from items
+  const phaseDays = {};
+  selectedItems.forEach(item => {
+    const sel = worksSelected[item.id]||{};
+    const d = (item.days||0.5)*(sel.qty||1);
+    phaseDays[item.phase] = (phaseDays[item.phase]||0) + d;
+  });
+
+  // Build active phases
+  const phases = WORKS_PROG_PHASES
+    .filter(p => neededPhases.has(p.id))
+    .map(p => ({
+      ...p,
+      done: false,
+      days: Math.max(p.baseDays, Math.ceil(phaseDays[p.id]||0)),
+      workers: selectedItems.filter(i=>i.phase===p.id).reduce((mx,i)=>Math.max(mx,worksSelected[i.id]?.minW||i.minW),p.minW),
+    }));
+
+  // Calculate dates
+  function addWD(start, wd, wpw2) {
+    const d=new Date(start);let added=0,s=0;
+    while(added<wd&&s<600){d.setDate(d.getDate()+1);s++;if(wpw2<=5&&(d.getDay()===0||d.getDay()===6))continue;added++;}
+    return new Date(d);
+  }
+  function fD(d){if(!d||isNaN(d))return'—';return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
+
+  let cursor = 0;
+  phases.forEach(p=>{p.startWD=cursor;p.endWD=cursor+p.days-1;p.startDate=addWD(sd,cursor,wpw);p.endDate=addWD(sd,cursor+p.days-1,wpw);cursor+=p.days;});
+  worksPhases = phases;
+
+  const totalDays=cursor,totalWeeks=Math.ceil(totalDays/wpw),totalLabour=phases.reduce((s,p)=>s+p.workers*p.days*dayRate,0);
+  const finDate=phases[phases.length-1]?.endDate;
+
+  document.getElementById('worksProgrammeSummary').innerHTML=[
+    {v:totalDays,l:'Working Days',c:'var(--gold)'},{v:totalWeeks,l:'Weeks',c:'var(--cyan)'},
+    {v:'£'+totalLabour.toLocaleString(),l:'Labour Est.',c:'var(--amber)'},
+    {v:fD(phases[0]?.startDate),l:'Start',c:'var(--text)'},{v:fD(finDate),l:'Completion',c:'var(--green)'},
+    {v:phases.filter(p=>p.done).length+'/'+phases.length,l:'Done',c:'var(--gold)'},
+  ].map(s=>`<div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:9px 14px;text-align:center;flex:1;min-width:90px;"><div style="font-size:17px;font-weight:700;color:${s.c};">${s.v}</div><div style="font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;">${s.l}</div></div>`).join('');
+
+  const DAY_W=26,totalW=totalDays*DAY_W;
+  const today=new Date();let todayWD=0;const tc=new Date(sd);
+  while(tc<today&&todayWD<totalDays){tc.setDate(tc.getDate()+1);if(tc.getDay()!==0&&tc.getDay()!==6)todayWD++;}
+  let wkH='';for(let w=0;w<totalWeeks;w++)wkH+=`<div style="position:absolute;left:${w*wpw*DAY_W}px;top:0;bottom:0;border-left:1px dashed rgba(255,255,255,.06);pointer-events:none;"><div style="font-size:9px;color:var(--dim);font-family:var(--mono);padding:2px 3px;">W${w+1}</div></div>`;
+  const isLight=col=>['#d4f244','#f0b840','#40d0b0','#40a0f0','#40e0d0','#40d080','#f0c080'].includes(col);
+
+  document.getElementById('worksGantt').innerHTML=`<div style="display:flex;border-bottom:1px solid var(--border);background:var(--s2);"><div style="width:200px;flex-shrink:0;padding:8px 12px;border-right:1px solid var(--border);font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;">Phase · Days · Workers</div><div style="flex:1;padding:8px 12px;font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;min-width:${totalW}px;">Timeline →</div></div>`+
+  phases.map((p,i)=>{const barL=p.startWD*DAY_W,barW=Math.max(DAY_W,p.days*DAY_W);
+    return`<div style="display:flex;align-items:center;border-bottom:1px solid var(--border);min-height:44px;${p.done?'opacity:.5':''}">
+      <div style="width:200px;flex-shrink:0;padding:8px 12px;border-right:1px solid var(--border);">
+        <div style="font-size:11px;font-weight:600;">${p.name}</div>
+        <div style="display:flex;gap:6px;margin-top:4px;align-items:center;">
+          <input type="number" value="${p.days}" min="1" max="90" style="background:var(--s2);border:1px solid var(--border);border-radius:4px;padding:2px 5px;color:var(--text);font-family:var(--mono);font-size:10px;width:36px;outline:none;text-align:center;" oninput="worksPhases[${i}].days=+this.value;renderWorksProgramme()">
+          <input type="number" value="${p.workers}" min="0" max="10" style="background:var(--s2);border:1px solid var(--border);border-radius:4px;padding:2px 5px;color:var(--gold);font-family:var(--mono);font-size:10px;width:32px;outline:none;text-align:center;" oninput="worksPhases[${i}].workers=+this.value;renderWorksProgramme()">
+          <span style="font-size:9px;color:var(--dim);font-family:var(--mono);">${p.workers>0?'£'+(p.workers*p.days*dayRate).toLocaleString():''}</span>
+        </div>
+      </div>
+      <div style="flex:1;position:relative;height:44px;min-width:${totalW}px;">
+        ${wkH}${todayWD>0?`<div style="position:absolute;left:${todayWD*DAY_W}px;top:0;bottom:0;width:2px;background:var(--red);opacity:.6;z-index:5;"></div>`:''}
+        <div style="position:absolute;left:${barL}px;width:${barW}px;height:26px;top:9px;border-radius:5px;background:${p.col};opacity:${p.done?.4:.82};display:flex;align-items:center;padding:0 7px;font-size:10px;font-weight:600;color:${isLight(p.col)?'#000':'#fff'};cursor:pointer;white-space:nowrap;overflow:hidden;" onclick="worksPhases[${i}].done=!worksPhases[${i}].done;renderWorksProgramme()">
+          ${p.days}d${p.done?' ✓':''}
+        </div>
+      </div>
+      <input type="checkbox" style="accent-color:var(--green);cursor:pointer;margin:0 12px;width:14px;height:14px;" ${p.done?'checked':''} onchange="worksPhases[${i}].done=this.checked;renderWorksProgramme()">
+    </div>`;}).join('');
+
+  document.getElementById('worksProgTableBody').innerHTML=phases.map((p,i)=>`
+    <tr style="${p.done?'opacity:.5':''}border-bottom:1px solid var(--border);">
+      <td style="padding:8px 12px;font-size:11px;color:var(--muted);font-family:var(--mono);">${i+1}</td>
+      <td style="padding:8px 12px;font-size:11px;font-family:var(--mono);"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${p.col};margin-right:7px;"></span>${p.name}</td>
+      <td style="padding:8px 12px;font-size:11px;color:var(--muted);font-family:var(--mono);">${p.trade}</td>
+      <td style="padding:8px 12px;"><input style="background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--text);font-family:var(--mono);font-size:11px;width:48px;outline:none;text-align:center;" type="number" value="${p.days}" min="1" max="90" oninput="worksPhases[${i}].days=+this.value;renderWorksProgramme()"></td>
+      <td style="padding:8px 12px;"><input style="background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--gold);font-family:var(--mono);font-size:11px;width:44px;outline:none;text-align:center;" type="number" value="${p.workers}" min="0" max="10" oninput="worksPhases[${i}].workers=+this.value;renderWorksProgramme()"></td>
+      <td style="padding:8px 12px;font-size:11px;color:var(--amber);font-family:var(--mono);text-align:right;">${p.workers>0?'£'+(p.workers*p.days*dayRate).toLocaleString():'—'}</td>
+      <td style="padding:8px 12px;font-size:11px;color:var(--gold);font-family:var(--mono);">${fD(p.startDate)}</td>
+      <td style="padding:8px 12px;font-size:11px;font-family:var(--mono);">${fD(p.endDate)}</td>
+      <td style="padding:8px 12px;"><input type="checkbox" style="accent-color:var(--green);cursor:pointer;width:14px;height:14px;" ${p.done?'checked':''} onchange="worksPhases[${i}].done=this.checked;renderWorksProgramme()"></td>
+    </tr>`).join('');
+}
+
+// Handle Works tab in propTab function
+const _origPropTab = propTab;
+propTab = function(tab, btn) {
+  _origPropTab(tab, btn);
+  if(tab==='works') worksStep(1);
+};
 function demoCalc(){
   const purchase=+document.getElementById('dPurch')?.value||100000;
   const refurb=+document.getElementById('dRefurb')?.value||30000;
