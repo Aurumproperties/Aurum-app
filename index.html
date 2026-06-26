@@ -396,45 +396,138 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 <body>
 
 <!-- LANDING PAGE -->
-<div id="landingWrap">
-  <div class="landing">
-    <div class="land-logo">AURUM</div>
-    <div class="land-tag">// brrr property intelligence · uk 2026</div>
-    <div class="land-features">
-      <div class="land-feat">
-        <div class="land-feat-icon">⚡</div>
-        <div class="land-feat-title">BRRR Calculator</div>
-        <div class="land-feat-desc">Live equity, cash flow, yield and capital recycled. Verdict in seconds.</div>
+<div id="landingWrap" style="display:flex">
+  <div style="min-height:100vh;width:100%;background:var(--bg);display:flex;flex-direction:column;">
+
+    <!-- NAV -->
+    <nav style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;border-bottom:1px solid var(--border);background:rgba(8,8,8,.95);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;">
+      <div style="font-size:20px;font-weight:800;color:var(--gold);letter-spacing:-.5px;">AURUM</div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <button onclick="showAuth(true)" style="font-family:var(--font);font-size:12px;font-weight:600;padding:7px 18px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">Sign In</button>
+        <button onclick="showAuth(false)" style="font-family:var(--font);font-size:12px;font-weight:700;padding:7px 18px;border-radius:8px;border:none;background:var(--gold);color:#000;cursor:pointer;">Get Started Free</button>
       </div>
-      <div class="land-feat">
-        <div class="land-feat-icon">🔍</div>
-        <div class="land-feat-title">Property Scout</div>
-        <div class="land-feat-desc">Score any UK deal. Area rankings with yield + growth data nationwide.</div>
+    </nav>
+
+    <!-- HERO -->
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px 40px;text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(240,192,64,.12) 0%,transparent 65%);">
+
+      <!-- Badge -->
+      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;color:var(--gold);font-family:var(--mono);margin-bottom:24px;letter-spacing:.05em;">
+        🇬🇧 Built for UK BRRR Investors · 2026
       </div>
-      <div class="land-feat">
-        <div class="land-feat-icon">📋</div>
-        <div class="land-feat-title">BOQ Engine</div>
-        <div class="land-feat-desc">Enter room dimensions → auto-generate full Bill of Quantities + A3 Gantt.</div>
+
+      <!-- Headline -->
+      <h1 style="font-size:clamp(36px,6vw,72px);font-weight:800;letter-spacing:-2px;line-height:1.05;color:var(--text);margin-bottom:20px;max-width:900px;">
+        Know if a deal works<br><span style="color:var(--gold);">before you make an offer.</span>
+      </h1>
+
+      <!-- Sub -->
+      <p style="font-size:clamp(15px,2vw,20px);color:var(--muted);max-width:580px;line-height:1.6;margin-bottom:36px;font-family:var(--mono);">
+        AURUM gives UK property investors the tools to analyse BRRR deals, generate NRM2 Bills of Quantities, track portfolios and manage refurbs — all in one place.
+      </p>
+
+      <!-- CTA -->
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:48px;">
+        <button onclick="showAuth(false)" style="font-family:var(--font);font-size:15px;font-weight:700;padding:16px 36px;border-radius:var(--r);border:none;background:var(--gold);color:#000;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='var(--gold2)'" onmouseout="this.style.background='var(--gold)'">
+          Start Free — No Card Needed →
+        </button>
+        <button onclick="showAuth(true)" style="font-family:var(--font);font-size:15px;font-weight:600;padding:16px 36px;border-radius:var(--r);border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+          Sign In
+        </button>
       </div>
-      <div class="land-feat">
-        <div class="land-feat-icon">🏦</div>
-        <div class="land-feat-title">Finance & Risk Hub</div>
-        <div class="land-feat-desc">SDLT, CGT, cash flow timeline, risk assessment, legal checklist.</div>
+
+      <!-- LIVE MINI CALCULATOR DEMO -->
+      <div style="width:100%;max-width:780px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:48px;text-align:left;">
+        <div style="padding:12px 18px;background:var(--s2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="width:10px;height:10px;border-radius:50%;background:#f04040;opacity:.7;"></div>
+            <div style="width:10px;height:10px;border-radius:50%;background:#f0c040;opacity:.7;"></div>
+            <div style="width:10px;height:10px;border-radius:50%;background:#40d080;opacity:.7;"></div>
+            <span style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-left:6px;">⚡ BRRR Live Calculator — try it now</span>
+          </div>
+          <span style="font-size:10px;color:var(--dim);font-family:var(--mono);">no login required</span>
+        </div>
+        <div style="padding:20px;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px;">
+            <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;">
+              <div style="font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:6px;">Purchase Price</div>
+              <div style="display:flex;align-items:center;gap:3px;"><span style="color:var(--muted);font-size:13px;">£</span><input id="dPurch" type="number" value="100000" oninput="demoCalc()" style="background:none;border:none;color:var(--text);font-family:var(--font);font-size:18px;font-weight:700;width:100%;outline:none;letter-spacing:-.5px;"></div>
+            </div>
+            <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;">
+              <div style="font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:6px;">Refurb Cost</div>
+              <div style="display:flex;align-items:center;gap:3px;"><span style="color:var(--muted);font-size:13px;">£</span><input id="dRefurb" type="number" value="30000" oninput="demoCalc()" style="background:none;border:none;color:var(--text);font-family:var(--font);font-size:18px;font-weight:700;width:100%;outline:none;letter-spacing:-.5px;"></div>
+            </div>
+            <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;">
+              <div style="font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:6px;">GDV After Refurb</div>
+              <div style="display:flex;align-items:center;gap:3px;"><span style="color:var(--gold);font-size:13px;">£</span><input id="dGdv" type="number" value="165000" oninput="demoCalc()" style="background:none;border:none;color:var(--gold);font-family:var(--font);font-size:18px;font-weight:700;width:100%;outline:none;letter-spacing:-.5px;"></div>
+            </div>
+            <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;">
+              <div style="font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:6px;">Monthly Rent</div>
+              <div style="display:flex;align-items:center;gap:3px;"><span style="color:var(--muted);font-size:13px;">£</span><input id="dRent" type="number" value="750" oninput="demoCalc()" style="background:none;border:none;color:var(--text);font-family:var(--font);font-size:18px;font-weight:700;width:100%;outline:none;letter-spacing:-.5px;"></div>
+            </div>
+          </div>
+          <!-- Results -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:14px;" id="demoResults"></div>
+          <!-- Verdict -->
+          <div id="demoVerdict" style="border-radius:var(--r);padding:12px 16px;display:flex;align-items:center;gap:12px;"></div>
+        </div>
       </div>
-      <div class="land-feat">
-        <div class="land-feat-icon">📊</div>
-        <div class="land-feat-title">Portfolio Tracker</div>
-        <div class="land-feat-desc">Total equity, monthly cash flow, yield across your entire portfolio.</div>
+
+      <!-- STATS STRIP -->
+      <div style="display:flex;gap:32px;flex-wrap:wrap;justify-content:center;margin-bottom:48px;">
+        <div style="text-align:center;"><div style="font-size:28px;font-weight:800;color:var(--gold);">50+</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">UK Postcodes Tracked</div></div>
+        <div style="text-align:center;"><div style="font-size:28px;font-weight:800;color:var(--gold);">NRM2</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">RICS Standard BOQ</div></div>
+        <div style="text-align:center;"><div style="font-size:28px;font-weight:800;color:var(--gold);">£0</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">To Start — Free Forever</div></div>
+        <div style="text-align:center;"><div style="font-size:28px;font-weight:800;color:var(--gold);">10s</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">To Score Any Deal</div></div>
       </div>
-      <div class="land-feat">
-        <div class="land-feat-icon">👷</div>
-        <div class="land-feat-title">Contractor Manager</div>
-        <div class="land-feat-desc">Build your trades team. One tap to call or WhatsApp any contractor.</div>
+
+      <!-- FEATURES GRID -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;max-width:960px;width:100%;margin-bottom:48px;text-align:left;">
+        <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px 22px;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:24px;margin-bottom:10px;">⚡</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">BRRR Live Calculator</div>
+          <div style="font-size:12px;color:var(--muted);font-family:var(--mono);line-height:1.6;">Equity created, capital recycled, monthly cash flow, gross yield — all live. Verdict tells you Buy, Negotiate or Walk Away.</div>
+        </div>
+        <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px 22px;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:24px;margin-bottom:10px;">📋</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">NRM2 Bill of Quantities</div>
+          <div style="font-size:12px;color:var(--muted);font-family:var(--mono);line-height:1.6;">Enter room dimensions → AURUM generates a RICS NRM2 compliant BOQ with BCIS 2026 rates. Export to Excel or PDF instantly.</div>
+        </div>
+        <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px 22px;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:24px;margin-bottom:10px;">🔍</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">Property Scout Engine</div>
+          <div style="font-size:12px;color:var(--muted);font-family:var(--mono);line-height:1.6;">Score any UK deal. Area rankings, rental yield data for 50+ postcodes, auction frequency, regeneration zones.</div>
+        </div>
+        <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px 22px;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:24px;margin-bottom:10px;">🏦</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">Finance & Risk Hub</div>
+          <div style="font-size:12px;color:var(--muted);font-family:var(--mono);line-height:1.6;">Full deal P&L, SDLT calculator, CGT, cash flow timeline with warnings, risk assessment, legal due diligence checklist.</div>
+        </div>
+        <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px 22px;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:24px;margin-bottom:10px;">📊</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">Portfolio Tracker</div>
+          <div style="font-size:12px;color:var(--muted);font-family:var(--mono);line-height:1.6;">Track every property — total equity, monthly cash flow, yield, annual rent roll. Your big picture at a glance.</div>
+        </div>
+        <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px 22px;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:24px;margin-bottom:10px;">👷</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">Contractor Manager</div>
+          <div style="font-size:12px;color:var(--muted);font-family:var(--mono);line-height:1.6;">Store your trades team. One tap to call or WhatsApp any contractor directly from the platform.</div>
+        </div>
       </div>
-    </div>
-    <div class="land-cta">
-      <button class="land-btn primary" onclick="showAuth(false)">Get Started Free</button>
-      <button class="land-btn secondary" onclick="showAuth(true)">Sign In</button>
+
+      <!-- FINAL CTA -->
+      <div style="background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r2);padding:40px 32px;text-align:center;max-width:600px;width:100%;margin-bottom:48px;">
+        <div style="font-size:26px;font-weight:800;color:var(--gold);margin-bottom:8px;">Ready to analyse your first deal?</div>
+        <div style="font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:24px;line-height:1.6;">Free to use. No credit card. No fluff.<br>Just the numbers you need to invest with confidence.</div>
+        <button onclick="showAuth(false)" style="font-family:var(--font);font-size:15px;font-weight:700;padding:16px 40px;border-radius:var(--r);border:none;background:var(--gold);color:#000;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='var(--gold2)'" onmouseout="this.style.background='var(--gold)'">
+          Create Free Account →
+        </button>
+      </div>
+
+      <!-- FOOTER -->
+      <div style="font-size:11px;color:var(--dim);font-family:var(--mono);text-align:center;padding-bottom:24px;">
+        AURUM · Built for UK BRRR investors · RICS NRM2 · BCIS 2026 · Not financial advice
+      </div>
     </div>
   </div>
 </div>
@@ -471,7 +564,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 </div>
 
 <!-- APP -->
-<div id="app">
+<div id="app" style="display:none;flex-direction:column;min-height:100vh">
   <div class="topbar">
     <div class="tbar-logo" onclick="navTo('dashboard')">AURUM</div>
     <div class="tbar-nav">
@@ -679,7 +772,14 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
           <div class="ss-title">⚡ Score Any UK Property</div>
           <div class="ss-desc">Enter any property → engine scores it, calculates BRRR numbers, all editable</div>
           <div class="ss-grid">
-            <div class="sf-group"><div class="sf-label">Postcode</div><input class="sf-input" id="ssPostcode" placeholder="SR2, B12, M11..."></div>
+            <div class="sf-group" style="position:relative;">
+              <div class="sf-label">Postcode</div>
+              <input class="sf-input" id="ssPostcode" placeholder="SR2, M11, LS9..." 
+                oninput="showPostcodeSuggestions(this.value)"
+                onkeydown="if(event.key==='Enter')scoreDeal()"
+                autocomplete="off">
+              <div id="pcSuggestions" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);z-index:50;max-height:220px;overflow-y:auto;margin-top:4px;box-shadow:0 8px 24px rgba(0,0,0,.4);"></div>
+            </div>
             <div class="sf-group"><div class="sf-label">Asking Price £</div><input class="sf-input" id="ssPrice" type="number" placeholder="100000" oninput="liveScore()"></div>
             <div class="sf-group"><div class="sf-label">Type</div><select class="sf-input" id="ssType" onchange="liveScore()"><option value="T">Terraced</option><option value="S">Semi-Detached</option><option value="D">Detached</option><option value="F">Flat</option></select></div>
             <div class="sf-group"><div class="sf-label">Bedrooms</div><select class="sf-input" id="ssBeds" onchange="liveScore()"><option value="1">1 bed</option><option value="2">2 beds</option><option value="3" selected>3 beds</option><option value="4">4 beds</option><option value="5">5 beds</option></select></div>
@@ -824,6 +924,12 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 </div>
 
 <script>
+// Prevent flash of auth page before Supabase checks session
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('landingWrap').style.display='flex';
+  document.getElementById('authWrap').style.display='none';
+  document.getElementById('app').style.display='none';
+});
 // SUPABASE
 const SUPA_URL='https://kxiftobazbjkorpeeufo.supabase.co';
 const SUPA_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4aWZ0b2JhemJqa29ycGVldWZvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NzQ3MTIsImV4cCI6MjA5NjA1MDcxMn0.wk82-u1VarRevvee61PjgMxCuc8G3kbMwk31_i2TjUs';
@@ -834,12 +940,14 @@ let currentUser=null,currentProp=null,rooms=[],materials=[],plValues={};
 function showAuth(signIn){
   document.getElementById('landingWrap').style.display='none';
   document.getElementById('authWrap').style.display='flex';
+  document.getElementById('app').style.display='none';
   document.getElementById('authSignIn').style.display=signIn?'block':'none';
   document.getElementById('authSignUp').style.display=signIn?'none':'block';
 }
 function showLanding(){
   document.getElementById('landingWrap').style.display='flex';
   document.getElementById('authWrap').style.display='none';
+  document.getElementById('app').style.display='none';
 }
 function toggleAuth(){
   const si=document.getElementById('authSignIn');
@@ -878,6 +986,8 @@ sb.auth.onAuthStateChange(async(event,session)=>{
     document.getElementById('userPill').textContent=session.user.email;
     await loadDashboard();
   } else {
+    document.getElementById('landingWrap').style.display='flex';
+    document.getElementById('authWrap').style.display='none';
     document.getElementById('app').style.display='none';
   }
 });
@@ -1387,6 +1497,31 @@ function scoutTab(tab,btn){
   document.getElementById('stab-'+tab).style.display='block';if(btn)btn.classList.add('on');
   if(tab==='ranking')renderAreaRanking();if(tab==='yield')renderYieldTable();if(tab==='custom'){loadCustomPostcodes();renderCustomPcList();}
 }
+function showPostcodeSuggestions(val){
+  const box=document.getElementById('pcSuggestions');
+  if(!val||val.length<1){box.style.display='none';return;}
+  const v=val.toUpperCase().trim();
+  const matches=Object.entries(MARKET_DATA).filter(([pc,d])=>pc.startsWith(v)||d.area.toUpperCase().startsWith(v)).slice(0,8);
+  if(!matches.length){box.style.display='none';return;}
+  box.style.display='block';
+  box.innerHTML=matches.map(([pc,d])=>`
+    <div onclick="document.getElementById('ssPostcode').value='${pc}';document.getElementById('pcSuggestions').style.display='none';if(document.getElementById('ssPrice').value)scoreDeal();" 
+      style="padding:10px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);transition:background .1s;"
+      onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+      <div>
+        <span style="font-weight:700;color:var(--gold);font-family:var(--mono);font-size:13px;">${pc}</span>
+        <span style="color:var(--text);font-size:12px;margin-left:8px;">${d.area}</span>
+        <span style="color:var(--muted);font-size:11px;margin-left:6px;">${d.region}</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span style="font-size:11px;font-family:var(--mono);color:${d.yield>=8?'var(--green)':d.yield>=6?'var(--amber)':'var(--muted)'};">${d.yield}% yield</span>
+        <span style="font-size:10px;padding:2px 7px;border-radius:5px;background:var(--s3);color:var(--muted);font-family:var(--mono);">£${(d.avgT/1000).toFixed(0)}k avg</span>
+      </div>
+    </div>`).join('');
+}
+// Close suggestions on click outside
+document.addEventListener('click',e=>{if(!e.target.closest('#pcSuggestions')&&e.target.id!=='ssPostcode'){const b=document.getElementById('pcSuggestions');if(b)b.style.display='none';}});
+
 function liveScore(){}
 function updateScoreFromEdits(){['ssRefurb','ssGdv','ssRent','ssMortRate','ssLtv','ssCosts'].forEach(id=>{const el=document.getElementById(id),sl=document.getElementById(id+'Slider');if(el&&sl)sl.value=el.value;});renderScoreResult();}
 function renderYieldTable(){
@@ -1410,16 +1545,64 @@ function renderScoreResult(){
   document.getElementById('ssDealResult').innerHTML=`<div class="deal-score-wrap" style="margin-top:14px"><div class="deal-score-top"><div class="deal-score-num" style="color:${sC}">${score}</div><div class="deal-score-info"><div class="deal-score-title" style="color:${sC}">${verdict}</div><div class="deal-score-sub">${postcode} · ${beds} bed · ${type==='T'?'Terraced':type==='S'?'Semi':type==='D'?'Detached':'Flat'}</div></div></div><div class="deal-metrics"><div class="dm-card"><div class="dm-val" style="color:${equity>0?'var(--green)':'var(--red)'}">${fK(equity)}</div><div class="dm-lbl">Equity Created</div></div><div class="dm-card"><div class="dm-val" style="color:var(--gold)">${fK(cashback)}</div><div class="dm-lbl">Cash Back</div></div><div class="dm-card"><div class="dm-val" style="color:${locked<15000?'var(--green)':'var(--red)'}">${fK(locked)}</div><div class="dm-lbl">Capital Locked</div></div><div class="dm-card"><div class="dm-val" style="color:${cf>0?'var(--green)':'var(--red)'}">${cf>=0?'+':''}£${Math.round(cf)}/mo</div><div class="dm-lbl">Cash Flow</div></div><div class="dm-card"><div class="dm-val" style="color:var(--cyan)">${grossYield.toFixed(1)}%</div><div class="dm-lbl">Gross Yield</div></div><div class="dm-card"><div class="dm-val">${recycled}%</div><div class="dm-lbl">Capital Recycled</div></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn solid" onclick="prefillFromScout(${price},${refurb},${gdv},${rent},'${postcode}')">+ Add to Portfolio</button><a class="btn gold" href="sold-prices.html?pc=${postcode}" target="_blank">🏠 Sold Prices ↗</a><a class="btn" href="https://www.rightmove.co.uk/house-prices/${postcode.toLowerCase().replace(' ','-')}.html" target="_blank">Rightmove ↗</a></div></div>`;
 }
 function scoreDeal(){
-  const postcode=document.getElementById('ssPostcode').value.trim(),price=+document.getElementById('ssPrice').value||0,type=document.getElementById('ssType').value,beds=+document.getElementById('ssBeds').value||3;
-  if(!postcode||!price){alert('Enter postcode and asking price.');return;}
-  const r=calcBRRRScore(price,postcode,type,beds);
+  const rawPC=document.getElementById('ssPostcode').value.trim();
+  const price=+document.getElementById('ssPrice').value||0;
+  const type=document.getElementById('ssType').value;
+  const beds=+document.getElementById('ssBeds').value||3;
+  const res=document.getElementById('ssDealResult');
+
+  // Validate postcode entered
+  if(!rawPC){
+    res.innerHTML=`<div style="background:rgba(240,64,64,.08);border:1px solid rgba(240,64,64,.3);border-radius:var(--r2);padding:16px 18px;margin-top:14px">
+      <div style="font-size:13px;font-weight:700;color:var(--red);margin-bottom:8px">⚠️ Enter a UK postcode</div>
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);line-height:1.7;margin-bottom:12px">Type the postcode area (e.g. SR2, M11, LS9) then click Score Deal.</div>
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px">📍 Postcodes in our database:</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${Object.keys(MARKET_DATA).map(pc=>`<button onclick="document.getElementById('ssPostcode').value='${pc}';scoreDeal()" style="background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:3px 10px;color:var(--gold);font-family:var(--mono);font-size:11px;cursor:pointer;">${pc}</button>`).join('')}</div>
+    </div>`;
+    return;
+  }
+
+  // Validate price entered
+  if(!price){
+    res.innerHTML=`<div style="background:rgba(240,192,64,.08);border:1px solid var(--gold-border);border-radius:var(--r2);padding:16px 18px;margin-top:14px">
+      <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:6px">💡 Enter an asking price to score this deal</div>
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono)">Postcode <strong style="color:var(--gold)">${rawPC.toUpperCase()}</strong> recognised. Now enter the asking price above and click Score Deal.</div>
+    </div>`;
+    // Show assumptions if postcode is in DB
+    const r=calcBRRRScore(100000,rawPC,type,beds);
+    if(r){
+      const hint=r.marketAvg;
+      document.getElementById('ssPrice').placeholder=hint.toLocaleString();
+      document.getElementById('ssPrice').focus();
+    }
+    return;
+  }
+
+  const r=calcBRRRScore(price,rawPC,type,beds);
   document.getElementById('ssAssumptions').style.display='block';
-  const refurbEst=r?r.refurbCost:Math.round(price*.2/1000)*1000,gdvEst=r?r.gdv:Math.round(price*1.35/1000)*1000,rentEst=r?r.monthlyRent:Math.round(gdvEst*.072/12/25)*25;
-  document.getElementById('ssRefurb').value=refurbEst;document.getElementById('ssGdv').value=gdvEst;document.getElementById('ssRent').value=rentEst;
-  const sl1=document.getElementById('ssRefurbSlider');const sl2=document.getElementById('ssGdvSlider');const sl3=document.getElementById('ssRentSlider');
-  if(sl1)sl1.value=refurbEst;if(sl2)sl2.value=gdvEst;if(sl3)sl3.value=rentEst;
+
+  const refurbEst=r?r.refurbCost:Math.round(price*.2/1000)*1000;
+  const gdvEst=r?r.gdv:Math.round(price*1.35/1000)*1000;
+  const rentEst=r?r.monthlyRent:Math.round(gdvEst*.072/12/25)*25;
+
+  document.getElementById('ssRefurb').value=refurbEst;
+  document.getElementById('ssGdv').value=gdvEst;
+  document.getElementById('ssRent').value=rentEst;
+  ['ssRefurbSlider','ssGdvSlider','ssRentSlider'].forEach((id,i)=>{const el=document.getElementById(id);if(el)el.value=[refurbEst,gdvEst,rentEst][i];});
+
   renderScoreResult();
-  if(!r)document.getElementById('ssDealResult').innerHTML+=`<div class="note-box" style="margin-top:10px">⚠️ <strong>${postcode}</strong> not in our database — estimates used. <a href="sold-prices.html" target="_blank" style="color:var(--gold)">Check real sold prices ↗</a></div>`;
+
+  if(!r){
+    // Postcode not in DB — show suggestions for nearby areas
+    const pc=rawPC.toUpperCase();
+    const prefix=pc.slice(0,2);
+    const similar=Object.keys(MARKET_DATA).filter(k=>k.startsWith(prefix)||k.slice(0,1)===pc.slice(0,1));
+    res.innerHTML+=`<div class="note-box" style="margin-top:12px">
+      ⚠️ <strong>${pc}</strong> not in our database — national average estimates used. Numbers may be inaccurate.
+      ${similar.length?`<br><br>📍 <strong>Similar areas we do have:</strong><br><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">${similar.map(s=>`<button onclick="document.getElementById('ssPostcode').value='${s}';scoreDeal()" style="background:var(--s3);border:1px solid var(--border);border-radius:6px;padding:3px 10px;color:var(--gold);font-family:var(--mono);font-size:11px;cursor:pointer;">${s} — ${MARKET_DATA[s].area}</button>`).join('')}</div>`:''}
+      <br><br><a href="sold-prices.html?pc=${pc}" target="_blank" style="color:var(--gold)">🏠 Check real sold prices for ${pc} ↗</a>
+    </div>`;
+  }
 }
 function prefillFromScout(price,refurb,gdv,rent,addr){document.getElementById('npAddr').value=addr;document.getElementById('npBuy').value=price;document.getElementById('npRef').value=refurb;document.getElementById('npGdv').value=gdv;document.getElementById('npRent').value=rent;openAddProp();}
 function renderAreaRanking(){
@@ -1451,10 +1634,43 @@ function renderCustomPcList(){
 function deleteCustomPC(pc){delete MARKET_DATA[pc];const saved=JSON.parse(localStorage.getItem('aurumCustomPCs')||'[]').filter(x=>x.pc!==pc);localStorage.setItem('aurumCustomPCs',JSON.stringify(saved));renderCustomPcList();renderAreaRanking();}
 function initScout(){loadCustomPostcodes();renderAreaRanking();renderCustomPcList();}
 
-// UTILS
-function fmtK(n){n=+n||0;if(Math.abs(n)>=1000000)return(n/1000000).toFixed(1)+'M';if(Math.abs(n)>=1000)return(n/1000).toFixed(0)+'k';return Math.round(n).toString();}
-document.getElementById('tlStart').valueAsDate=new Date();
-document.getElementById('progStart').valueAsDate=new Date();
+// LANDING DEMO CALCULATOR
+function demoCalc(){
+  const purchase=+document.getElementById('dPurch')?.value||100000;
+  const refurb=+document.getElementById('dRefurb')?.value||30000;
+  const gdv=+document.getElementById('dGdv')?.value||165000;
+  const rent=+document.getElementById('dRent')?.value||750;
+  const totalIn=purchase+refurb+5000;
+  const equity=gdv-totalIn;
+  const cashback=gdv*.75;
+  const locked=Math.max(0,totalIn-cashback);
+  const recycled=Math.min(100,Math.round(cashback/totalIn*100));
+  const mr=.055/12,n=25*12,monthlyMtg=cashback*(mr*Math.pow(1+mr,n))/(Math.pow(1+mr,n)-1);
+  const cf=rent-monthlyMtg;
+  const grossYield=(rent*12/gdv)*100;
+  const bmv=gdv>0?((gdv-purchase)/gdv)*100:0;
+  const fK=n=>{if(Math.abs(n)>=1000000)return'£'+(n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1000)return'£'+(n/1000).toFixed(0)+'k';return'£'+Math.round(n);};
+  const fN=n=>(n>=0?'+':'')+fK(n);
+  const res=document.getElementById('demoResults');
+  if(!res)return;
+  res.innerHTML=[
+    {v:fK(equity),    l:'Equity Created',   c:equity>0?'var(--green)':'var(--red)'},
+    {v:fK(cashback),  l:'Cash Back 75% LTV',c:'var(--gold)'},
+    {v:fK(locked),    l:'Capital Locked',   c:locked<15000?'var(--green)':'var(--red)'},
+    {v:fN(cf)+'/mo',  l:'Monthly CF',       c:cf>0?'var(--green)':'var(--red)'},
+    {v:grossYield.toFixed(1)+'%',l:'Gross Yield',c:grossYield>6?'var(--green)':'var(--amber)'},
+    {v:recycled+'%',  l:'Capital Recycled', c:recycled>75?'var(--green)':'var(--amber)'},
+  ].map(s=>`<div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:10px 14px;"><div style="font-size:17px;font-weight:700;color:${s.c};letter-spacing:-.3px;">${s.v}</div><div style="font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-top:3px;">${s.l}</div></div>`).join('');
+  const score=(equity>0?1:0)+(locked<15000?1:0)+(cf>100?1:0)+(grossYield>6?1:0)+(bmv>15?1:0);
+  let icon,title,col,bg;
+  if(score>=4){icon='🏆';title='Excellent Deal — Strong BRRR numbers';col='var(--green)';bg='rgba(64,208,128,.08)';}
+  else if(score>=3){icon='✅';title='Good Deal — Worth proceeding';col='var(--gold)';bg='var(--gold-dim)';}
+  else if(score>=2){icon='⚠️';title='Marginal — Negotiate the price down';col='var(--amber)';bg='rgba(240,160,64,.08)';}
+  else{icon='❌';title='Weak Deal — Numbers do not stack';col='var(--red)';bg:'rgba(240,64,64,.08)';}
+  const verd=document.getElementById('demoVerdict');
+  if(verd){verd.style.background=bg;verd.style.border=`1px solid ${col}`;verd.innerHTML=`<div style="font-size:24px;">${icon}</div><div><div style="font-size:13px;font-weight:700;color:${col};">${title}</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:3px;">Sign up to unlock full analysis — scenario comparison, 10-year equity build, SDLT calculator and more.</div></div>`;}
+}
+document.addEventListener('DOMContentLoaded',()=>{setTimeout(demoCalc,100);});
 </script>
 </body>
 </html>
