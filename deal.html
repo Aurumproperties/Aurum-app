@@ -1,1 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURUM — Deal Analyser</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080808;--s1:#101010;--s2:#181818;--s3:#222;
+  --border:#2a2a2a;--border2:#3a3a3a;
+  --gold:#f0c040;--gold2:#c89820;
+  --gold-dim:rgba(240,192,64,.08);--gold-border:rgba(240,192,64,.2);
+  --cyan:#40e0d0;--red:#f04040;--amber:#f0a040;--green:#40d080;
+  --text:#f0ede6;--muted:#808070;--dim:#404038;
+  --font:'Inter',sans-serif;--mono:'DM Mono',monospace;
+  --r:12px;--r2:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font);}
+body::after{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.5;}
+.topbar{height:56px;background:rgba(8,8,8,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;}
+.tbar-logo{font-size:20px;font-weight:800;color:var(--gold);letter-spacing:-.5px;text-decoration:none;}
+.tbar-title{font-size:12px;color:var(--muted);font-family:var(--mono);}
+.btn{font-family:var(--font);font-size:12px;font-weight:600;padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+.btn:hover{border-color:var(--border2);color:var(--text);}
+.btn.solid{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700;}
+.btn.solid:hover{background:var(--gold2);}
+.btn.gold{border-color:var(--gold);color:var(--gold);}
+.btn.gold:hover{background:var(--gold);color:#000;}
+.main{max-width:1100px;margin:0 auto;padding:28px 24px;}
 
+/* INPUT SECTION */
+.input-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:24px;margin-bottom:24px;}
+.input-title{font-size:16px;font-weight:700;margin-bottom:4px;}
+.input-title span{color:var(--gold);}
+.input-sub{font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:20px;}
+.field-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:16px;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono);}
+.field-input{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:11px 14px;color:var(--text);font-family:var(--font);font-size:14px;font-weight:600;outline:none;width:100%;transition:border-color .15s;}
+.field-input:focus{border-color:var(--gold);}
+.field-prefix{display:flex;align-items:center;gap:0;}
+.field-prefix span{background:var(--s3);border:1px solid var(--border);border-right:none;border-radius:var(--r) 0 0 var(--r);padding:11px 12px;color:var(--muted);font-size:14px;font-weight:700;}
+.field-prefix input{border-radius:0 var(--r) var(--r) 0;border-left:none;}
+
+/* ADDRESS AUTOCOMPLETE */
+.addr-wrap{position:relative;grid-column:1/-1;}
+.addr-dropdown{display:none;position:absolute;top:100%;left:0;right:0;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);z-index:50;max-height:260px;overflow-y:auto;margin-top:4px;box-shadow:0 8px 32px rgba(0,0,0,.5);}
+.addr-item{padding:12px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s;}
+.addr-item:last-child{border-bottom:none;}
+.addr-item:hover{background:var(--s2);}
+.addr-item-main{font-size:13px;font-weight:600;}
+.addr-item-sub{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
+
+/* TYPE SELECTOR */
+.type-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+.type-btn{background:var(--s2);border:2px solid var(--border);border-radius:var(--r);padding:10px;text-align:center;cursor:pointer;transition:all .2s;}
+.type-btn.active{border-color:var(--gold);background:var(--gold-dim);}
+.type-btn-icon{font-size:20px;margin-bottom:4px;}
+.type-btn-label{font-size:11px;font-weight:700;color:var(--muted);}
+.type-btn.active .type-btn-label{color:var(--gold);}
+
+/* LTV SELECTOR */
+.ltv-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.ltv-btn{background:var(--s2);border:2px solid var(--border);border-radius:var(--r);padding:10px 14px;text-align:center;cursor:pointer;transition:all .2s;}
+.ltv-btn.active{border-color:var(--gold);background:var(--gold-dim);}
+.ltv-btn-val{font-size:18px;font-weight:800;color:var(--muted);}
+.ltv-btn.active .ltv-btn-val{color:var(--gold);}
+.ltv-btn-lbl{font-size:10px;color:var(--dim);font-family:var(--mono);}
+
+/* RESULTS */
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;}
+.result-panel{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;}
+.panel-head{padding:14px 18px;background:var(--s2);border-bottom:1px solid var(--border);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:space-between;}
+.panel-head .panel-sub{font-size:11px;color:var(--muted);font-family:var(--mono);font-weight:400;}
+.panel-body{padding:18px;}
+
+/* KPI STRIP */
+.kpi-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:20px;}
+.kpi-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;}
+.kpi-val{font-size:22px;font-weight:700;letter-spacing:-.4px;}
+.kpi-lbl{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-top:3px;}
+.kpi-sub{font-size:10px;color:var(--dim);font-family:var(--mono);margin-top:2px;}
+
+/* VERDICT */
+.verdict{border-radius:var(--r2);padding:18px 22px;display:flex;align-items:center;gap:16px;margin-bottom:20px;}
+.verdict-icon{font-size:36px;flex-shrink:0;}
+.verdict-title{font-size:16px;font-weight:800;margin-bottom:4px;}
+.verdict-desc{font-size:12px;color:var(--muted);font-family:var(--mono);line-height:1.6;}
+
+/* COMPARABLES TABLE */
+.comp-table{width:100%;border-collapse:collapse;}
+.comp-table thead th{padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono);}
+.comp-table tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+.comp-table tbody tr:hover{background:var(--s2);}
+.comp-table td{padding:9px 12px;font-size:12px;font-family:var(--mono);}
+.type-pill{font-size:9px;padding:2px 7px;border-radius:5px;font-weight:700;font-family:var(--mono);}
+.tp-T{background:#181808;color:#cccc40;border:1px solid #383818;}
+.tp-S{background:#081818;color:#40cccc;border:1px solid #083838;}
+.tp-D{background:#081808;color:#40cc80;border:1px solid #083818;}
+.tp-F{background:#180818;color:#cc40cc;border:1px solid #381838;}
+.tp-O{background:var(--s3);color:var(--muted);border:1px solid var(--border);}
+.dist-badge{font-size:9px;padding:2px 7px;border-radius:5px;background:var(--s3);color:var(--muted);border:1px solid var(--border);font-family:var(--mono);}
+
+/* LOADING */
+.loading-state{text-align:center;padding:40px 20px;display:flex;flex-direction:column;align-items:center;gap:12px;}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:13px;color:var(--muted);font-family:var(--mono);}
+.step-indicator{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.step-dot{font-size:11px;font-family:var(--mono);padding:3px 10px;border-radius:10px;background:var(--s2);color:var(--muted);border:1px solid var(--border);}
+.step-dot.active{background:var(--gold-dim);color:var(--gold);border-color:var(--gold-border);}
+.step-dot.done{background:rgba(64,208,128,.08);color:var(--green);border-color:rgba(64,208,128,.2);}
+
+/* NOTE */
+.note-box{background:var(--gold-dim);border:1px dashed var(--gold-border);border-radius:var(--r);padding:11px 14px;font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:16px;font-family:var(--mono);}
+.note-box strong{color:var(--gold);}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;font-family:var(--mono);}
+.info-row:last-child{border-bottom:none;}
+.info-label{color:var(--muted);}
+.info-val{font-weight:700;}
+
+/* RIGHTMOVE LINKS */
+.rm-links{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.rm-link{font-size:11px;padding:6px 12px;border-radius:8px;background:var(--s2);border:1px solid var(--border);color:var(--muted);text-decoration:none;font-family:var(--mono);transition:all .15s;}
+.rm-link:hover{border-color:var(--gold);color:var(--gold);}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .results-grid{grid-template-columns:1fr;}
+  .field-grid{grid-template-columns:1fr 1fr;}
+  .type-grid{grid-template-columns:repeat(2,1fr);}
+  .main{padding:16px 14px;}
+  .tbar-title{display:none;}
+}
+@media(max-width:480px){
+  .field-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="tbar-logo" href="index.html">AURUM</a>
+  <div class="tbar-title">// Deal Analyser · Real Sold Prices · Land Registry</div>
+  <div style="display:flex;gap:8px;">
+    <a class="btn" href="index.html">← Back to App</a>
+    <a class="btn" href="boq.html" target="_blank">📋 BOQ Engine</a>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- HEADER -->
+  <div style="margin-bottom:24px;">
+    <div style="font-size:26px;font-weight:800;margin-bottom:6px;">🏠 Deal <span style="color:var(--gold);">Analyser</span></div>
+    <div style="font-size:13px;color:var(--muted);font-family:var(--mono);">Real sold prices from HM Land Registry · Comparables split by type · Refinance calculator · Rental estimates</div>
+  </div>
+
+  <!-- INPUT CARD -->
+  <div class="input-card">
+    <div class="input-title">Property <span>Details</span></div>
+    <div class="input-sub">Enter the property address and numbers — we pull real sold prices within 0.5 mile</div>
+
+    <!-- ADDRESS -->
+    <div style="margin-bottom:16px;">
+      <div class="field-label" style="margin-bottom:6px;">Property Address / Postcode</div>
+      <div class="addr-wrap">
+        <input class="field-input" id="addrInput" placeholder="Start typing address or postcode... e.g. SR2 7BH or 83 Bishop Road"
+          oninput="handleAddrInput(this.value)"
+          onkeydown="if(event.key==='Enter'&&selectedPostcode)runAnalysis()"
+          autocomplete="off">
+        <div class="addr-dropdown" id="addrDropdown"></div>
+      </div>
+      <div id="addrConfirm" style="display:none;margin-top:8px;font-size:11px;font-family:var(--mono);color:var(--green);">
+        ✅ <span id="addrConfirmText"></span>
+      </div>
+    </div>
+
+    <!-- PROPERTY TYPE -->
+    <div style="margin-bottom:16px;">
+      <div class="field-label" style="margin-bottom:8px;">Property Type</div>
+      <div class="type-grid">
+        <div class="type-btn active" id="type-T" onclick="selectType('T')"><div class="type-btn-icon">🏠</div><div class="type-btn-label">Terraced</div></div>
+        <div class="type-btn" id="type-S" onclick="selectType('S')"><div class="type-btn-icon">🏡</div><div class="type-btn-label">Semi-Detached</div></div>
+        <div class="type-btn" id="type-D" onclick="selectType('D')"><div class="type-btn-icon">🏰</div><div class="type-btn-label">Detached</div></div>
+        <div class="type-btn" id="type-F" onclick="selectType('F')"><div class="type-btn-icon">🏢</div><div class="type-btn-label">Flat / Mais.</div></div>
+      </div>
+    </div>
+
+    <!-- NUMBERS -->
+    <div class="field-grid">
+      <div class="field">
+        <div class="field-label">Bedrooms</div>
+        <select class="field-input" id="bedsInput">
+          <option value="1">1 bedroom</option>
+          <option value="2">2 bedrooms</option>
+          <option value="3" selected>3 bedrooms</option>
+          <option value="4">4 bedrooms</option>
+          <option value="5">5 bedrooms</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="field-label">Purchase Price £</div>
+        <div class="field-prefix">
+          <span>£</span>
+          <input class="field-input" id="purchaseInput" type="number" placeholder="100,000" oninput="updateLiveCalc()">
+        </div>
+      </div>
+      <div class="field">
+        <div class="field-label">Refurb Budget £</div>
+        <div class="field-prefix">
+          <span>£</span>
+          <input class="field-input" id="refurbInput" type="number" placeholder="35,000" oninput="updateLiveCalc()">
+        </div>
+      </div>
+    </div>
+
+    <!-- LTV -->
+    <div style="margin-bottom:20px;">
+      <div class="field-label" style="margin-bottom:8px;">Refinance LTV</div>
+      <div class="ltv-grid">
+        <div class="ltv-btn" id="ltv-70" onclick="selectLTV(70)"><div class="ltv-btn-val">70%</div><div class="ltv-btn-lbl">Conservative</div></div>
+        <div class="ltv-btn active" id="ltv-75" onclick="selectLTV(75)"><div class="ltv-btn-val">75%</div><div class="ltv-btn-lbl">Standard BTL</div></div>
+        <div class="ltv-btn" id="ltv-80" onclick="selectLTV(80)"><div class="ltv-btn-val">80%</div><div class="ltv-btn-lbl">Higher risk</div></div>
+      </div>
+    </div>
+
+    <!-- ANALYSE BUTTON -->
+    <button class="btn solid" onclick="runAnalysis()" style="width:100%;padding:14px;font-size:14px;justify-content:center;" id="analyseBtn">
+      🔍 Analyse This Deal — Pull Real Sold Prices
+    </button>
+  </div>
+
+  <!-- LOADING -->
+  <div id="loadingState" style="display:none;">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <div class="loading-txt" id="loadingTxt">Searching Land Registry...</div>
+      <div class="step-indicator" id="stepIndicator">
+        <div class="step-dot active" id="step1">📍 Locating postcode</div>
+        <div class="step-dot" id="step2">🏠 Pulling sold prices</div>
+        <div class="step-dot" id="step3">💰 Rental estimates</div>
+        <div class="step-dot" id="step4">⚡ Calculating deal</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="resultsSection" style="display:none;">
+
+    <!-- VERDICT -->
+    <div class="verdict" id="verdictBox" style="margin-bottom:20px;"></div>
+
+    <!-- KPI STRIP -->
+    <div class="kpi-strip" id="kpiStrip" style="margin-bottom:20px;"></div>
+
+    <!-- MAIN GRID -->
+    <div class="results-grid">
+
+      <!-- LEFT: BRRR BREAKDOWN -->
+      <div class="result-panel">
+        <div class="panel-head">
+          <span>⚡ BRRR Breakdown</span>
+          <span class="panel-sub" id="brrr-sub"></span>
+        </div>
+        <div class="panel-body">
+          <div id="brrrBreakdown"></div>
+          <div style="margin-top:16px;">
+            <div class="field-label" style="margin-bottom:8px;">BTL Mortgage Rate %</div>
+            <input type="range" min="4" max="9" step="0.1" value="5.5" id="rateSlider" oninput="document.getElementById('rateVal').textContent=this.value+'%';recalcBRRR()" style="width:100%;accent-color:var(--gold);">
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim);font-family:var(--mono);margin-top:3px;"><span>4%</span><span id="rateVal" style="color:var(--gold);">5.5%</span><span>9%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: COMPARABLES -->
+      <div class="result-panel">
+        <div class="panel-head">
+          <span id="compTitle">🏠 Sold Comparables</span>
+          <span class="panel-sub" id="compSub"></span>
+        </div>
+        <div class="panel-body" style="padding:0;">
+          <div id="compTabs" style="display:flex;border-bottom:1px solid var(--border);overflow-x:auto;"></div>
+          <div id="compContent" style="padding:16px;overflow-x:auto;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RENTAL + LINKS -->
+    <div class="results-grid">
+      <div class="result-panel">
+        <div class="panel-head"><span>💰 Rental Estimate</span><span class="panel-sub">Based on area averages 2026</span></div>
+        <div class="panel-body" id="rentalPanel"></div>
+      </div>
+      <div class="result-panel">
+        <div class="panel-head"><span>🔗 Research Further</span><span class="panel-sub">Live Rightmove links</span></div>
+        <div class="panel-body" id="linksPanel"></div>
+      </div>
+    </div>
+
+    <!-- ADD TO PORTFOLIO -->
+    <div style="text-align:center;margin-top:8px;">
+      <button class="btn solid" onclick="addToPortfolio()" style="padding:12px 32px;font-size:13px;">+ Add This Deal to Portfolio</button>
+      <button class="btn" onclick="openBOQ()" style="margin-left:8px;padding:12px 32px;font-size:13px;">📋 Open BOQ Engine</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const WORKER = 'https://plain-pine-20a9.antoniolondon254.workers.dev';
+let selectedPostcode = '';
+let selectedType = 'T';
+let selectedLTV = 75;
+let currentData = null;
+let addrTimer = null;
+
+// TYPE LABELS
+const TYPE_LABELS = { T:'Terraced', S:'Semi-Detached', D:'Detached', F:'Flat/Maisonette' };
+const TYPE_LR = { T:'terraced', S:'semi-detached', D:'detached', F:'flat-maisonette' };
+
+// SELECT TYPE
+function selectType(t) {
+  selectedType = t;
+  ['T','S','D','F'].forEach(x => document.getElementById('type-'+x).classList.toggle('active', x===t));
+  if(currentData) recalcBRRR();
+}
+
+// SELECT LTV
+function selectLTV(v) {
+  selectedLTV = v;
+  [70,75,80].forEach(x => document.getElementById('ltv-'+x).classList.toggle('active', x===v));
+  if(currentData) recalcBRRR();
+}
+
+// FORMAT
+function fK(n) { n=+n||0; if(Math.abs(n)>=1e6)return'£'+(n/1e6).toFixed(2)+'M'; if(Math.abs(n)>=1000)return'£'+Math.round(n).toLocaleString('en-GB'); return'£'+Math.round(n); }
+function fN(n) { return(n>=0?'+':'')+fK(n); }
+function fDate(s) { if(!s)return'—'; const d=new Date(s); return d.toLocaleDateString('en-GB',{month:'short',year:'numeric'}); }
+function fDist(m) { if(!m&&m!==0)return'—'; if(m<1000)return Math.round(m)+'m'; return(m/1609.34).toFixed(1)+' mi'; }
+
+// ADDRESS INPUT
+function handleAddrInput(val) {
+  clearTimeout(addrTimer);
+  const drop = document.getElementById('addrDropdown');
+  const confirm = document.getElementById('addrConfirm');
+  confirm.style.display = 'none';
+  selectedPostcode = '';
+
+  if(val.length < 2) { drop.style.display = 'none'; return; }
+
+  // Check if it looks like a postcode
+  const pcReg = /^[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9]?[A-Z]{0,2}$/i;
+  if(pcReg.test(val.trim())) {
+    addrTimer = setTimeout(()=>lookupPostcode(val.trim()), 300);
+  } else {
+    addrTimer = setTimeout(()=>autocompletePostcode(val.trim()), 400);
+  }
+}
+
+async function lookupPostcode(pc) {
+  const drop = document.getElementById('addrDropdown');
+  try {
+    const r = await fetch(`${WORKER}?action=postcode-lookup&postcode=${encodeURIComponent(pc)}`);
+    const d = await r.json();
+    if(d.result) {
+      selectedPostcode = d.result.postcode;
+      showAddrConfirm(d.result);
+      drop.style.display = 'none';
+    } else {
+      // Try autocomplete
+      autocompletePostcode(pc);
+    }
+  } catch(e) {
+    drop.style.display = 'none';
+  }
+}
+
+async function autocompletePostcode(q) {
+  const drop = document.getElementById('addrDropdown');
+  try {
+    const r = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(q)}/autocomplete`);
+    const d = await r.json();
+    const results = d.result || [];
+    if(!results.length) { drop.style.display = 'none'; return; }
+
+    drop.style.display = 'block';
+    drop.innerHTML = results.slice(0,8).map(pc => `
+      <div class="addr-item" onclick="selectPostcode('${pc}')">
+        <div class="addr-item-main">${pc}</div>
+        <div class="addr-item-sub">Click to confirm postcode</div>
+      </div>`).join('');
+  } catch(e) {
+    drop.style.display = 'none';
+  }
+}
+
+async function selectPostcode(pc) {
+  document.getElementById('addrDropdown').style.display = 'none';
+  document.getElementById('addrInput').value = pc;
+  try {
+    const r = await fetch(`${WORKER}?action=postcode-lookup&postcode=${encodeURIComponent(pc)}`);
+    const d = await r.json();
+    if(d.result) {
+      selectedPostcode = d.result.postcode;
+      showAddrConfirm(d.result);
+    }
+  } catch(e) {
+    selectedPostcode = pc;
+  }
+}
+
+function showAddrConfirm(result) {
+  const confirm = document.getElementById('addrConfirm');
+  const txt = document.getElementById('addrConfirmText');
+  selectedPostcode = result.postcode;
+  const parts = [result.postcode, result.admin_ward, result.admin_district, result.region].filter(Boolean).join(' · ');
+  txt.textContent = parts;
+  confirm.style.display = 'block';
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', e => {
+  if(!e.target.closest('.addr-wrap')) {
+    document.getElementById('addrDropdown').style.display = 'none';
+  }
+});
+
+// LIVE CALC (without API)
+function updateLiveCalc() {
+  if(currentData) recalcBRRR();
+}
+
+// MAIN ANALYSIS
+async function runAnalysis() {
+  if(!selectedPostcode) {
+    const val = document.getElementById('addrInput').value.trim();
+    if(!val) { alert('Please enter a postcode or address.'); return; }
+    // Try to use as postcode directly
+    selectedPostcode = val.toUpperCase();
+  }
+
+  const purchase = +document.getElementById('purchaseInput').value || 0;
+  const refurb = +document.getElementById('refurbInput').value || 0;
+  const beds = +document.getElementById('bedsInput').value || 3;
+
+  // Show loading
+  document.getElementById('loadingState').style.display = 'block';
+  document.getElementById('resultsSection').style.display = 'none';
+  document.getElementById('analyseBtn').disabled = true;
+
+  const setStep = (n, txt) => {
+    document.getElementById('loadingTxt').textContent = txt;
+    [1,2,3,4].forEach(i => {
+      const el = document.getElementById('step'+i);
+      el.className = 'step-dot' + (i<n?' done':i===n?' active':'');
+    });
+  };
+
+  try {
+    // Step 1: Postcode lookup
+    setStep(1, 'Locating postcode coordinates...');
+    const pcRes = await fetch(`${WORKER}?action=postcode-lookup&postcode=${encodeURIComponent(selectedPostcode)}`);
+    const pcData = await pcRes.json();
+    const pcResult = pcData.result;
+    if(!pcResult) throw new Error(`Postcode ${selectedPostcode} not found. Try a full postcode like SR2 7BH.`);
+
+    const { latitude, longitude } = pcResult;
+
+    // Step 2: Sold prices within radius
+    setStep(2, 'Pulling sold prices from Land Registry (0.5 mile radius)...');
+
+    // Get nearby postcodes first
+    const nearbyRes = await fetch(`${WORKER}?action=postcodes-radius&lat=${latitude}&lon=${longitude}&radius=800`);
+    const nearbyData = await nearbyRes.json();
+    const nearbyPCs = (nearbyData.result || []).map(p => p.postcode).slice(0, 12);
+    if(!nearbyPCs.includes(selectedPostcode)) nearbyPCs.unshift(selectedPostcode);
+
+    // Pull sold prices for each postcode (parallel)
+    const allTrans = [];
+    const fetchPromises = nearbyPCs.slice(0, 8).map(async pc => {
+      try {
+        const r = await fetch(`${WORKER}?action=sold-prices&postcode=${encodeURIComponent(pc)}&limit=30`);
+        const d = await r.json();
+        const items = d?.result?.items || [];
+        items.forEach(item => {
+          const addr = item.propertyAddress || {};
+          const typeUri = (item.propertyType?.['@id']||'').split('/').pop();
+          const typeMap = { terraced:'T', 'semi-detached':'S', detached:'D', 'flat-maisonette':'F' };
+          const typeCode = typeMap[typeUri] || 'O';
+
+          // Calculate distance
+          const itemLat = null; // LR doesn't return lat/lon per transaction
+          const distMiles = pc === selectedPostcode ? 0 :
+            (nearbyData.result||[]).find(p=>p.postcode===pc)?.distance || null;
+
+          allTrans.push({
+            address: [addr.paon, addr.saon, addr.street].filter(Boolean).join(' '),
+            postcode: addr.postcode || pc,
+            price: item.pricePaid,
+            date: item.transactionDate,
+            type: typeCode,
+            typeLabel: TYPE_LABELS[typeCode] || typeUri,
+            newBuild: item.newBuild?.['@id']?.includes('true') || false,
+            distanceMetres: distMiles ? distMiles : (pc === selectedPostcode ? 0 : null),
+          });
+        });
+      } catch(e) {}
+    });
+    await Promise.all(fetchPromises);
+
+    // Sort by date desc
+    allTrans.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+
+    // Step 3: Rental estimate
+    setStep(3, 'Estimating rental value...');
+    const rentRes = await fetch(`${WORKER}?action=postcodes-radius&lat=${latitude}&lon=${longitude}&radius=500`).catch(()=>({json:()=>({})}));
+
+    // Use our rental data
+    const rental = estimateRent(selectedPostcode, beds, selectedType);
+
+    // Step 4: Calculate
+    setStep(4, 'Calculating deal numbers...');
+
+    // GDV from comparables (same type, last 18 months)
+    const cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - 18);
+    const sameType = allTrans.filter(t =>
+      t.type === selectedType &&
+      t.price > 0 &&
+      !t.newBuild &&
+      new Date(t.date) > cutoff
+    );
+    const gdvComps = sameType.length ? sameType : allTrans.filter(t=>t.price>0&&!t.newBuild).slice(0,20);
+    const prices = gdvComps.map(t=>t.price).filter(p=>p>0);
+    const avgPrice = prices.length ? Math.round(prices.reduce((s,p)=>s+p,0)/prices.length) : 0;
+    const medianPrice = prices.length ? [...prices].sort((a,b)=>a-b)[Math.floor(prices.length/2)] : 0;
+
+    // GDV estimate — post-refurb, assume top 30% of recent comparables
+    const sortedPrices = [...prices].sort((a,b)=>a-b);
+    const topThird = sortedPrices.slice(Math.floor(sortedPrices.length*0.6));
+    const gdvEstimate = topThird.length ? Math.round(topThird.reduce((s,p)=>s+p,0)/topThird.length) :
+      avgPrice ? Math.round(avgPrice * 1.12) : (purchase ? Math.round(purchase * 1.35) : 0);
+
+    currentData = {
+      postcode: selectedPostcode,
+      pcResult,
+      purchase, refurb, beds,
+      type: selectedType,
+      allTrans,
+      sameType,
+      gdvEstimate,
+      avgPrice,
+      medianPrice,
+      rental,
+      nearbyPCs,
+      latitude, longitude,
+    };
+
+    renderResults();
+
+  } catch(e) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('analyseBtn').disabled = false;
+    alert('Error: ' + e.message);
+  }
+}
+
+// RENDER ALL RESULTS
+function renderResults() {
+  document.getElementById('loadingState').style.display = 'none';
+  document.getElementById('resultsSection').style.display = 'block';
+  document.getElementById('analyseBtn').disabled = false;
+  recalcBRRR();
+  renderComparables();
+  renderRental();
+  renderLinks();
+  window.scrollTo({ top: document.getElementById('resultsSection').offsetTop - 80, behavior: 'smooth' });
+}
+
+// BRRR CALCULATION
+function recalcBRRR() {
+  if(!currentData) return;
+  const { purchase, refurb, gdvEstimate, rental } = currentData;
+  const ltv = selectedLTV / 100;
+  const rate = +document.getElementById('rateSlider').value / 100;
+  const gdv = +document.getElementById('gdvOverride')?.value || gdvEstimate;
+  const rent = rental.estimate;
+  const costs = 5000; // legal + broker
+  const totalIn = purchase + refurb + costs;
+  const equity = gdv - totalIn;
+  const cashback = gdv * ltv;
+  const locked = Math.max(0, totalIn - cashback);
+  const recycled = Math.min(100, Math.round(cashback / totalIn * 100));
+  const mr = rate / 12, n = 25 * 12;
+  const monthlyMtg = cashback * (mr * Math.pow(1+mr,n)) / (Math.pow(1+mr,n) - 1);
+  const cf = rent - monthlyMtg;
+  const grossYield = gdv > 0 ? (rent * 12 / gdv * 100) : 0;
+  const bmv = purchase > 0 && gdv > 0 ? ((gdv - purchase) / gdv * 100) : 0;
+
+  // Verdict score
+  const score = (equity > 0 ? 1:0) + (locked < 15000 ? 1:0) + (cf > 100 ? 1:0) + (grossYield > 6 ? 1:0) + (bmv > 10 ? 1:0);
+  let icon, title, desc, col, bg;
+  if(score >= 4) { icon='🏆'; title='Excellent Deal'; desc=`Strong equity ${fK(equity)}, ${recycled}% capital recycled, ${fN(cf)}/mo cash flow. This stacks well.`; col='var(--green)'; bg='rgba(64,208,128,.08)'; }
+  else if(score >= 3) { icon='✅'; title='Good Deal'; desc=`Solid numbers. Equity ${fK(equity)}, CF ${fN(cf)}/mo. ${locked<10000?`Only ${fK(locked)} locked in — strong BRRR.`:'Negotiate the price down to improve capital recycling.'}`; col='var(--gold)'; bg='var(--gold-dim)'; }
+  else if(score >= 2) { icon='⚠️'; title='Marginal — Negotiate Harder'; desc=`Try to get purchase price down. Target: BMV >10%, yield >6%, positive CF. Current equity: ${fK(equity)}.`; col='var(--amber)'; bg='rgba(240,160,64,.08)'; }
+  else { icon='❌'; title='Weak Deal — Walk Away'; desc=`Numbers don't stack. ${purchase===0?'Enter a purchase price above.':'Equity '+fK(equity)+', CF '+fN(cf)+'/mo. Too much capital required.'}`; col='var(--red)'; bg='rgba(240,64,64,.08)'; }
+
+  document.getElementById('verdictBox').style.cssText = `background:${bg};border:2px solid ${col};border-radius:var(--r2);padding:18px 22px;display:flex;align-items:center;gap:16px;margin-bottom:20px;`;
+  document.getElementById('verdictBox').innerHTML = `
+    <div class="verdict-icon">${icon}</div>
+    <div>
+      <div class="verdict-title" style="color:${col};">${title}</div>
+      <div class="verdict-desc">${desc}</div>
+    </div>
+    <div style="margin-left:auto;text-align:right;flex-shrink:0;">
+      <div style="font-size:36px;font-weight:800;color:${col};">${score}/5</div>
+      <div style="font-size:10px;color:var(--muted);font-family:var(--mono);">Deal Score</div>
+    </div>`;
+
+  // KPIs
+  document.getElementById('kpiStrip').innerHTML = [
+    { val: fK(equity),    lbl:'Equity Created',    col: equity>0?'var(--green)':'var(--red)',   sub: gdv>0?`${bmv.toFixed(1)}% BMV`:'Enter prices above' },
+    { val: fK(cashback),  lbl:`Cash Back (${selectedLTV}% LTV)`, col:'var(--gold)',    sub: `On GDV of ${fK(gdv)}` },
+    { val: fK(locked),    lbl:'Capital Locked In', col: locked<10000?'var(--green)':locked<20000?'var(--amber)':'var(--red)', sub:`${recycled}% recycled` },
+    { val: fN(cf)+'/mo',  lbl:'Monthly Cash Flow', col: cf>0?'var(--green)':'var(--red)',       sub:`Mtg ${fK(monthlyMtg)}/mo` },
+    { val: grossYield.toFixed(1)+'%', lbl:'Gross Yield', col: grossYield>6?'var(--green)':grossYield>4?'var(--amber)':'var(--red)', sub:'Annual rent / GDV' },
+    { val: fK(totalIn),   lbl:'Total Invested',    col:'var(--amber)',  sub:'Buy + refurb + fees' },
+  ].map(k=>`<div class="kpi-card"><div class="kpi-val" style="color:${k.col};">${k.val}</div><div class="kpi-lbl">${k.lbl}</div><div class="kpi-sub">${k.sub}</div></div>`).join('');
+
+  // BRRR Breakdown
+  document.getElementById('brrr-sub').textContent = `${selectedLTV}% LTV · ${(rate*100).toFixed(1)}% rate`;
+  document.getElementById('brrrBreakdown').innerHTML = `
+    <div style="margin-bottom:12px;">
+      <div class="field-label" style="margin-bottom:6px;">GDV Estimate (editable)</div>
+      <div class="field-prefix">
+        <span style="background:var(--s3);border:1px solid var(--border);border-right:none;border-radius:var(--r) 0 0 var(--r);padding:11px 12px;color:var(--muted);font-size:14px;font-weight:700;">£</span>
+        <input class="field-input" id="gdvOverride" type="number" value="${gdv}" oninput="recalcBRRR()"
+          style="border-radius:0 var(--r) var(--r) 0;border-left:none;color:var(--gold);font-size:16px;font-weight:700;">
+      </div>
+      <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:4px;">
+        Based on ${currentData.sameType.length} ${TYPE_LABELS[selectedType]} comparables in last 18 months. Median: ${fK(currentData.medianPrice)}. You can override.
+      </div>
+    </div>
+    ${[
+      ['Purchase Price', fK(purchase||0), 'var(--red)'],
+      ['Refurb Budget', fK(refurb||0), 'var(--red)'],
+      ['Legal + Broker Fees', '£5,000', 'var(--red)'],
+      ['Total Invested', fK(totalIn), 'var(--red)', true],
+      ['GDV After Refurb', fK(gdv), 'var(--green)'],
+      [`Cash Back (${selectedLTV}% LTV)`, fK(cashback), 'var(--gold)'],
+      ['Capital Locked In', fK(locked), locked<10000?'var(--green)':locked<20000?'var(--amber)':'var(--red)', true],
+      ['Monthly Mortgage', `−${fK(monthlyMtg)}`, 'var(--red)'],
+      ['Monthly Rent', fK(rent), 'var(--green)'],
+      ['Monthly Cash Flow', fN(cf), cf>0?'var(--green)':'var(--red)', true],
+    ].map(([l,v,c,bold])=>`<div class="info-row"><span class="info-label">${l}</span><span class="info-val" style="color:${c};${bold?'font-size:14px;':''}">${v}</span></div>`).join('')}`;
+}
+
+// COMPARABLES
+function renderComparables() {
+  if(!currentData) return;
+  const { allTrans, selectedType: type } = { ...currentData, selectedType };
+
+  // Group by type
+  const byType = {};
+  allTrans.forEach(t => {
+    if(!byType[t.type]) byType[t.type] = [];
+    byType[t.type].push(t);
+  });
+
+  const tabs = Object.keys(byType).sort();
+  const activeTab = byType[selectedType] ? selectedType : tabs[0];
+
+  document.getElementById('compTabs').innerHTML = tabs.map(t => `
+    <button onclick="showCompTab('${t}')" id="comp-tab-${t}"
+      style="font-family:var(--font);font-size:12px;font-weight:600;padding:10px 16px;border:none;background:none;color:${t===activeTab?'var(--gold)':'var(--muted)'};cursor:pointer;border-bottom:2px solid ${t===activeTab?'var(--gold)':'transparent'};white-space:nowrap;flex-shrink:0;transition:all .15s;">
+      ${TYPE_LABELS[t]||t} <span style="font-size:10px;opacity:.6;">(${byType[t].length})</span>
+      ${t===selectedType?'<span style="font-size:9px;color:var(--gold);margin-left:4px;">← yours</span>':''}
+    </button>`).join('');
+
+  window._compByType = byType;
+  showCompTab(activeTab);
+
+  const total = allTrans.length;
+  document.getElementById('compSub').textContent = `${total} transactions · 0.5 mile radius`;
+  document.getElementById('compTitle').textContent = `🏠 Sold Comparables`;
+}
+
+function showCompTab(type) {
+  const byType = window._compByType || {};
+  const items = byType[type] || [];
+
+  // Update tab styles
+  Object.keys(byType).forEach(t => {
+    const tab = document.getElementById('comp-tab-'+t);
+    if(tab) { tab.style.color = t===type?'var(--gold)':'var(--muted)'; tab.style.borderBottom = t===type?'2px solid var(--gold)':'2px solid transparent'; }
+  });
+
+  if(!items.length) {
+    document.getElementById('compContent').innerHTML = `<div style="text-align:center;padding:24px;color:var(--muted);font-family:var(--mono);font-size:12px;">No ${TYPE_LABELS[type]||type} transactions found in this area.<br>Try a wider search or different property type.</div>`;
+    return;
+  }
+
+  // Stats for this type
+  const prices = items.map(t=>t.price).filter(p=>p>0);
+  const avg = prices.length ? Math.round(prices.reduce((s,p)=>s+p,0)/prices.length) : 0;
+  const median = prices.length ? [...prices].sort((a,b)=>a-b)[Math.floor(prices.length/2)] : 0;
+  const min = prices.length ? Math.min(...prices) : 0;
+  const max = prices.length ? Math.max(...prices) : 0;
+
+  // Last 12 months average
+  const cutoff12 = new Date(); cutoff12.setFullYear(cutoff12.getFullYear()-1);
+  const recent = items.filter(t=>new Date(t.date)>cutoff12&&t.price>0);
+  const recentAvg = recent.length ? Math.round(recent.map(t=>t.price).reduce((s,p)=>s+p,0)/recent.length) : 0;
+
+  document.getElementById('compContent').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin-bottom:14px;">
+      ${[
+        ['Avg Price', fK(avg), 'var(--text)'],
+        ['Median', fK(median), 'var(--cyan)'],
+        ['Last 12mo Avg', fK(recentAvg)||'N/A', 'var(--gold)'],
+        ['Range', fK(min)+'–'+fK(max), 'var(--muted)'],
+        ['Sales Found', items.length, 'var(--text)'],
+      ].map(([l,v,c])=>`<div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;"><div style="font-size:14px;font-weight:700;color:${c};">${v}</div><div style="font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;margin-top:2px;">${l}</div></div>`).join('')}
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="comp-table">
+        <thead><tr>
+          <th>Address</th><th>Postcode</th><th>Type</th>
+          <th style="text-align:right">Price</th><th style="text-align:right">Date</th><th>Distance</th>
+        </tr></thead>
+        <tbody>
+          ${items.slice(0,25).map(t=>`<tr>
+            <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${t.address}">${t.address||'—'}</td>
+            <td style="color:var(--gold);">${t.postcode||'—'}</td>
+            <td><span class="type-pill tp-${t.type||'O'}">${TYPE_LABELS[t.type]||t.type||'—'}</span></td>
+            <td style="text-align:right;font-weight:700;color:var(--amber);">${t.price?fK(t.price):'—'}</td>
+            <td style="text-align:right;color:var(--muted);">${fDate(t.date)}</td>
+            <td>${t.distanceMetres!==null&&t.distanceMetres!==undefined?`<span class="dist-badge">${fDist(t.distanceMetres)}</span>`:'—'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// RENTAL
+function estimateRent(postcode, beds, type) {
+  const RENTALS = {
+    SR:{1:520,2:650,3:780,4:950},L:{1:700,2:850,3:1000,4:1250},
+    HU:{1:550,2:680,3:780,4:950},DN:{1:500,2:620,3:720,4:880},
+    TS:{1:540,2:660,3:760,4:930},DL:{1:550,2:680,3:780,4:950},
+    NE:{1:700,2:850,3:980,4:1200},S:{1:650,2:800,3:950,4:1150},
+    LS:{1:750,2:920,3:1100,4:1350},M:{1:800,2:1000,3:1200,4:1450},
+    CV:{1:750,2:900,3:1050,4:1300},ME:{1:850,2:1050,3:1250,4:1500},
+    LU:{1:950,2:1150,3:1400,4:1700},N:{1:1400,2:1750,3:2200,4:2800},
+    EN:{1:1300,2:1600,3:2000,4:2500},E:{1:1500,2:1900,3:2400,4:3000},
+  };
+  const prefix2 = postcode.replace(/\s/g,'').slice(0,2).replace(/\d/g,'');
+  const prefix1 = postcode.slice(0,1);
+  const data = RENTALS[prefix2] || RENTALS[prefix1] || {1:600,2:750,3:900,4:1100};
+  const b = Math.min(4,Math.max(1,beds));
+  const base = data[b];
+  const adj = {T:1.0,S:1.05,D:1.15,F:0.85}[type]||1.0;
+  const est = Math.round(base*adj/25)*25;
+  return { estimate:est, low:Math.round(est*.85/25)*25, high:Math.round(est*1.15/25)*25 };
+}
+
+function renderRental() {
+  if(!currentData) return;
+  const { rental, beds, postcode } = currentData;
+  document.getElementById('rentalPanel').innerHTML = `
+    <div style="text-align:center;margin-bottom:16px;">
+      <div style="font-size:36px;font-weight:800;color:var(--green);">${fK(rental.estimate)}<span style="font-size:16px;color:var(--muted)">/mo</span></div>
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:4px;">Estimated rental — ${beds} bed ${TYPE_LABELS[selectedType]}</div>
+    </div>
+    ${[
+      ['Low estimate', fK(rental.low)+'/mo', 'var(--muted)'],
+      ['Mid estimate', fK(rental.estimate)+'/mo', 'var(--green)'],
+      ['High estimate', fK(rental.high)+'/mo', 'var(--muted)'],
+      ['Annual rent roll', fK(rental.estimate*12), 'var(--gold)'],
+      ['Gross yield (on GDV)', currentData.gdvEstimate>0?(rental.estimate*12/currentData.gdvEstimate*100).toFixed(1)+'%':'—', 'var(--cyan)'],
+    ].map(([l,v,c])=>`<div class="info-row"><span class="info-label">${l}</span><span class="info-val" style="color:${c};">${v}</span></div>`).join('')}
+    <div class="note-box" style="margin-top:14px;font-size:10px;">Based on Rightmove/Zoopla area averages 2026. Verify on Rightmove before committing.</div>`;
+}
+
+function renderLinks() {
+  if(!currentData) return;
+  const { postcode, beds } = currentData;
+  const pc = postcode.toLowerCase().replace(/\s/g,'-');
+  const pcRaw = postcode.replace(/\s/g,'');
+  const beds2 = beds;
+  const typeRM = { T:'houses', S:'houses', D:'houses', F:'flats' }[selectedType]||'houses';
+
+  document.getElementById('linksPanel').innerHTML = `
+    <div style="font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:14px;line-height:1.6;">
+      Verify comparables and rental demand directly on Rightmove. Links pre-filtered for your search criteria.
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      <a class="rm-link" href="https://www.rightmove.co.uk/house-prices/${pc}.html" target="_blank" style="display:block;">🏠 Rightmove Sold Prices — ${postcode}</a>
+      <a class="rm-link" href="https://www.rightmove.co.uk/property-for-sale/find.html?locationIdentifier=POSTCODE%5E${pcRaw}&minBedrooms=${beds2}&maxBedrooms=${beds2}" target="_blank" style="display:block;">💰 For Sale — ${beds} bed near ${postcode}</a>
+      <a class="rm-link" href="https://www.rightmove.co.uk/property-to-rent/find.html?locationIdentifier=POSTCODE%5E${pcRaw}&minBedrooms=${beds2}&maxBedrooms=${beds2}" target="_blank" style="display:block;">🔑 To Rent — ${beds} bed near ${postcode}</a>
+      <a class="rm-link" href="https://www.zoopla.co.uk/house-prices/${pc}/" target="_blank" style="display:block;">🔍 Zoopla Sold Prices — ${postcode}</a>
+      <a class="rm-link" href="https://landregistry.data.gov.uk/app/ppd?et%5B%5D=lrcommon%3AfreeHold&et%5B%5D=lrcommon%3AleaseHold&limit=15&postcode=${encodeURIComponent(postcode)}&ptype%5B%5D=lrcommon%3Aterraced&tc%5B%5D=A&tc%5B%5D=B" target="_blank" style="display:block;">🏛 HM Land Registry — ${postcode}</a>
+    </div>`;
+}
+
+// ADD TO PORTFOLIO
+function addToPortfolio() {
+  if(!currentData) return;
+  const { purchase, refurb, postcode, rental } = currentData;
+  const gdv = +document.getElementById('gdvOverride')?.value || currentData.gdvEstimate;
+  const params = new URLSearchParams({
+    addr: postcode,
+    buy: purchase,
+    ref: refurb,
+    gdv: gdv,
+    rent: rental.estimate,
+  });
+  window.location.href = `index.html?addDeal=1&${params.toString()}`;
+}
+
+function openBOQ() {
+  window.open('boq.html', '_blank');
+}
+</script>
+</body>
+</html>

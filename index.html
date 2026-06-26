@@ -573,6 +573,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
       <button class="tnav-btn" id="tnav-portfolio" onclick="navTo('portfolio')">📊 Portfolio</button>
       <button class="tnav-btn" id="tnav-contractors" onclick="navTo('contractors')">👷 Contractors</button>
       <button class="tnav-btn" id="tnav-property" onclick="navTo('property')" style="display:none">Property</button>
+      <a class="tnav-btn" href="deal.html" target="_blank">🏠 Deal Analyser</a>
       <a class="tnav-btn" href="boq.html" target="_blank">📋 BOQ</a>
     </div>
     <div class="tbar-right">
@@ -1029,8 +1030,10 @@ function renderFinance(){renderPL();}
 
 // DASHBOARD
 async function loadDashboard(){
-  const{data:props}=await sb.from('properties').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
-  const list=props||[];
+  try {
+    const{data:props, error}=await sb.from('properties').select('*').eq('user_id',currentUser.id).order('created_at',{ascending:false});
+    if(error) throw error;
+    const list=props||[];
   const totalEquity=list.reduce((s,p)=>s+(p.gdv-(p.buy_price+p.refurb_budget+5000)),0);
   const totalPortfolio=list.reduce((s,p)=>s+p.gdv,0);
   const totalCF=list.reduce((s,p)=>s+(p.monthly_rent-(p.gdv*.75*.055/12)),0);
@@ -1055,6 +1058,20 @@ async function loadDashboard(){
         </div>
       </div>
     </div>`).join('')+`<div class="add-prop-card" onclick="openAddProp()"><div style="font-size:32px">+</div><div style="font-size:13px;color:var(--muted);font-weight:600">Add Property</div></div>`;
+  } catch(err) {
+    console.error('Dashboard load error:', err);
+    document.getElementById('propsGrid').innerHTML=`<div class="empty" style="grid-column:1/-1">
+      <div class="empty-icon">⚠️</div>
+      <div class="empty-txt">Could not load properties</div>
+      <div class="empty-sub" style="margin-bottom:12px">${err.message||'Database connection issue'}</div>
+      <button class="btn solid" onclick="loadDashboard()">↺ Retry</button>
+    </div>`;
+    document.getElementById('dashStats').innerHTML=`
+      <div class="dstat"><div class="dstat-val">—</div><div class="dstat-lbl">Properties</div></div>
+      <div class="dstat"><div class="dstat-val">—</div><div class="dstat-lbl">Portfolio Value</div></div>
+      <div class="dstat"><div class="dstat-val">—</div><div class="dstat-lbl">Total Equity</div></div>
+      <div class="dstat"><div class="dstat-val">—</div><div class="dstat-lbl">Monthly Cash Flow</div></div>`;
+  }
 }
 
 // PROPERTY
