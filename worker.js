@@ -13,41 +13,37 @@ export default {
 
     const url = new URL(request.url);
     const action = url.searchParams.get('action');
+
     const json = (data, status = 200) => new Response(JSON.stringify(data), {
-      status,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      status, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
-    // ── STATUS ──────────────────────────────────────────
+    // ── STATUS ──────────────────────────────────────────────────────
     if (!action) {
-      return json({ status: 'AURUM Worker v4 — Land Registry + Comparables Ready' });
+      return json({ status: 'AURUM Worker v5 — Land Registry + Rightmove + Zoopla' });
     }
 
-    // ── POSTCODE LOOKUP (postcodes.io) ──────────────────
+    // ── POSTCODE LOOKUP ─────────────────────────────────────────────
     if (action === 'postcode-lookup') {
       const postcode = url.searchParams.get('postcode') || '';
       try {
         const r = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`);
         const d = await r.json();
         return json(d);
-      } catch (e) {
-        return json({ error: e.message }, 500);
-      }
+      } catch (e) { return json({ error: e.message }, 500); }
     }
 
-    // ── POSTCODE AUTOCOMPLETE ────────────────────────────
+    // ── POSTCODE AUTOCOMPLETE ────────────────────────────────────────
     if (action === 'postcode-autocomplete') {
       const q = url.searchParams.get('q') || '';
       try {
         const r = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(q)}/autocomplete`);
         const d = await r.json();
         return json(d);
-      } catch (e) {
-        return json({ error: e.message }, 500);
-      }
+      } catch (e) { return json({ error: e.message }, 500); }
     }
 
-    // ── POSTCODES WITHIN RADIUS ──────────────────────────
+    // ── POSTCODES WITHIN RADIUS ──────────────────────────────────────
     if (action === 'postcodes-radius') {
       const lat = url.searchParams.get('lat');
       const lon = url.searchParams.get('lon');
@@ -56,307 +52,257 @@ export default {
         const r = await fetch(`https://api.postcodes.io/postcodes?lon=${lon}&lat=${lat}&radius=${radius}&limit=100`);
         const d = await r.json();
         return json(d);
-      } catch (e) {
-        return json({ error: e.message }, 500);
-      }
+      } catch (e) { return json({ error: e.message }, 500); }
     }
 
-    // ── LAND REGISTRY SOLD PRICES ────────────────────────
-    // Uses HM Land Registry Price Paid Data (open data, no auth needed)
+    // ── LAND REGISTRY SOLD PRICES ────────────────────────────────────
     if (action === 'sold-prices') {
-      const postcode = (url.searchParams.get('postcode') || '').toUpperCase().trim();
-      const propertyType = url.searchParams.get('type') || ''; // T=Terraced, S=Semi, D=Detached, F=Flat
-      const limit = parseInt(url.searchParams.get('limit') || '50');
+      const postcode = url.searchParams.get('postcode') || '';
+      const limit = url.searchParams.get('limit') || 50;
+      try {
+        const lrUrl = `https://landregistry.data.gov.uk/data/ppi/transaction-record.json?_page=0&_pageSize=${limit}&propertyAddress.postcode=${encodeURIComponent(postcode)}&_sort=-transactionDate`;
+        const r = await fetch(lrUrl, { headers: { 'Accept': 'application/json' } });
+        const d = await r.json();
+        return json(d);
+      } catch (e) { return json({ error: e.message }, 500); }
+    }
+
+    // ── BULK SOLD PRICES ─────────────────────────────────────────────
+    if (action === 'bulk-sold-prices') {
+      const body = await request.json();
+      const postcodes = body.postcodes || [];
+      const results = {};
+      await Promise.all(postcodes.map(async (pc) => {
+        try {
+          const lrUrl = `https://landregistry.data.gov.uk/data/ppi/transaction-record.json?_page=0&_pageSize=30&propertyAddress.postcode=${encodeURIComponent(pc)}&_sort=-transactionDate`;
+          const r = await fetch(lrUrl, { headers: { 'Accept': 'application/json' } });
+          const d = await r.json();
+          const items = d?.result?.items || [];
+          results[pc] = items.map(i => ({
+            address: `${i.propertyAddress?.paon || ''} ${i.propertyAddress?.street || ''}`.trim(),
+            price: i.pricePaid,
+            date: i.transactionDate,
+            type: i.propertyType,
+            postcode: pc
+          }));
+        } catch (e) { results[pc] = []; }
+      }));
+      return json({ results });
+    }
+
+    // ── RIGHTMOVE RENTAL SCRAPE ──────────────────────────────────────
+    // Scrapes Rightmove rental listings for a given postcode + beds
+    if (action === 'rightmove-rents') {
+      const postcode = (url.searchParams.get('postcode') || '').trim().toUpperCase();
+      const beds = url.searchParams.get('beds') || '3';
+      const propType = url.searchParams.get('type') || ''; // houses / flats
 
       if (!postcode) return json({ error: 'postcode required' }, 400);
 
       try {
-        // Land Registry SPARQL endpoint — public, free, no API key
-        let typeFilter = '';
-        if (propertyType) {
-          typeFilter = `FILTER(?propertyType = <http://landregistry.data.gov.uk/def/ppi/propertyType/${
-            propertyType === 'T' ? 'terraced' :
-            propertyType === 'S' ? 'semiDetached' :
-            propertyType === 'D' ? 'detached' :
-            propertyType === 'F' ? 'flatMaisonette' : 'terraced'
-          }>)`;
-        }
-
-        const sparql = `
-          PREFIX ppi: <http://landregistry.data.gov.uk/def/ppi/>
-          PREFIX lrppi: <http://landregistry.data.gov.uk/def/ppi/>
-          PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
-          PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
-          PREFIX sr: <http://data.ordnancesurvey.co.uk/ontology/spatialrelations/>
-          PREFIX lrcommon: <http://landregistry.data.gov.uk/def/common/>
-
-          SELECT ?paon ?saon ?street ?town ?county ?postcode ?amount ?date ?propertyType ?estateType
-          WHERE {
-            ?addr lrcommon:postcode "${postcode}"^^xsd:string .
-            ?transx ppi:propertyAddress ?addr ;
-                    ppi:pricePaid ?amount ;
-                    ppi:transactionDate ?date ;
-                    ppi:propertyType ?propertyType ;
-                    ppi:estateType ?estateType .
-            OPTIONAL { ?addr lrcommon:paon ?paon }
-            OPTIONAL { ?addr lrcommon:saon ?saon }
-            OPTIONAL { ?addr lrcommon:street ?street }
-            OPTIONAL { ?addr lrcommon:town ?town }
-            OPTIONAL { ?addr lrcommon:county ?county }
-            OPTIONAL { ?addr lrcommon:postcode ?postcode }
-            ${typeFilter}
+        // Step 1: Get Rightmove location identifier for postcode
+        const searchUrl = `https://www.rightmove.co.uk/typeAhead/uknoauth?input=${encodeURIComponent(postcode)}&numberOfResults=5`;
+        const searchRes = await fetch(searchUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept': 'application/json',
+            'Referer': 'https://www.rightmove.co.uk/',
           }
-          ORDER BY DESC(?date)
-          LIMIT ${limit}
-        `;
-
-        const r = await fetch(
-          'https://landregistry.data.gov.uk/app/ppd/ppd_data.csv?' +
-          new URLSearchParams({ query: sparql }),
-          { headers: { 'Accept': 'application/sparql-results+json' } }
-        );
-
-        // Try the JSON endpoint
-        const r2 = await fetch(
-          'https://landregistry.data.gov.uk/app/ppd/ppd_data.json?' +
-          new URLSearchParams({ query: sparql })
-        );
-
-        if (r2.ok) {
-          const data = await r2.json();
-          return json({ success: true, source: 'land_registry', data });
-        }
-
-        // Fallback: use the open data API
-        const r3 = await fetch(
-          `https://landregistry.data.gov.uk/data/ppi/transaction-record.json?` +
-          new URLSearchParams({
-            'propertyAddress.postcode': postcode,
-            '_page': '0',
-            '_pageSize': limit.toString(),
-            '_sort': '-transactionDate',
-          })
-        );
-
-        if (r3.ok) {
-          const data = await r3.json();
-          return json({ success: true, source: 'land_registry_api', data });
-        }
-
-        return json({ error: 'Land Registry unavailable', fallback: true }, 503);
-
-      } catch (e) {
-        return json({ error: e.message, fallback: true }, 500);
-      }
-    }
-
-    // ── LAND REGISTRY via linked data API ────────────────
-    if (action === 'sold-prices-v2') {
-      const postcode = (url.searchParams.get('postcode') || '').toUpperCase().replace(/\s/g, '+');
-      const propertyType = url.searchParams.get('type') || '';
-      const limit = url.searchParams.get('limit') || '50';
-
-      try {
-        const typeMap = { T:'terraced', S:'semi-detached', D:'detached', F:'flat-maisonette' };
-        const typeParam = propertyType && typeMap[propertyType] ? `&propertyType=${typeMap[propertyType]}` : '';
-
-        const apiUrl = `https://landregistry.data.gov.uk/data/ppi/transaction-record.json?propertyAddress.postcode=${postcode}${typeParam}&_page=0&_pageSize=${limit}&_sort=-transactionDate`;
-
-        const r = await fetch(apiUrl, {
-          headers: { 'Accept': 'application/json' }
         });
 
-        if (!r.ok) {
-          return json({ error: `Land Registry returned ${r.status}`, fallback: true }, r.status);
+        let locationId = null;
+        if (searchRes.ok) {
+          const searchData = await searchRes.json();
+          const match = (searchData.typeAheadLocations || []).find(l =>
+            l.displayName?.toUpperCase().includes(postcode) || l.locationIdentifier?.includes('POSTCODE')
+          );
+          if (match) locationId = match.locationIdentifier;
         }
 
-        const raw = await r.json();
+        // Step 2: Scrape rental listings
+        const typeParam = propType === 'F' ? '&propertyTypes=flat' : propType === 'T' || propType === 'S' || propType === 'D' ? '&propertyTypes=semi-detached%2Cterraced%2Cdetached' : '';
+        const rmUrl = locationId
+          ? `https://www.rightmove.co.uk/property-to-rent/find.html?locationIdentifier=${encodeURIComponent(locationId)}&minBedrooms=${beds}&maxBedrooms=${beds}${typeParam}&_includeLetAgreed=false&sortType=6`
+          : `https://www.rightmove.co.uk/property-to-rent/find.html?locationIdentifier=POSTCODE%5E${encodeURIComponent(postcode.replace(/\s/g,''))}&minBedrooms=${beds}&maxBedrooms=${beds}${typeParam}&sortType=6`;
 
-        // Parse the results into clean format
-        const items = raw.result?.items || [];
-        const transactions = items.map(item => {
-          const addr = item.propertyAddress || {};
-          const typeUri = (item.propertyType?.['@id'] || '').split('/').pop();
-          const typeLabel = { terraced:'T', 'semi-detached':'S', detached:'D', 'flat-maisonette':'F' }[typeUri] || typeUri;
-          return {
-            price: item.pricePaid,
-            date: item.transactionDate,
-            address: [addr.paon, addr.saon, addr.street].filter(Boolean).join(' '),
-            postcode: addr.postcode,
-            town: addr.town,
-            type: typeLabel,
-            typeLabel: { T:'Terraced', S:'Semi-Detached', D:'Detached', F:'Flat/Maisonette' }[typeLabel] || typeLabel,
-            newBuild: item.newBuild === 'Y',
-            tenure: (item.estateType?.['@id'] || '').split('/').pop(),
-          };
+        const rmRes = await fetch(rmUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml',
+            'Accept-Language': 'en-GB,en;q=0.9',
+            'Referer': 'https://www.rightmove.co.uk/',
+            'Cache-Control': 'no-cache',
+          }
         });
 
-        return json({
-          success: true,
-          postcode: postcode.replace('+', ' '),
-          count: transactions.length,
-          transactions,
-          source: 'hm_land_registry',
-          note: 'HM Land Registry Price Paid Data. Crown Copyright.'
-        });
-
-      } catch (e) {
-        return json({ error: e.message, fallback: true }, 500);
-      }
-    }
-
-    // ── NEARBY SOLD PRICES (radius search) ──────────────
-    if (action === 'nearby-sold') {
-      const postcode = url.searchParams.get('postcode') || '';
-      const propertyType = url.searchParams.get('type') || 'T';
-      const radiusMetres = url.searchParams.get('radius') || '800';
-
-      try {
-        // Step 1: Get lat/lon for postcode
-        const pcRes = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`);
-        const pcData = await pcRes.json();
-
-        if (!pcData.result) {
-          return json({ error: 'Invalid postcode', postcode }, 400);
+        if (!rmRes.ok) {
+          return json({ error: `Rightmove returned ${rmRes.status}`, fallback: true }, 200);
         }
 
-        const { latitude, longitude } = pcData.result;
+        const html = await rmRes.text();
 
-        // Step 2: Get all postcodes within radius
-        const nearbyRes = await fetch(
-          `https://api.postcodes.io/postcodes?lon=${longitude}&lat=${latitude}&radius=${radiusMetres}&limit=20`
-        );
-        const nearbyData = await nearbyRes.json();
-        const nearbyPCs = (nearbyData.result || []).map(p => p.postcode).slice(0, 10);
+        // Extract prices from HTML — Rightmove embeds JSON data in window.jsonModel
+        const prices = [];
+        const addresses = [];
 
-        // Step 3: Get sold prices for each nearby postcode
-        const typeMap = { T:'terraced', S:'semi-detached', D:'detached', F:'flat-maisonette' };
-        const typeParam = typeMap[propertyType] ? `&propertyType=${typeMap[propertyType]}` : '';
-
-        const allTransactions = [];
-        const errors = [];
-
-        // Fetch from Land Registry for each postcode (parallel)
-        const fetches = nearbyPCs.slice(0, 6).map(async pc => {
+        // Method 1: Extract from jsonModel script tag
+        const jsonModelMatch = html.match(/window\.jsonModel\s*=\s*(\{[\s\S]*?\});?\s*<\/script>/);
+        if (jsonModelMatch) {
           try {
-            const pcEncoded = pc.replace(/\s/g, '+');
-            const r = await fetch(
-              `https://landregistry.data.gov.uk/data/ppi/transaction-record.json?propertyAddress.postcode=${pcEncoded}${typeParam}&_page=0&_pageSize=15&_sort=-transactionDate`,
-              { headers: { 'Accept': 'application/json' } }
-            );
-            if (!r.ok) return;
-            const raw = await r.json();
-            const items = raw.result?.items || [];
-            items.forEach(item => {
-              const addr = item.propertyAddress || {};
-              const typeUri = (item.propertyType?.['@id'] || '').split('/').pop();
-              const typeLabel = { terraced:'T', 'semi-detached':'S', detached:'D', 'flat-maisonette':'F' }[typeUri] || 'O';
-              allTransactions.push({
-                price: item.pricePaid,
-                date: item.transactionDate,
-                address: [addr.paon, addr.saon, addr.street].filter(Boolean).join(' '),
-                postcode: addr.postcode || pc,
-                town: addr.town,
-                type: typeLabel,
-                typeLabel: { T:'Terraced', S:'Semi-Detached', D:'Detached', F:'Flat/Maisonette' }[typeLabel] || typeLabel,
-                newBuild: item.newBuild === 'Y',
-                distanceMetres: null, // calculated client side
-              });
+            const jsonModel = JSON.parse(jsonModelMatch[1]);
+            const props = jsonModel?.properties || [];
+            props.forEach(p => {
+              if (p.price?.amount && p.price.amount > 0) {
+                // Rightmove shows weekly or monthly — convert if weekly
+                let monthly = p.price.amount;
+                if (p.price.frequency === 'weekly') monthly = Math.round(monthly * 52 / 12);
+                prices.push(monthly);
+                addresses.push({
+                  address: p.displayAddress || '',
+                  price: monthly,
+                  beds: p.bedrooms,
+                  type: p.propertySubType || p.propertyTypeFullDescription || '',
+                  added: p.addedOrReduced || '',
+                  url: `https://www.rightmove.co.uk${p.propertyUrl || ''}`,
+                });
+              }
             });
-          } catch(e) {
-            errors.push({ pc, error: e.message });
+          } catch (e) {}
+        }
+
+        // Method 2: Regex fallback — extract prices from HTML
+        if (prices.length === 0) {
+          // Match patterns like "£1,250 pcm" or "£1250 per month"
+          const priceRegexPCM = /£([\d,]+)\s*(?:pcm|per\s*month|pm)/gi;
+          const priceRegexPW = /£([\d,]+)\s*(?:pw|per\s*week)/gi;
+          let m;
+          while ((m = priceRegexPCM.exec(html)) !== null) {
+            const p = parseInt(m[1].replace(/,/g, ''));
+            if (p > 200 && p < 20000) prices.push(p);
           }
-        });
+          while ((m = priceRegexPW.exec(html)) !== null) {
+            const p = Math.round(parseInt(m[1].replace(/,/g, '')) * 52 / 12);
+            if (p > 200 && p < 20000) prices.push(p);
+          }
+        }
 
-        await Promise.all(fetches);
+        if (prices.length === 0) {
+          return json({
+            success: false,
+            error: 'No listings found or Rightmove blocked scraping',
+            fallback: true,
+            rightmoveUrl: rmUrl,
+          }, 200);
+        }
 
-        // Sort by date desc
-        allTransactions.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+        // Remove outliers (top and bottom 10%)
+        const sorted = [...prices].sort((a, b) => a - b);
+        const trimStart = Math.floor(sorted.length * 0.1);
+        const trimEnd = Math.ceil(sorted.length * 0.9);
+        const trimmed = sorted.slice(trimStart, trimEnd);
 
-        // Calculate stats
-        const prices = allTransactions.filter(t=>t.price>0).map(t=>t.price);
-        const avgPrice = prices.length ? Math.round(prices.reduce((s,p)=>s+p,0)/prices.length) : 0;
-        const medianPrice = prices.length ? prices.sort((a,b)=>a-b)[Math.floor(prices.length/2)] : 0;
-        const minPrice = prices.length ? Math.min(...prices) : 0;
-        const maxPrice = prices.length ? Math.max(...prices) : 0;
+        const avg = trimmed.length ? Math.round(trimmed.reduce((s, p) => s + p, 0) / trimmed.length / 25) * 25 : 0;
+        const median = trimmed.length ? trimmed[Math.floor(trimmed.length / 2)] : 0;
+        const min = sorted[0];
+        const max = sorted[sorted.length - 1];
 
         return json({
           success: true,
-          searchPostcode: postcode,
-          propertyType: propertyType,
-          searchRadius: `${radiusMetres}m`,
-          centreLatLon: { lat: latitude, lon: longitude },
-          nearbyPostcodes: nearbyPCs,
-          count: allTransactions.length,
-          stats: { avgPrice, medianPrice, minPrice, maxPrice, sampleSize: prices.length },
-          transactions: allTransactions.slice(0, 50),
-          errors,
-          source: 'hm_land_registry',
-          rightmoveUrl: `https://www.rightmove.co.uk/house-prices/${postcode.toLowerCase().replace(/\s/g,'-')}.html`,
-          note: 'HM Land Registry Price Paid Data. Crown Copyright.'
+          postcode,
+          beds: parseInt(beds),
+          listingsFound: prices.length,
+          avgRent: avg,
+          medianRent: median,
+          minRent: min,
+          maxRent: max,
+          listings: addresses.slice(0, 15),
+          allPrices: sorted,
+          rightmoveUrl: rmUrl,
+          source: 'rightmove_live',
+          note: 'Live Rightmove rental listings. Prices in £/month.',
         });
 
       } catch (e) {
-        return json({ error: e.message }, 500);
+        return json({ error: e.message, fallback: true }, 200);
       }
     }
 
-    // ── RENTAL ESTIMATE (based on yield data) ────────────
-    if (action === 'rental-estimate') {
-      const postcode = (url.searchParams.get('postcode') || '').toUpperCase().trim();
-      const beds = parseInt(url.searchParams.get('beds') || '3');
-      const propertyType = url.searchParams.get('type') || 'T';
+    // ── ZOOPLA RENTAL FALLBACK ────────────────────────────────────────
+    if (action === 'zoopla-rents') {
+      const postcode = (url.searchParams.get('postcode') || '').trim().toUpperCase();
+      const beds = url.searchParams.get('beds') || '3';
 
-      // Regional rental data (Rightmove/Zoopla averages 2026)
-      const RENTAL_DATA = {
-        // Format: postcode_prefix: { 1bed, 2bed, 3bed, 4bed }
-        'SR': { 1:520, 2:650, 3:780, 4:950 },
-        'L':  { 1:700, 2:850, 3:1000, 4:1250 },
-        'HU': { 1:550, 2:680, 3:780, 4:950 },
-        'DN': { 1:500, 2:620, 3:720, 4:880 },
-        'TS': { 1:540, 2:660, 3:760, 4:930 },
-        'DL': { 1:550, 2:680, 3:780, 4:950 },
-        'NE': { 1:700, 2:850, 3:980, 4:1200 },
-        'S':  { 1:650, 2:800, 3:950, 4:1150 },
-        'LS': { 1:750, 2:920, 3:1100, 4:1350 },
-        'M':  { 1:800, 2:1000, 3:1200, 4:1450 },
-        'CV': { 1:750, 2:900, 3:1050, 4:1300 },
-        'ME': { 1:850, 2:1050, 3:1250, 4:1500 },
-        'LU': { 1:950, 2:1150, 3:1400, 4:1700 },
-        'N':  { 1:1400, 2:1750, 3:2200, 4:2800 },
-        'EN': { 1:1300, 2:1600, 3:2000, 4:2500 },
-        'E':  { 1:1500, 2:1900, 3:2400, 4:3000 },
-        'SE': { 1:1400, 2:1800, 3:2200, 4:2800 },
-        'SW': { 1:1500, 2:1900, 3:2400, 4:3000 },
-        'W':  { 1:1600, 2:2000, 3:2500, 4:3200 },
-        'WC': { 1:1800, 2:2200, 3:2800, 4:3500 },
-        'EC': { 1:1800, 2:2200, 3:2800, 4:3500 },
-      };
+      try {
+        const pcSlug = postcode.toLowerCase().replace(/\s/g, '-');
+        const zUrl = `https://www.zoopla.co.uk/to-rent/property/${pcSlug}/?beds_min=${beds}&beds_max=${beds}&results_sort=newest_listings&search_source=to-rent`;
 
-      const prefix2 = postcode.slice(0,2).replace(/\d/g,'');
-      const prefix1 = postcode.slice(0,1);
-      const data = RENTAL_DATA[prefix2] || RENTAL_DATA[prefix1] || { 1:600, 2:750, 3:900, 4:1100 };
-      const clampedBeds = Math.min(4, Math.max(1, beds));
-      const baseRent = data[clampedBeds];
+        const zRes = await fetch(zUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+            'Accept': 'text/html',
+            'Accept-Language': 'en-GB,en;q=0.9',
+            'Referer': 'https://www.zoopla.co.uk/',
+          }
+        });
 
-      // Type adjustment
-      const typeAdj = { T:1.0, S:1.05, D:1.15, F:0.85 };
-      const estimatedRent = Math.round(baseRent * (typeAdj[propertyType]||1.0) / 25) * 25;
+        if (!zRes.ok) return json({ error: `Zoopla ${zRes.status}`, fallback: true }, 200);
 
-      return json({
-        success: true,
-        postcode,
-        beds,
-        propertyType,
-        estimatedMonthlyRent: estimatedRent,
-        estimatedAnnualRent: estimatedRent * 12,
-        range: { low: Math.round(estimatedRent*0.85/25)*25, high: Math.round(estimatedRent*1.15/25)*25 },
-        source: 'rightmove_zoopla_averages_2026',
-        rightmoveRentUrl: `https://www.rightmove.co.uk/property-to-rent/find.html?locationIdentifier=POSTCODE%5E${encodeURIComponent(postcode)}&maxBedrooms=${beds}&minBedrooms=${beds}`,
-      });
+        const html = await zRes.text();
+        const prices = [];
+
+        // Extract from __NEXT_DATA__ JSON
+        const nextDataMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+        if (nextDataMatch) {
+          try {
+            const nextData = JSON.parse(nextDataMatch[1]);
+            const listings = nextData?.props?.pageProps?.regularListingsFormatted ||
+                             nextData?.props?.pageProps?.listings?.regular || [];
+            listings.forEach(l => {
+              const p = l.price || l.rentPerMonth || l.pricing?.label;
+              if (typeof p === 'number' && p > 200 && p < 20000) prices.push(p);
+              if (typeof p === 'string') {
+                const n = parseInt(p.replace(/[£,]/g, ''));
+                if (n > 200 && n < 20000) prices.push(n);
+              }
+            });
+          } catch (e) {}
+        }
+
+        // Regex fallback
+        if (prices.length === 0) {
+          const priceRegex = /£([\d,]+)\s*(?:pcm|per\s*month|pm)/gi;
+          let m;
+          while ((m = priceRegex.exec(html)) !== null) {
+            const p = parseInt(m[1].replace(/,/g, ''));
+            if (p > 200 && p < 20000) prices.push(p);
+          }
+        }
+
+        if (!prices.length) return json({ error: 'No Zoopla listings found', fallback: true }, 200);
+
+        const sorted = [...prices].sort((a, b) => a - b);
+        const avg = Math.round(sorted.reduce((s, p) => s + p, 0) / sorted.length / 25) * 25;
+        const median = sorted[Math.floor(sorted.length / 2)];
+
+        return json({
+          success: true,
+          postcode,
+          beds: parseInt(beds),
+          listingsFound: prices.length,
+          avgRent: avg,
+          medianRent: median,
+          minRent: sorted[0],
+          maxRent: sorted[sorted.length - 1],
+          allPrices: sorted,
+          zooplaUrl: zUrl,
+          source: 'zoopla_live',
+        });
+      } catch (e) {
+        return json({ error: e.message, fallback: true }, 200);
+      }
     }
 
-    // ── ANTHROPIC AI PROXY (existing) ───────────────────
+    // ── ANTHROPIC PROXY ──────────────────────────────────────────────
     if (request.method === 'POST') {
       try {
         const body = await request.json();
@@ -366,17 +312,17 @@ export default {
           headers: {
             'Content-Type': 'application/json',
             'x-api-key': apiKey,
-            'anthropic-version': request.headers.get('anthropic-version') || '2023-06-01',
+            'anthropic-version': '2023-06-01',
           },
-          body: JSON.stringify(body),
+          body: JSON.stringify(body)
         });
         const data = await r.json();
         return json(data, r.status);
-      } catch (e) {
-        return json({ error: e.message }, 500);
+      } catch (err) {
+        return json({ error: err.message }, 500);
       }
     }
 
-    return json({ error: 'Unknown action', availableActions: ['postcode-lookup','postcode-autocomplete','postcodes-radius','sold-prices-v2','nearby-sold','rental-estimate'] }, 400);
+    return json({ error: 'Unknown action' }, 400);
   }
 };

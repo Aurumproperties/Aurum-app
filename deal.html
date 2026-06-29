@@ -349,16 +349,35 @@ function handleAddrInput(val) {
   const confirm = document.getElementById('addrConfirm');
   confirm.style.display = 'none';
   selectedPostcode = '';
-
   if(val.length < 2) { drop.style.display = 'none'; return; }
 
-  // Check if it looks like a postcode
-  const pcReg = /^[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9]?[A-Z]{0,2}$/i;
-  if(pcReg.test(val.trim())) {
-    addrTimer = setTimeout(()=>lookupPostcode(val.trim()), 300);
-  } else {
-    addrTimer = setTimeout(()=>autocompletePostcode(val.trim()), 400);
+  // Extract postcode from full address (e.g. "42 Cranleigh Road / TW13 4QD" or "TW134QD")
+  const pcRegex = /\b([A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2})\b/i;
+  const pcMatch = val.match(pcRegex);
+  if(pcMatch) {
+    const extracted = pcMatch[1].replace(/\s/g,'').toUpperCase();
+    // Format: add space before last 3 chars
+    const formatted = extracted.slice(0,-3) + ' ' + extracted.slice(-3);
+    addrTimer = setTimeout(()=>lookupPostcode(formatted), 200);
+    return;
   }
+
+  // Check if it looks like postcode prefix
+  const prefixReg = /^[A-Z]{1,2}[0-9][0-9A-Z]?$/i;
+  if(prefixReg.test(val.trim())) {
+    addrTimer = setTimeout(()=>autocompletePostcode(val.trim()), 300);
+    return;
+  }
+
+  // Full postcode check
+  const fullReg = /^[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}$/i;
+  if(fullReg.test(val.trim())) {
+    addrTimer = setTimeout(()=>lookupPostcode(val.trim()), 200);
+    return;
+  }
+
+  // Otherwise autocomplete
+  addrTimer = setTimeout(()=>autocompletePostcode(val.trim()), 400);
 }
 
 async function lookupPostcode(pc) {
@@ -436,12 +455,25 @@ function updateLiveCalc() {
 
 // MAIN ANALYSIS
 async function runAnalysis() {
-  if(!selectedPostcode) {
+  let pc = selectedPostcode;
+
+  if(!pc) {
     const val = document.getElementById('addrInput').value.trim();
     if(!val) { alert('Please enter a postcode or address.'); return; }
-    // Try to use as postcode directly
-    selectedPostcode = val.toUpperCase();
+
+    // Try to extract postcode from whatever they typed
+    const pcRegex = /\b([A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2})\b/i;
+    const pcMatch = val.match(pcRegex);
+    if(pcMatch) {
+      const extracted = pcMatch[1].replace(/\s/g,'').toUpperCase();
+      pc = extracted.slice(0,-3) + ' ' + extracted.slice(-3);
+    } else {
+      // Use as-is and let the API handle it
+      pc = val.toUpperCase().trim();
+    }
   }
+
+  selectedPostcode = pc;
 
   const purchase = +document.getElementById('purchaseInput').value || 0;
   const refurb = +document.getElementById('refurbInput').value || 0;
@@ -515,12 +547,64 @@ async function runAnalysis() {
     // Sort by date desc
     allTrans.sort((a,b) => (b.date||'').localeCompare(a.date||''));
 
-    // Step 3: Rental estimate
-    setStep(3, 'Estimating rental value...');
-    const rentRes = await fetch(`${WORKER}?action=postcodes-radius&lat=${latitude}&lon=${longitude}&radius=500`).catch(()=>({json:()=>({})}));
+    // Step 3: Get LIVE rental data from Rightmove
+    setStep(3, 'Fetching live rental prices from Rightmove...');
+    let rental = null;
 
-    // Use our rental data
-    const rental = estimateRent(selectedPostcode, beds, selectedType);
+    try {
+      const rmRes = await fetch(
+        `${WORKER}?action=rightmove-rents&postcode=${encodeURIComponent(selectedPostcode)}&beds=${beds}&type=${selectedType}`
+      );
+      const rmData = await rmRes.json();
+
+      if (rmData.success && rmData.listingsFound > 0) {
+        rental = {
+          estimate: rmData.medianRent || rmData.avgRent,
+          avg: rmData.avgRent,
+          median: rmData.medianRent,
+          low: rmData.minRent,
+          high: rmData.maxRent,
+          listings: rmData.listings || [],
+          allPrices: rmData.allPrices || [],
+          count: rmData.listingsFound,
+          source: 'Rightmove Live',
+          rightmoveUrl: rmData.rightmoveUrl,
+          prefix: selectedPostcode,
+          live: true,
+        };
+      }
+    } catch (e) {}
+
+    // Fallback: try Zoopla
+    if (!rental) {
+      try {
+        const zRes = await fetch(
+          `${WORKER}?action=zoopla-rents&postcode=${encodeURIComponent(selectedPostcode)}&beds=${beds}`
+        );
+        const zData = await zRes.json();
+        if (zData.success && zData.listingsFound > 0) {
+          rental = {
+            estimate: zData.medianRent || zData.avgRent,
+            avg: zData.avgRent,
+            median: zData.medianRent,
+            low: zData.minRent,
+            high: zData.maxRent,
+            allPrices: zData.allPrices || [],
+            count: zData.listingsFound,
+            source: 'Zoopla Live',
+            zooplaUrl: zData.zooplaUrl,
+            prefix: selectedPostcode,
+            live: true,
+          };
+        }
+      } catch (e) {}
+    }
+
+    // Final fallback: local data
+    if (!rental) {
+      const local = estimateRent(selectedPostcode, beds, selectedType);
+      rental = { ...local, live: false, source: 'AURUM Local Estimates 2026' };
+    }
 
     // Step 4: Calculate
     setStep(4, 'Calculating deal numbers...');
@@ -748,42 +832,339 @@ function showCompTab(type) {
 
 // RENTAL
 function estimateRent(postcode, beds, type) {
+  // Accurate UK rental data by postcode prefix — Rightmove/Zoopla 2026
+  // Format: prefix: [1bed, 2bed, 3bed, 4bed, 5bed]
   const RENTALS = {
-    SR:{1:520,2:650,3:780,4:950},L:{1:700,2:850,3:1000,4:1250},
-    HU:{1:550,2:680,3:780,4:950},DN:{1:500,2:620,3:720,4:880},
-    TS:{1:540,2:660,3:760,4:930},DL:{1:550,2:680,3:780,4:950},
-    NE:{1:700,2:850,3:980,4:1200},S:{1:650,2:800,3:950,4:1150},
-    LS:{1:750,2:920,3:1100,4:1350},M:{1:800,2:1000,3:1200,4:1450},
-    CV:{1:750,2:900,3:1050,4:1300},ME:{1:850,2:1050,3:1250,4:1500},
-    LU:{1:950,2:1150,3:1400,4:1700},N:{1:1400,2:1750,3:2200,4:2800},
-    EN:{1:1300,2:1600,3:2000,4:2500},E:{1:1500,2:1900,3:2400,4:3000},
+    // LONDON — full postcodes
+    'EC':  [2200,3000,4200,5500,7000],
+    'WC':  [2200,3000,4200,5500,7000],
+    'E1':  [2000,2800,3800,5000,6500],
+    'E2':  [2000,2800,3800,5000,6500],
+    'E3':  [1700,2300,3200,4200,5500],
+    'E4':  [1400,1900,2600,3400,4500],
+    'E5':  [1500,2100,2900,3800,5000],
+    'E6':  [1300,1800,2500,3200,4200],
+    'E7':  [1400,1900,2700,3500,4600],
+    'E8':  [1800,2600,3600,4800,6200],
+    'E9':  [1700,2400,3300,4400,5700],
+    'E10': [1300,1800,2500,3300,4300],
+    'E11': [1300,1800,2500,3300,4300],
+    'E13': [1300,1800,2500,3200,4200],
+    'E15': [1500,2100,2900,3800,5000],
+    'E16': [1500,2100,2900,3800,5000],
+    'E17': [1400,1900,2700,3500,4600],
+    'N1':  [2000,2800,3900,5200,6800],
+    'N4':  [1700,2400,3300,4400,5800],
+    'N7':  [1800,2500,3500,4600,6000],
+    'N8':  [1700,2300,3200,4300,5600],
+    'N15': [1400,1900,2700,3500,4600],
+    'N17': [1300,1800,2500,3200,4200],
+    'N22': [1400,1900,2700,3500,4600],
+    'NW1': [2200,3100,4300,5700,7500],
+    'NW2': [1700,2400,3300,4400,5800],
+    'NW3': [2500,3500,4800,6500,8500],
+    'NW6': [1900,2700,3700,5000,6500],
+    'NW10':[1500,2100,2900,3800,5000],
+    'SE1': [2200,3000,4200,5500,7200],
+    'SE4': [1700,2300,3200,4200,5500],
+    'SE5': [1700,2400,3300,4400,5700],
+    'SE8': [1700,2400,3300,4400,5700],
+    'SE13':[1600,2200,3000,4000,5200],
+    'SE14':[1700,2400,3300,4400,5700],
+    'SE15':[1700,2400,3300,4400,5700],
+    'SE17':[1800,2500,3500,4700,6100],
+    'SE18':[1400,1900,2700,3600,4700],
+    'SE22':[1900,2700,3700,5000,6500],
+    'SE23':[1700,2300,3200,4300,5600],
+    'SW1': [3500,5000,7500,10000,15000],
+    'SW2': [1800,2500,3500,4700,6100],
+    'SW4': [2000,2900,4000,5300,7000],
+    'SW6': [2400,3300,4600,6200,8000],
+    'SW8': [1900,2700,3700,5000,6500],
+    'SW9': [1900,2700,3700,5000,6500],
+    'SW11':[2200,3100,4300,5800,7500],
+    'SW12':[2000,2900,4000,5300,7000],
+    'SW16':[1600,2200,3000,4000,5200],
+    'SW17':[1700,2300,3200,4300,5600],
+    'SW18':[1900,2700,3700,5000,6500],
+    'W1':  [3000,4500,6500,9000,13000],
+    'W2':  [2500,3600,5000,6800,9000],
+    'W6':  [2200,3100,4300,5700,7500],
+    'W11': [2800,4000,5600,7500,10000],
+    'W12': [1900,2700,3700,5000,6500],
+    'W14': [2000,2900,4000,5300,7000],
+    // LONDON OUTER / COMMUTER
+    'TW': [1400,1850,2400,3200,4200],  // Twickenham, Richmond area
+    'TW1':[1600,2200,3000,4000,5200],
+    'TW2':[1500,2000,2800,3700,4800],
+    'TW3':[1500,2000,2700,3600,4700],
+    'TW4':[1400,1900,2600,3400,4500],
+    'TW7':[1600,2200,3000,4000,5200],
+    'TW8':[1700,2400,3200,4300,5600],
+    'TW9':[1900,2700,3700,5000,6500],
+    'TW10':[1800,2500,3500,4700,6100],
+    'TW11':[1500,2000,2800,3700,4800],
+    'TW12':[1400,1900,2700,3500,4600],
+    'TW13':[1300,1750,2350,3100,4000],
+    'TW14':[1300,1750,2350,3100,4000],
+    'TW15':[1350,1800,2450,3250,4200],
+    'TW16':[1350,1800,2500,3300,4300],
+    'TW17':[1300,1750,2400,3200,4100],
+    'TW18':[1350,1800,2500,3300,4300],
+    'KT': [1500,2000,2800,3800,5000],
+    'KT1':[1800,2500,3500,4700,6100],
+    'KT2':[1900,2700,3700,5000,6500],
+    'KT3':[1700,2300,3200,4300,5600],
+    'KT6':[1800,2500,3400,4600,6000],
+    'KT9':[1500,2100,2900,3900,5100],
+    'KT10':[1900,2600,3600,4800,6300],
+    'KT12':[1600,2200,3000,4000,5200],
+    'SM': [1400,1900,2600,3500,4600],
+    'CR': [1300,1750,2400,3200,4200],
+    'BR': [1300,1750,2400,3200,4200],
+    'RM': [1200,1650,2300,3000,4000],
+    'IG': [1200,1650,2300,3000,4000],
+    'HA': [1300,1800,2500,3300,4300],
+    'UB': [1300,1800,2500,3300,4300],
+    'SL': [1200,1700,2350,3100,4000],
+    'EN': [1300,1800,2500,3300,4300],
+    'WD': [1300,1800,2500,3300,4300],
+    'AL': [1200,1650,2300,3000,4000],
+    // SOUTH EAST
+    'GU': [1100,1500,2100,2800,3700],
+    'RH': [1000,1400,1950,2600,3400],
+    'RG': [1000,1400,1900,2500,3300],
+    'OX': [1100,1500,2100,2800,3700],
+    'MK': [900, 1200,1700,2300,3000],
+    'LU': [950, 1300,1800,2400,3100],
+    'SG': [1000,1400,1950,2600,3400],
+    'HP': [1100,1500,2100,2800,3700],
+    'ME': [850, 1150,1600,2100,2800],
+    'CT': [750, 1000,1400,1900,2500],
+    'TN': [850, 1150,1600,2100,2800],
+    'BN': [950, 1300,1800,2400,3100],
+    'PO': [850, 1150,1600,2100,2800],
+    'SO': [900, 1200,1700,2300,3000],
+    'SP': [800, 1050,1450,1950,2500],
+    'GU11':[900,1250,1750,2350,3050],
+    // SOUTH WEST
+    'BS': [900, 1250,1750,2350,3050],
+    'BA': [850, 1150,1600,2150,2800],
+    'SN': [750, 1000,1400,1900,2500],
+    'GL': [850, 1150,1600,2150,2800],
+    'HR': [700, 950, 1300,1750,2300],
+    'EX': [750, 1000,1400,1850,2400],
+    'PL': [700, 950, 1300,1750,2300],
+    'TR': [750, 1000,1400,1850,2400],
+    'TA': [700, 950, 1300,1750,2300],
+    'DT': [750, 1000,1400,1850,2400],
+    'BH': [900, 1200,1700,2250,2950],
+    // EAST OF ENGLAND
+    'CB': [1000,1400,1950,2600,3400],
+    'PE': [750, 1000,1400,1850,2400],
+    'IP': [800, 1100,1500,2000,2600],
+    'NR': [750, 1000,1400,1850,2400],
+    'CO': [850, 1150,1600,2150,2800],
+    'SS': [950, 1300,1800,2400,3100],
+    'CM': [1000,1400,1950,2600,3400],
+    // EAST MIDLANDS
+    'LE': [800, 1050,1450,1950,2550],
+    'NG': [800, 1050,1450,1950,2550],
+    'DE': [750, 1000,1400,1850,2400],
+    'LN': [650, 850, 1200,1600,2100],
+    'NN': [750, 1000,1400,1850,2400],
+    // WEST MIDLANDS
+    'B':  [800, 1050,1500,2000,2600],
+    'B1': [900, 1250,1750,2350,3050],
+    'B4': [900, 1250,1750,2350,3050],
+    'CV': [850, 1150,1600,2150,2800],
+    'WS': [750, 1000,1400,1850,2400],
+    'WV': [700, 950, 1350,1800,2350],
+    'DY': [700, 950, 1350,1800,2350],
+    'ST': [650, 900, 1250,1650,2150],
+    'WR': [750, 1000,1400,1850,2400],
+    // YORKSHIRE
+    'LS': [800, 1050,1500,2000,2600],
+    'LS1':[950, 1300,1850,2450,3200],
+    'BD': [650, 850, 1200,1600,2100],
+    'HX': [650, 850, 1200,1600,2100],
+    'WF': [650, 850, 1200,1600,2100],
+    'HU': [600, 800, 1100,1500,1950],
+    'YO': [750, 1000,1400,1850,2400],
+    'DN': [600, 800, 1100,1500,1950],
+    'S':  [700, 950, 1350,1800,2350],
+    'S1': [800, 1100,1550,2050,2700],
+    // NORTH WEST
+    'M':  [850, 1150,1650,2200,2900],
+    'M1': [1000,1400,2000,2700,3500],
+    'M2': [1000,1400,2000,2700,3500],
+    'M4': [950, 1300,1850,2450,3200],
+    'M14':[800, 1100,1550,2050,2700],
+    'M20':[950, 1300,1850,2450,3200],
+    'SK': [800, 1050,1500,2000,2600],
+    'L':  [750, 1000,1400,1900,2500],
+    'L1': [900, 1250,1750,2350,3050],
+    'WA': [750, 1000,1450,1950,2550],
+    'WN': [650, 850, 1200,1600,2100],
+    'BL': [650, 850, 1200,1600,2100],
+    'OL': [650, 850, 1200,1600,2100],
+    'PR': [700, 950, 1350,1800,2350],
+    'BB': [600, 800, 1100,1500,1950],
+    'FY': [600, 800, 1100,1500,1950],
+    'LA': [650, 850, 1200,1600,2100],
+    // NORTH EAST
+    'NE': [650, 850, 1200,1600,2100],
+    'NE1':[800, 1100,1550,2050,2700],
+    'SR': [550, 700, 1000,1350,1750],
+    'TS': [550, 700, 1000,1350,1750],
+    'DH': [550, 700, 1000,1350,1750],
+    'DL': [600, 800, 1100,1500,1950],
+    // WALES
+    'CF': [750, 1000,1400,1850,2400],
+    'SA': [650, 850, 1200,1600,2100],
+    'LD': [550, 700, 1000,1350,1750],
+    'LL': [650, 850, 1200,1600,2100],
+    'NP': [700, 950, 1350,1800,2350],
+    // SCOTLAND
+    'EH': [950, 1300,1800,2400,3100],
+    'G':  [850, 1150,1600,2150,2800],
+    'G1': [1000,1400,1950,2600,3400],
+    'AB': [750, 1000,1400,1850,2400],
+    'DD': [650, 850, 1200,1600,2100],
+    'PH': [600, 800, 1100,1500,1950],
+    'KY': [650, 850, 1200,1600,2100],
+    // NORTHERN IRELAND
+    'BT': [600, 800, 1100,1500,1950],
   };
-  const prefix2 = postcode.replace(/\s/g,'').slice(0,2).replace(/\d/g,'');
-  const prefix1 = postcode.slice(0,1);
-  const data = RENTALS[prefix2] || RENTALS[prefix1] || {1:600,2:750,3:900,4:1100};
-  const b = Math.min(4,Math.max(1,beds));
+
+  // Smart lookup — try most specific first (e.g. TW13), then TW1, then TW
+  const pc = postcode.replace(/\s/g,'').toUpperCase();
+  let data = null;
+
+  // Try 4-char prefix (e.g. TW13)
+  if(pc.length>=4) data = RENTALS[pc.slice(0,4)];
+  // Try 3-char prefix (e.g. TW1)
+  if(!data&&pc.length>=3) data = RENTALS[pc.slice(0,3)];
+  // Try 2-char prefix (e.g. TW)
+  if(!data&&pc.length>=2) data = RENTALS[pc.slice(0,2)];
+  // Try 1-char prefix (e.g. T — fallback)
+  if(!data&&pc.length>=1) data = RENTALS[pc.slice(0,1)];
+  // Last resort national average
+  if(!data) data = [750,1000,1400,1850,2400];
+
+  const b = Math.min(5, Math.max(1, beds)) - 1; // 0-indexed
   const base = data[b];
-  const adj = {T:1.0,S:1.05,D:1.15,F:0.85}[type]||1.0;
-  const est = Math.round(base*adj/25)*25;
-  return { estimate:est, low:Math.round(est*.85/25)*25, high:Math.round(est*1.15/25)*25 };
+
+  // Property type adjustment
+  const typeAdj = { T:1.0, S:1.08, D:1.20, F:0.85 };
+  const est = Math.round(base * (typeAdj[type]||1.0) / 25) * 25;
+
+  return {
+    estimate: est,
+    low:  Math.round(est * 0.88 / 25) * 25,
+    high: Math.round(est * 1.12 / 25) * 25,
+    source: 'Rightmove/Zoopla 2026',
+    prefix: pc.slice(0,4),
+  };
 }
 
 function renderRental() {
   if(!currentData) return;
   const { rental, beds, postcode } = currentData;
+  const pcRaw = postcode.replace(/\s/g,'');
+  const liveBadge = rental.live
+    ? `<span style="background:rgba(64,208,128,.12);border:1px solid rgba(64,208,128,.3);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;color:var(--green);font-family:var(--mono);">🟢 LIVE ${rental.source}</span>`
+    : `<span style="background:var(--s3);border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:10px;font-weight:600;color:var(--muted);font-family:var(--mono);">📊 ${rental.source}</span>`;
+
   document.getElementById('rentalPanel').innerHTML = `
-    <div style="text-align:center;margin-bottom:16px;">
-      <div style="font-size:36px;font-weight:800;color:var(--green);">${fK(rental.estimate)}<span style="font-size:16px;color:var(--muted)">/mo</span></div>
-      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:4px;">Estimated rental — ${beds} bed ${TYPE_LABELS[selectedType]}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono);">Monthly Rent — <span style="color:var(--gold);">EDIT if needed</span></div>
+      ${liveBadge}
     </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <span style="font-size:24px;color:var(--muted);font-weight:700;">£</span>
+      <input type="number" id="rentOverride" value="${rental.estimate}" step="25"
+        style="background:var(--s2);border:2px solid var(--gold);border-radius:var(--r);padding:10px 14px;color:var(--green);font-family:var(--font);font-size:28px;font-weight:800;outline:none;width:160px;letter-spacing:-.5px;"
+        oninput="updateRentOverride(+this.value)">
+      <span style="font-size:16px;color:var(--muted);">/mo</span>
+    </div>
+    ${rental.live && rental.count ? `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <div style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;text-align:center;flex:1;min-width:80px;">
+        <div style="font-size:14px;font-weight:700;color:var(--text);">${rental.count}</div>
+        <div style="font-size:9px;color:var(--muted);font-family:var(--mono);">Listings</div>
+      </div>
+      <div style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;text-align:center;flex:1;min-width:80px;">
+        <div style="font-size:14px;font-weight:700;color:var(--cyan);">£${(rental.avg||0).toLocaleString()}</div>
+        <div style="font-size:9px;color:var(--muted);font-family:var(--mono);">Avg/mo</div>
+      </div>
+      <div style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;text-align:center;flex:1;min-width:80px;">
+        <div style="font-size:14px;font-weight:700;color:var(--gold);">£${(rental.median||0).toLocaleString()}</div>
+        <div style="font-size:9px;color:var(--muted);font-family:var(--mono);">Median/mo</div>
+      </div>
+      <div style="background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:6px 12px;text-align:center;flex:1;min-width:80px;">
+        <div style="font-size:14px;font-weight:700;color:var(--muted);">£${(rental.low||0).toLocaleString()}–£${(rental.high||0).toLocaleString()}</div>
+        <div style="font-size:9px;color:var(--muted);font-family:var(--mono);">Range</div>
+      </div>
+    </div>` : `
+    <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:8px;">
+      Estimated range: <span style="color:var(--text);">£${(rental.low||0).toLocaleString()} – £${(rental.high||0).toLocaleString()}/mo</span>
+    </div>`}
+    ${rental.listings && rental.listings.length ? `
+    <div style="margin-bottom:12px;">
+      <div style="font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono);margin-bottom:6px;">Live Listings from Rightmove</div>
+      <div style="max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r);">
+        ${rental.listings.map(l=>`
+          <a href="${l.url||'#'}" target="_blank" style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border);text-decoration:none;transition:background .1s;" onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+            <div style="font-size:11px;color:var(--text);font-family:var(--mono);">${l.address||'—'}</div>
+            <div style="font-size:12px;font-weight:700;color:var(--green);font-family:var(--mono);flex-shrink:0;margin-left:12px;">£${(l.price||0).toLocaleString()}/mo</div>
+          </a>`).join('')}
+      </div>
+    </div>` : ''}
     ${[
-      ['Low estimate', fK(rental.low)+'/mo', 'var(--muted)'],
-      ['Mid estimate', fK(rental.estimate)+'/mo', 'var(--green)'],
-      ['High estimate', fK(rental.high)+'/mo', 'var(--muted)'],
-      ['Annual rent roll', fK(rental.estimate*12), 'var(--gold)'],
-      ['Gross yield (on GDV)', currentData.gdvEstimate>0?(rental.estimate*12/currentData.gdvEstimate*100).toFixed(1)+'%':'—', 'var(--cyan)'],
-    ].map(([l,v,c])=>`<div class="info-row"><span class="info-label">${l}</span><span class="info-val" style="color:${c};">${v}</span></div>`).join('')}
-    <div class="note-box" style="margin-top:14px;font-size:10px;">Based on Rightmove/Zoopla area averages 2026. Verify on Rightmove before committing.</div>`;
+      ['Annual Rent Roll', '£'+(rental.estimate*12).toLocaleString(), 'var(--gold)', 'annualRent'],
+      ['Gross Yield (on GDV)', '—', 'var(--cyan)', 'grossYieldRent'],
+      ['Net Yield (est. -25% costs)', '—', 'var(--muted)', 'netYieldRent'],
+      ['Monthly Mortgage', '—', 'var(--red)', 'monthlyMtgRent'],
+      ['Monthly Cash Flow', '—', 'var(--green)', 'mthCFRent'],
+    ].map(([l,v,c,id])=>`<div class="info-row"><span class="info-label">${l}</span><span class="info-val" style="color:${c};" id="${id}">${v}</span></div>`).join('')}
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:12px;">
+      <a href="${rental.rightmoveUrl || `https://www.rightmove.co.uk/property-to-rent/find.html?locationIdentifier=POSTCODE%5E${pcRaw}&minBedrooms=${beds}&maxBedrooms=${beds}`}" target="_blank"
+        style="display:block;font-size:12px;padding:9px 14px;border-radius:8px;background:var(--s2);border:1px solid var(--border);color:var(--gold);text-decoration:none;font-family:var(--mono);text-align:center;transition:all .15s;"
+        onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+        🏠 Rightmove — ${beds} bed rentals near ${postcode} ↗
+      </a>
+      <a href="https://www.zoopla.co.uk/to-rent/property/${postcode.toLowerCase().replace(/\s/g,'-')}/?beds_min=${beds}&beds_max=${beds}" target="_blank"
+        style="display:block;font-size:12px;padding:9px 14px;border-radius:8px;background:var(--s2);border:1px solid var(--border);color:var(--muted);text-decoration:none;font-family:var(--mono);text-align:center;transition:all .15s;"
+        onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+        🔍 Zoopla — ${beds} bed rentals near ${postcode} ↗
+      </a>
+    </div>`;
+  updateRentOverride(rental.estimate);
+}
+
+function updateRentOverride(rent) {
+  if(!currentData) return;
+  currentData.rental.estimate = rent;
+  const gdv = +document.getElementById('gdvOverride')?.value || currentData.gdvEstimate;
+  const rate = +document.getElementById('rateSlider')?.value / 100 || 0.055;
+  const ltv = selectedLTV / 100;
+  const cashback = gdv * ltv;
+  const mr = rate/12, n = 25*12;
+  const monthlyMtg = cashback * (mr*Math.pow(1+mr,n)) / (Math.pow(1+mr,n)-1);
+  const cf = rent - monthlyMtg;
+  const grossYield = gdv > 0 ? (rent*12/gdv*100) : 0;
+  const netYield = gdv > 0 ? (rent*12*0.75/gdv*100) : 0;
+
+  const el = id => document.getElementById(id);
+  if(el('annualRent')) el('annualRent').textContent = '£'+(rent*12).toLocaleString();
+  if(el('grossYieldRent')) { el('grossYieldRent').textContent = grossYield.toFixed(1)+'%'; el('grossYieldRent').style.color = grossYield>6?'var(--green)':grossYield>4?'var(--amber)':'var(--red)'; }
+  if(el('netYieldRent')) el('netYieldRent').textContent = netYield.toFixed(1)+'%';
+  if(el('monthlyMtgRent')) el('monthlyMtgRent').textContent = '−£'+Math.round(monthlyMtg).toLocaleString();
+  if(el('mthCFRent')) { el('mthCFRent').textContent = (cf>=0?'+':'')+'£'+Math.round(cf).toLocaleString()+'/mo'; el('mthCFRent').style.color = cf>0?'var(--green)':'var(--red)'; }
+
+  // Also update the main BRRR calc
+  recalcBRRR();
 }
 
 function renderLinks() {
