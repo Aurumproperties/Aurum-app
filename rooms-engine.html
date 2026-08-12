@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURUM — Room Cost Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080808;--s1:#101010;--s2:#181818;--s3:#222;
+  --border:#2a2a2a;--border2:#3a3a3a;
+  --gold:#f0c040;--gold2:#c89820;
+  --gold-dim:rgba(240,192,64,.08);--gold-border:rgba(240,192,64,.2);
+  --cyan:#40e0d0;--red:#f04040;--amber:#f0a040;--green:#40d080;
+  --text:#f0ede6;--muted:#808070;--dim:#404038;
+  --font:'Inter',sans-serif;--mono:'DM Mono',monospace;
+  --r:10px;--r2:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font);}
+.topbar{height:52px;background:rgba(8,8,8,.97);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:100;}
+.logo{font-size:18px;font-weight:800;color:var(--gold);text-decoration:none;}
+.btn{font-family:var(--font);font-size:12px;font-weight:600;padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:5px;}
+.btn:hover{border-color:var(--border2);color:var(--text);}
+.btn.gold{border-color:var(--gold);color:var(--gold);}
+.btn.gold:hover{background:var(--gold);color:#000;}
+.btn.solid{background:var(--gold);color:#000;border-color:var(--gold);font-weight:700;}
+.btn.solid:hover{background:var(--gold2);}
+.main{max-width:1200px;margin:0 auto;padding:24px;}
+
+/* ROOM CARDS */
+.rooms-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-bottom:24px;}
+.room-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;}
+.room-header{background:var(--s2);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);}
+.room-name{background:none;border:none;color:var(--text);font-family:var(--font);font-size:14px;font-weight:700;outline:none;width:160px;}
+.room-body{padding:16px;}
+.dims-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+.dim-field{display:flex;flex-direction:column;gap:3px;}
+.dim-label{font-size:9px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);}
+.dim-input{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--gold);font-family:var(--mono);font-size:15px;font-weight:700;outline:none;text-align:center;width:100%;}
+.dim-input:focus{border-color:var(--gold);}
+.calcs-strip{background:var(--s2);border-radius:var(--r);padding:8px 12px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;}
+.calc-item{text-align:center;}
+.calc-val{font-size:13px;font-weight:700;color:var(--cyan);font-family:var(--mono);}
+.calc-lbl{font-size:8px;color:var(--dim);font-family:var(--mono);text-transform:uppercase;margin-top:1px;}
+.room-type-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;}
+.rtype-btn{font-size:10px;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--s2);color:var(--muted);cursor:pointer;transition:all .15s;font-family:var(--mono);}
+.rtype-btn.on{border-color:var(--gold-border);background:var(--gold-dim);color:var(--gold);}
+.room-total{display:flex;justify-content:space-between;align-items:center;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);padding:8px 12px;}
+.room-total-val{font-size:16px;font-weight:800;color:var(--gold);font-family:var(--mono);}
+.room-total-lbl{font-size:10px;color:var(--muted);font-family:var(--mono);}
+.add-room-btn{background:var(--s1);border:2px dashed var(--border);border-radius:var(--r2);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:200px;cursor:pointer;transition:all .2s;gap:8px;}
+.add-room-btn:hover{border-color:var(--gold);background:var(--gold-dim);}
+
+/* BREAKDOWN PANEL */
+.breakdown{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:16px;}
+.breakdown-head{background:var(--s2);padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.breakdown-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:8px;}
+.breakdown-total{font-size:14px;font-weight:700;color:var(--gold);font-family:var(--mono);}
+.cost-table{width:100%;border-collapse:collapse;}
+.cost-table thead th{padding:7px 14px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono);}
+.cost-table thead th.r{text-align:right;}
+.cost-table tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+.cost-table tbody tr:hover{background:rgba(255,255,255,.02);}
+.cost-table td{padding:8px 14px;font-size:12px;font-family:var(--mono);}
+.cost-table td.r{text-align:right;}
+.cost-table td.desc-td{font-family:var(--font);font-size:12px;font-weight:500;}
+.row-subtotal td{background:var(--s2);font-weight:700;border-top:2px solid var(--border2)!important;}
+.editable-input{background:var(--s3);border:1px solid var(--border);border-radius:4px;padding:3px 7px;color:var(--cyan);font-family:var(--mono);font-size:11px;font-weight:600;width:70px;outline:none;text-align:right;}
+.editable-input:focus{border-color:var(--cyan);}
+.rate-input{color:var(--amber);}
+.rate-input:focus{border-color:var(--amber);}
+
+/* PROGRAMME */
+.prog-phase{display:flex;align-items:center;border-bottom:1px solid var(--border);min-height:38px;}
+.prog-label{width:200px;flex-shrink:0;padding:6px 14px;border-right:1px solid var(--border);}
+.prog-name{font-size:11px;font-weight:600;}
+.prog-meta{font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:1px;}
+.prog-track{flex:1;position:relative;height:38px;overflow:hidden;}
+.prog-bar{position:absolute;height:22px;top:8px;border-radius:4px;display:flex;align-items:center;padding:0 7px;font-size:10px;font-weight:600;cursor:pointer;white-space:nowrap;}
+
+/* SUMMARY */
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:20px;}
+.sum-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;}
+.sum-val{font-size:22px;font-weight:700;letter-spacing:-.3px;}
+.sum-lbl{font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-top:3px;}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:24px;width:100%;max-width:380px;}
+.modal-title{font-size:16px;font-weight:800;color:var(--gold);margin-bottom:16px;}
+.form-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;display:block;margin-top:10px;}
+.form-input{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;}
+.form-input:focus{border-color:var(--gold);}
+.modal-btns{display:flex;gap:8px;margin-top:16px;justify-content:flex-end;}
+
+.note{background:var(--gold-dim);border:1px dashed var(--gold-border);border-radius:var(--r);padding:10px 14px;font-size:11px;color:var(--muted);font-family:var(--mono);margin-bottom:16px;line-height:1.6;}
+.note strong{color:var(--gold);}
+
+@media(max-width:640px){.main{padding:14px;}.rooms-wrap{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="logo" href="index.html">AURUM</a>
+  <div style="font-size:11px;color:var(--muted);font-family:var(--mono);">// Room Cost Engine · Materials + Labour + Programme</div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn" onclick="clearAll()">↺ Reset</button>
+    <button class="btn gold" onclick="exportExcel()">📊 Excel</button>
+    <button class="btn solid" onclick="generateAll()">⚡ Generate All Rooms</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+    <div>
+      <div style="font-size:22px;font-weight:800;">Room <span style="color:var(--gold);">Cost Engine</span></div>
+      <div style="font-size:12px;color:var(--muted);font-family:var(--mono);margin-top:3px;">Enter room dimensions → automatic materials, labour, programme. All rates amendable.</div>
+    </div>
+    <button class="btn solid" onclick="openAddRoom()" style="padding:10px 24px;font-size:13px;">+ Add Room</button>
+  </div>
+
+  <div class="note">
+    📐 <strong>Just enter L × W × H</strong> — AURUM calculates wall area (net of doors/windows), floor, ceiling, perimeter automatically.
+    All quantities and rates are <strong>fully editable</strong>. BCIS 2026 rates used as defaults.
+  </div>
+
+  <!-- ROOMS GRID -->
+  <div class="rooms-wrap" id="roomsWrap"></div>
+
+  <!-- PROJECT SUMMARY -->
+  <div id="projectSummary" style="display:none;">
+    <div style="font-size:16px;font-weight:700;margin-bottom:14px;">Project <span style="color:var(--gold);">Summary</span></div>
+    <div class="summary-grid" id="summaryStrip"></div>
+
+    <!-- MATERIALS BREAKDOWN -->
+    <div class="breakdown" id="materialsBreakdown">
+      <div class="breakdown-head">
+        <div class="breakdown-title">🪚 Materials — All Rooms</div>
+        <div class="breakdown-total" id="matTotal">£0</div>
+      </div>
+      <div style="overflow-x:auto;"><table class="cost-table" id="matTable">
+        <thead><tr>
+          <th style="width:180px;">Room</th>
+          <th>Item</th>
+          <th class="r" style="width:60px;">Unit</th>
+          <th class="r" style="width:80px;">Qty</th>
+          <th class="r" style="width:90px;">Rate £</th>
+          <th class="r" style="width:100px;">Total £</th>
+        </tr></thead>
+        <tbody id="matBody"></tbody>
+      </table></div>
+    </div>
+
+    <!-- LABOUR BREAKDOWN -->
+    <div class="breakdown" id="labourBreakdown">
+      <div class="breakdown-head">
+        <div class="breakdown-title">👷 Labour — By Trade</div>
+        <div class="breakdown-total" id="labTotal">£0</div>
+      </div>
+      <div style="overflow-x:auto;"><table class="cost-table" id="labTable">
+        <thead><tr>
+          <th style="width:180px;">Room</th>
+          <th>Trade</th>
+          <th class="r" style="width:90px;">Days</th>
+          <th class="r" style="width:110px;">Day Rate £</th>
+          <th class="r" style="width:100px;">Total £</th>
+        </tr></thead>
+        <tbody id="labBody"></tbody>
+      </table></div>
+    </div>
+
+    <!-- PROGRAMME -->
+    <div class="breakdown">
+      <div class="breakdown-head">
+        <div class="breakdown-title">📅 Build Programme</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <div style="font-size:11px;color:var(--muted);font-family:var(--mono);">Start:</div>
+          <input type="date" id="progStart" style="background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:5px 9px;color:var(--text);font-family:var(--mono);font-size:11px;outline:none;" oninput="renderProgramme()">
+        </div>
+      </div>
+      <div style="padding:14px 18px;display:flex;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--border);" id="progSummaryStrip"></div>
+      <div style="overflow-x:auto;"><div id="progChart"></div></div>
+      <div style="overflow-x:auto;margin-top:0;">
+        <table style="width:100%;border-collapse:collapse;min-width:700px;">
+          <thead><tr style="background:var(--s2);">
+            <th style="padding:8px 14px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">#</th>
+            <th style="padding:8px 14px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Phase</th>
+            <th style="padding:8px 14px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Trade</th>
+            <th style="padding:8px 14px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Days</th>
+            <th style="padding:8px 14px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Workers</th>
+            <th style="padding:8px 14px;text-align:right;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Labour £</th>
+            <th style="padding:8px 14px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Start</th>
+            <th style="padding:8px 14px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:var(--mono);">Finish</th>
+          </tr></thead>
+          <tbody id="progTable"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- GRAND TOTAL -->
+    <div style="background:var(--gold-dim);border:2px solid var(--gold-border);border-radius:var(--r2);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+      <div>
+        <div style="font-size:15px;font-weight:800;color:var(--gold);">GRAND TOTAL — All Rooms</div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:3px;">Materials + Labour · BCIS 2026 rates · Exc. VAT</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-size:32px;font-weight:800;color:var(--gold);" id="grandTotal">£0</div>
+        <div style="font-size:12px;color:var(--green);font-family:var(--mono);" id="grandTotalVAT">Inc. VAT: £0</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD ROOM MODAL -->
+<div class="modal-bg" id="addModal" style="display:none;">
+  <div class="modal">
+    <div class="modal-title">+ Add Room</div>
+    <label class="form-label">Room Name</label>
+    <input class="form-input" id="nr-name" placeholder="Living Room, Kitchen, Bedroom 1...">
+    <label class="form-label">Room Type</label>
+    <select class="form-input" id="nr-type">
+      <option value="living">Living Room</option>
+      <option value="kitchen">Kitchen</option>
+      <option value="bedroom">Bedroom</option>
+      <option value="bathroom">Bathroom / WC</option>
+      <option value="hallway">Hallway / Landing</option>
+      <option value="other">Other</option>
+    </select>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px;">
+      <div><label class="form-label">Length (m)</label><input class="form-input" id="nr-l" type="number" step=".1" placeholder="4.5"></div>
+      <div><label class="form-label">Width (m)</label><input class="form-input" id="nr-w" type="number" step=".1" placeholder="3.8"></div>
+      <div><label class="form-label">Height (m)</label><input class="form-input" id="nr-h" type="number" step=".1" placeholder="2.4" value="2.4"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn solid" onclick="saveRoom()">Add Room</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+let rooms = [];
+let progPhases = [];
+
+// ROOM TYPES config
+const ROOM_CFG = {
+  living:   {icon:'🛋', doors:1, windows:2, sockets:8,  lights:4,  hasToilet:false, hasBath:false, hasKitch:false},
+  kitchen:  {icon:'🍳', doors:1, windows:1, sockets:8,  lights:3,  hasToilet:false, hasBath:false, hasKitch:true},
+  bedroom:  {icon:'🛏', doors:1, windows:1, sockets:8,  lights:3,  hasToilet:false, hasBath:false, hasKitch:false},
+  bathroom: {icon:'🚿', doors:1, windows:1, sockets:2,  lights:2,  hasToilet:true,  hasBath:true,  hasKitch:false},
+  hallway:  {icon:'🚪', doors:0, windows:0, sockets:4,  lights:3,  hasToilet:false, hasBath:false, hasKitch:false},
+  other:    {icon:'📦', doors:1, windows:1, sockets:8,  lights:3,  hasToilet:false, hasBath:false, hasKitch:false},
+};
+
+// BCIS 2026 RATES
+const MAT_RATES = {
+  plasterboard_fix:  {name:'Plasterboard 12.5mm fix to walls',         unit:'m²', rate:8.50},
+  plaster_skim:      {name:'Plaster skim coat (walls)',                 unit:'m²', rate:4.00},
+  plasterboard_ceil: {name:'Plasterboard 12.5mm fix to ceiling',        unit:'m²', rate:9.20},
+  plaster_skim_ceil: {name:'Plaster skim coat (ceiling)',               unit:'m²', rate:4.50},
+  coving:            {name:'Coving/cornice 90mm (supply only)',          unit:'ml', rate:3.80},
+  skirting:          {name:'MDF skirting board 100mm (supply only)',    unit:'ml', rate:4.20},
+  door_int:          {name:'Internal door + lining (supply only)',      unit:'nr', rate:185},
+  door_ironmongery:  {name:'Door ironmongery — handles, hinges, latch',unit:'nr', rate:42},
+  socket_mat:        {name:'Double socket outlet (material only)',      unit:'nr', rate:18},
+  light_point_mat:   {name:'Light point + fitting (material only)',     unit:'nr', rate:32},
+  paint_walls:       {name:'Emulsion paint walls 2 coats (material)',   unit:'m²', rate:2.80},
+  paint_ceil:        {name:'Emulsion paint ceiling 2 coats (material)', unit:'m²', rate:2.80},
+  paint_wood:        {name:'Gloss paint woodwork (material)',           unit:'ml', rate:1.80},
+  floor_laminate:    {name:'Laminate 8mm AC4 (supply only)',            unit:'m²', rate:12.50},
+  floor_underlay:    {name:'Underlay for laminate (supply only)',       unit:'m²', rate:3.20},
+  floor_carpet:      {name:'Carpet + underlay (supply only)',           unit:'m²', rate:14.00},
+  floor_tile_mat:    {name:'Porcelain floor tile 600mm (supply only)',  unit:'m²', rate:22.00},
+  wall_tile_mat:     {name:'Ceramic wall tile (supply only)',           unit:'m²', rate:18.00},
+  tile_adhesive:     {name:'Tile adhesive + grout (material)',          unit:'m²', rate:5.50},
+  insul_ceil:        {name:'Ceiling insulation mineral wool 100mm',     unit:'m²', rate:8.00},
+  insul_stud:        {name:'Stud wall insulation mineral wool 75mm',    unit:'m²', rate:6.50},
+  vapour_barrier:    {name:'Vapour barrier (material)',                  unit:'m²', rate:1.80},
+  batten_ceil:       {name:'Timber batten 50×25mm (ceiling)',           unit:'ml', rate:2.20},
+  stud_work:         {name:'Timber stud 100×50mm CLS (partition)',      unit:'ml', rate:4.50},
+  rad_mat:           {name:'Radiator 600×900mm double panel (supply)',  unit:'nr', rate:145},
+  pipe_mat:          {name:'Copper pipe 15mm (material)',               unit:'ml', rate:4.80},
+};
+
+const LAB_RATES = {
+  builder:     {trade:'Builder / Labourer',    rate:220, col:'#f04040'},
+  electrician: {trade:'Electrician',           rate:320, col:'#d4f244'},
+  plasterer:   {trade:'Plasterer',             rate:280, col:'#9040f0'},
+  decorator:   {trade:'Painter & Decorator',  rate:220, col:'#40d080'},
+  tiler:       {trade:'Tiler',                rate:260, col:'#40d0b0'},
+  carpenter:   {trade:'Carpenter / Joiner',   rate:260, col:'#8060cc'},
+  plumber:     {trade:'Plumber',              rate:300, col:'#40a0f0'},
+};
+
+// PROGRAMME PHASES — fixed sequence
+const PROG_DEFS = [
+  {id:'strip',    name:'Strip Out & Demolition',   trade:'builder',     col:'#f04040', minW:2},
+  {id:'timbers',  name:'Timber Works / Studwork',  trade:'carpenter',   col:'#8060cc', minW:1},
+  {id:'insul',    name:'Insulation',               trade:'builder',     col:'#40a0f0', minW:1},
+  {id:'ff_elec',  name:'First Fix Electrics',      trade:'electrician', col:'#d4f244', minW:1},
+  {id:'ff_plumb', name:'First Fix Plumbing',       trade:'plumber',     col:'#40d0b0', minW:1},
+  {id:'plaster',  name:'Plasterwork',              trade:'plasterer',   col:'#9040f0', minW:2},
+  {id:'dry',      name:'⏳ Drying Time (min 7 days)',trade:'—',         col:'#404038', minW:0},
+  {id:'tiling',   name:'Tiling',                   trade:'tiler',       col:'#f040c0', minW:1},
+  {id:'sf_elec',  name:'Second Fix Electrics',     trade:'electrician', col:'#d4f244', minW:1},
+  {id:'sf_plumb', name:'Second Fix Plumbing',      trade:'plumber',     col:'#40d0b0', minW:1},
+  {id:'carpentry',name:'Carpentry & Joinery',      trade:'carpenter',   col:'#8060cc', minW:1},
+  {id:'flooring', name:'Flooring',                 trade:'builder',     col:'#80c080', minW:1},
+  {id:'decorating',name:'Painting & Decorating',  trade:'decorator',   col:'#f0c080', minW:1},
+  {id:'snag',     name:'Snagging & Clean',         trade:'builder',     col:'#40e0d0', minW:1},
+];
+
+function uid(){return Math.random().toString(36).slice(2,8);}
+
+// ── ROOM RENDERING ──────────────────────────────────────
+function renderRooms(){
+  const wrap = document.getElementById('roomsWrap');
+  wrap.innerHTML = rooms.map((r,i) => {
+    const cfg = ROOM_CFG[r.type]||ROOM_CFG.other;
+    const l=+r.l||0, w=+r.w||0, h=+r.h||2.4;
+    const floor = +(l*w).toFixed(2);
+    const perim = +(2*(l+w)).toFixed(1);
+    const wallGross = perim*h;
+    const wallNet = +(Math.max(0, wallGross - cfg.doors*0.9*2.1 - cfg.windows*1.2*1.2)).toFixed(1);
+    const ceil = floor;
+    const cost = calcRoomTotal(r);
+    return `<div class="room-card">
+      <div class="room-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:18px;">${cfg.icon}</span>
+          <input class="room-name" value="${r.name}" onchange="rooms[${i}].name=this.value;renderRooms();">
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <select style="background:var(--s1);border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--muted);font-family:var(--mono);font-size:10px;outline:none;" onchange="rooms[${i}].type=this.value;renderRooms();">
+            ${Object.entries(ROOM_CFG).map(([k,v])=>`<option value="${k}" ${r.type===k?'selected':''}>${v.icon} ${k.charAt(0).toUpperCase()+k.slice(1)}</option>`).join('')}
+          </select>
+          <button onclick="rooms.splice(${i},1);renderRooms();generateAll();" style="background:none;border:none;color:var(--dim);cursor:pointer;font-size:13px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--dim)'">✕</button>
+        </div>
+      </div>
+      <div class="room-body">
+        <div class="dims-row">
+          <div class="dim-field"><div class="dim-label">Length (m)</div><input class="dim-input" type="number" step=".1" placeholder="0.0" value="${r.l||''}" oninput="rooms[${i}].l=+this.value;renderRooms();generateAll();"></div>
+          <div class="dim-field"><div class="dim-label">Width (m)</div><input class="dim-input" type="number" step=".1" placeholder="0.0" value="${r.w||''}" oninput="rooms[${i}].w=+this.value;renderRooms();generateAll();"></div>
+          <div class="dim-field"><div class="dim-label">Height (m)</div><input class="dim-input" type="number" step=".1" placeholder="2.4" value="${r.h||2.4}" oninput="rooms[${i}].h=+this.value;renderRooms();generateAll();"></div>
+        </div>
+        ${l&&w?`<div class="calcs-strip">
+          <div class="calc-item"><div class="calc-val">${floor}</div><div class="calc-lbl">m² floor</div></div>
+          <div class="calc-item"><div class="calc-val">${wallNet}</div><div class="calc-lbl">m² wall net</div></div>
+          <div class="calc-item"><div class="calc-val">${ceil}</div><div class="calc-lbl">m² ceiling</div></div>
+          <div class="calc-item"><div class="calc-val">${perim}</div><div class="calc-lbl">ml perim</div></div>
+        </div>
+        <div class="room-total">
+          <div><div class="room-total-lbl">Estimated Total (Mat + Lab)</div></div>
+          <div class="room-total-val">${cost>0?'£'+cost.toLocaleString():'Enter dims'}</div>
+        </div>` : '<div style="text-align:center;padding:12px;font-size:11px;color:var(--dim);font-family:var(--mono);">Enter dimensions above to calculate costs</div>'}
+      </div>
+    </div>`;
+  }).join('') + `<div class="add-room-btn" onclick="openAddRoom()">
+    <div style="font-size:28px;">+</div>
+    <div style="font-size:12px;color:var(--muted);font-weight:600;">Add Room</div>
+  </div>`;
+}
+
+// ── CALCULATE ROOM QUANTITIES ────────────────────────────
+function calcRoomQty(r) {
+  const cfg = ROOM_CFG[r.type]||ROOM_CFG.other;
+  const l=+r.l||0, w=+r.w||0, h=+r.h||2.4;
+  if(!l||!w) return null;
+  const floor = l*w;
+  const perim = 2*(l+w);
+  const wallGross = perim*h;
+  const wallNet = Math.max(0, wallGross - cfg.doors*0.9*2.1 - cfg.windows*1.2*1.2);
+  const ceil = floor;
+  const skirtingMl = Math.max(0, perim - cfg.doors*0.9);
+  const covingMl = perim;
+  const isBath = r.type==='bathroom';
+  const isKitch = r.type==='kitchen';
+  const isBed = r.type==='bedroom';
+  return {
+    floor, perim, wallNet, ceil, skirtingMl, covingMl, h,
+    sockets: cfg.sockets,
+    lights: cfg.lights,
+    doors: cfg.doors,
+    windows: cfg.windows,
+    isBath, isKitch, isBed,
+    wallTile: isBath ? wallNet : isKitch ? Math.min(4, wallNet*0.25) : 0,
+    floorTile: (isBath||isKitch) ? floor : 0,
+    paintWall: isBath ? 0 : wallNet,
+    paintCeil: isBath ? 0 : ceil,
+    floorLam: (!isBath&&!isKitch&&!isBed) ? floor : 0,
+    floorCarpet: isBed ? floor : 0,
+  };
+}
+
+// ── GENERATE MATERIALS FOR A ROOM ───────────────────────
+function getRoomMaterials(r) {
+  const q = calcRoomQty(r);
+  if(!q) return [];
+  const items = [];
+  const add = (key, qty, override) => {
+    const def = MAT_RATES[key];
+    if(!def||qty<=0) return;
+    const rate = override||def.rate;
+    items.push({key, name:def.name, unit:def.unit, qty:+qty.toFixed(2), rate, total:Math.round(qty*rate)});
+  };
+
+  // STRIP OUT (no material cost — labour only)
+
+  // TIMBERS / STUDWORK
+  add('batten_ceil', q.ceil);
+  add('vapour_barrier', q.ceil + q.wallNet);
+  if(q.isBath) add('stud_work', q.perim*0.5);
+
+  // INSULATION
+  add('insul_ceil', q.ceil);
+  if(!q.isBath) add('insul_stud', q.wallNet*0.15);
+
+  // PLASTERWORK
+  if(!q.isBath) {
+    add('plasterboard_fix', q.wallNet);
+    add('plaster_skim', q.wallNet);
+  }
+  add('plasterboard_ceil', q.ceil);
+  add('plaster_skim_ceil', q.ceil);
+
+  // TILING
+  if(q.wallTile>0) { add('wall_tile_mat', q.wallTile); add('tile_adhesive', q.wallTile); }
+  if(q.floorTile>0) { add('floor_tile_mat', q.floorTile); add('tile_adhesive', q.floorTile*0.5); }
+
+  // ELECTRICS (materials only)
+  add('socket_mat', q.sockets);
+  add('light_point_mat', q.lights);
+
+  // CARPENTRY / JOINERY
+  if(q.doors>0) { add('door_int', q.doors); add('door_ironmongery', q.doors); }
+  add('skirting', q.skirtingMl);
+  add('coving', q.covingMl);
+
+  // FLOORING
+  if(q.floorLam>0) { add('floor_laminate', q.floorLam*1.1); add('floor_underlay', q.floorLam*1.1); }
+  if(q.floorCarpet>0) add('floor_carpet', q.floorCarpet*1.1);
+
+  // DECORATING (materials)
+  if(q.paintWall>0) add('paint_walls', q.paintWall);
+  if(q.paintCeil>0) add('paint_ceil', q.paintCeil);
+  add('paint_wood', q.skirtingMl + q.doors*2*(2.1+0.9)*2);
+
+  return items;
+}
+
+// ── GENERATE LABOUR FOR A ROOM ───────────────────────────
+function getRoomLabour(r) {
+  const q = calcRoomQty(r);
+  if(!q) return [];
+  const sf = Math.max(1, q.floor/12); // scale factor
+  const items = [];
+  const add = (trade, days, notes) => {
+    if(days<=0) return;
+    const d = Math.max(0.5, +days.toFixed(1));
+    const lr = LAB_RATES[trade];
+    items.push({trade, tradeName:lr.trade, days:d, rate:lr.rate, total:Math.round(d*lr.rate), notes, col:lr.col});
+  };
+
+  add('builder',     1.0*sf,        'Strip out, remove plaster, clear rubbish');
+  add('carpenter',   0.5*sf,        'Timber battens, noggins, studwork');
+  add('builder',     0.3*sf,        'Insulation fitting');
+  add('electrician', q.isBath?0.5:1.5, 'First fix: cabling, back boxes, consumer unit (per room allowance)');
+  if(q.isBath||q.isKitch) add('plumber', q.isBath?1.5:0.5, 'First fix pipework');
+  add('plasterer',   (q.wallNet/10 + q.ceil/8)*sf, 'Plasterboard and skim walls + ceiling');
+  // Drying time — no labour
+  if(q.wallTile>0) add('tiler', q.wallTile/4, 'Wall tiling to bathroom/kitchen');
+  if(q.floorTile>0) add('tiler', q.floorTile/5, 'Floor tiling');
+  add('electrician', 0.5,           'Second fix: sockets, switches, light fittings');
+  if(q.isBath) add('plumber', 1.0,  'Second fix: sanitary ware, connections');
+  if(q.isKitch) add('plumber', 0.5, 'Second fix: sink, connections');
+  if(q.doors>0) add('carpenter', q.doors*0.5, 'Hang doors, fit linings, skirting, architrave');
+  if(q.floorLam>0) add('builder', q.floor/16, 'Lay laminate flooring');
+  if(q.floorCarpet>0) add('builder', q.floor/18, 'Lay carpet');
+  add('decorator',   (q.paintWall/16 + q.paintCeil/14), 'Paint walls + ceiling 2 coats');
+  add('builder',     0.5,           'Snagging and final clean');
+
+  return items;
+}
+
+function calcRoomTotal(r) {
+  const mats = getRoomMaterials(r).reduce((s,i)=>s+i.total,0);
+  const lab = getRoomLabour(r).reduce((s,i)=>s+i.total,0);
+  return mats + lab;
+}
+
+// ── GENERATE ALL ROOMS ────────────────────────────────────
+function generateAll() {
+  const hasRooms = rooms.some(r=>r.l&&r.w);
+  document.getElementById('projectSummary').style.display = hasRooms ? 'block' : 'none';
+  if(!hasRooms) return;
+
+  // Summary strip
+  let totalMat=0, totalLab=0;
+  rooms.forEach(r => {
+    totalMat += getRoomMaterials(r).reduce((s,i)=>s+i.total,0);
+    totalLab += getRoomLabour(r).reduce((s,i)=>s+i.total,0);
+  });
+  const grand = totalMat + totalLab;
+  document.getElementById('summaryStrip').innerHTML = [
+    {v:'£'+totalMat.toLocaleString(), l:'Total Materials', c:'var(--amber)'},
+    {v:'£'+totalLab.toLocaleString(), l:'Total Labour',    c:'var(--cyan)'},
+    {v:'£'+grand.toLocaleString(),    l:'Grand Total',     c:'var(--gold)'},
+    {v:'£'+(grand*1.2).toLocaleString(), l:'Inc. VAT 20%', c:'var(--green)'},
+    {v:rooms.filter(r=>r.l&&r.w).length, l:'Rooms Priced', c:'var(--text)'},
+    {v:rooms.reduce((s,r)=>s+(+r.l||0)*(+r.w||0),0).toFixed(0)+'m²', l:'Total Floor Area', c:'var(--muted)'},
+  ].map(s=>`<div class="sum-card"><div class="sum-val" style="color:${s.c};">${s.v}</div><div class="sum-lbl">${s.l}</div></div>`).join('');
+
+  document.getElementById('grandTotal').textContent = '£'+grand.toLocaleString();
+  document.getElementById('grandTotalVAT').textContent = 'Inc. VAT: £'+(grand*1.2).toLocaleString();
+
+  renderMaterialsTable();
+  renderLabourTable();
+  buildAndRenderProgramme();
+}
+
+// ── MATERIALS TABLE ───────────────────────────────────────
+function renderMaterialsTable() {
+  const tbody = document.getElementById('matBody');
+  let grandMat = 0;
+  let rows = '';
+  rooms.filter(r=>r.l&&r.w).forEach(r => {
+    const mats = getRoomMaterials(r);
+    if(!mats.length) return;
+    const roomTotal = mats.reduce((s,i)=>s+i.total,0);
+    grandMat += roomTotal;
+    rows += mats.map((item,idx) => `<tr>
+      ${idx===0?`<td rowspan="${mats.length}" style="vertical-align:top;padding-top:10px;font-weight:700;color:var(--gold);border-right:1px solid var(--border);">${r.name}</td>`:''}
+      <td class="desc-td">${item.name}</td>
+      <td class="r" style="color:var(--muted);">${item.unit}</td>
+      <td class="r"><input class="editable-input" type="number" step="0.1" value="${item.qty}" style="width:65px;" oninput="updateMatItem(this,${rooms.indexOf(r)},${idx},+this.value,'qty')"></td>
+      <td class="r"><input class="editable-input rate-input" type="number" step="0.10" value="${item.rate}" style="width:75px;" oninput="updateMatItem(this,${rooms.indexOf(r)},${idx},+this.value,'rate')"></td>
+      <td class="r" style="font-weight:700;color:var(--amber);" id="mat-${rooms.indexOf(r)}-${idx}">£${item.total.toLocaleString()}</td>
+    </tr>`).join('') +
+    `<tr class="row-subtotal"><td></td><td colspan="4" style="font-size:11px;">Materials Total — ${r.name}</td><td class="r">£${roomTotal.toLocaleString()}</td></tr>`;
+  });
+  tbody.innerHTML = rows;
+  document.getElementById('matTotal').textContent = '£'+grandMat.toLocaleString();
+}
+
+function updateMatItem(el, roomIdx, itemIdx, val, field) {
+  // Live recalc
+  const row = el.closest('tr');
+  const cells = row.querySelectorAll('td');
+  const qtyInput = row.querySelector('.editable-input:not(.rate-input)');
+  const rateInput = row.querySelector('.rate-input');
+  if(qtyInput && rateInput) {
+    const newTotal = Math.round(+qtyInput.value * +rateInput.value);
+    const totalCell = row.querySelector('td:last-child');
+    if(totalCell) totalCell.textContent = '£'+newTotal.toLocaleString();
+  }
+}
+
+// ── LABOUR TABLE ──────────────────────────────────────────
+function renderLabourTable() {
+  const tbody = document.getElementById('labBody');
+  let grandLab = 0;
+  let rows = '';
+  rooms.filter(r=>r.l&&r.w).forEach(r => {
+    const lab = getRoomLabour(r);
+    if(!lab.length) return;
+    const roomTotal = lab.reduce((s,i)=>s+i.total,0);
+    grandLab += roomTotal;
+    rows += lab.map((item,idx) => `<tr>
+      ${idx===0?`<td rowspan="${lab.length}" style="vertical-align:top;padding-top:10px;font-weight:700;color:var(--gold);border-right:1px solid var(--border);">${r.name}</td>`:''}
+      <td class="desc-td">
+        <div style="font-weight:600;">${item.tradeName}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px;">${item.notes||''}</div>
+      </td>
+      <td class="r"><input class="editable-input" type="number" step="0.5" value="${item.days}" style="width:55px;" oninput="updateLabItem(this,+this.value,'days')"></td>
+      <td class="r"><input class="editable-input rate-input" type="number" step="10" value="${item.rate}" style="width:70px;" oninput="updateLabItem(this,+this.value,'rate')"></td>
+      <td class="r" style="font-weight:700;color:var(--cyan);">£${item.total.toLocaleString()}</td>
+    </tr>`).join('') +
+    `<tr class="row-subtotal"><td></td><td colspan="3" style="font-size:11px;">Labour Total — ${r.name}</td><td class="r">£${roomTotal.toLocaleString()}</td></tr>`;
+  });
+  tbody.innerHTML = rows;
+  document.getElementById('labTotal').textContent = '£'+grandLab.toLocaleString();
+}
+
+function updateLabItem(el, val, field) {
+  const row = el.closest('tr');
+  const daysInput = row.querySelector('.editable-input:not(.rate-input)');
+  const rateInput = row.querySelector('.rate-input');
+  if(daysInput && rateInput) {
+    const newTotal = Math.round(+daysInput.value * +rateInput.value);
+    const totalCell = row.querySelector('td:last-child');
+    if(totalCell) totalCell.textContent = '£'+newTotal.toLocaleString();
+  }
+}
+
+// ── PROGRAMME ─────────────────────────────────────────────
+function buildAndRenderProgramme() {
+  // Aggregate days per phase from all rooms
+  const phaseDays = {};
+  const phaseWorkers = {};
+  rooms.filter(r=>r.l&&r.w).forEach(r => {
+    const lab = getRoomLabour(r);
+    lab.forEach(item => {
+      const phaseId = tradeToPhase(item.trade);
+      phaseDays[phaseId] = (phaseDays[phaseId]||0) + item.days;
+      phaseWorkers[phaseId] = Math.max(phaseWorkers[phaseId]||0, PROG_DEFS.find(p=>p.id===phaseId)?.minW||1);
+    });
+  });
+
+  // Build phases
+  progPhases = PROG_DEFS
+    .filter(p => p.id==='dry' || (phaseDays[p.id]||0)>0)
+    .map(p => ({
+      ...p,
+      days: p.id==='dry' ? 7 : Math.max(1, Math.ceil(phaseDays[p.id]||0)),
+      workers: phaseWorkers[p.id]||p.minW,
+      done: false,
+    }));
+
+  if(!document.getElementById('progStart').value) {
+    const d = new Date(); d.setDate(d.getDate()+14);
+    document.getElementById('progStart').valueAsDate = d;
+  }
+  renderProgramme();
+}
+
+function tradeToPhase(trade) {
+  const map = {
+    builder:['strip','timbers','insul','flooring','snag'],
+    electrician:['ff_elec','sf_elec'],
+    plasterer:['plaster'],
+    decorator:['decorating'],
+    tiler:['tiling'],
+    carpenter:['timbers','carpentry'],
+    plumber:['ff_plumb','sf_plumb'],
+  };
+  // Simple mapping
+  if(trade==='builder') return 'strip';
+  if(trade==='electrician') return 'ff_elec';
+  if(trade==='plasterer') return 'plaster';
+  if(trade==='decorator') return 'decorating';
+  if(trade==='tiler') return 'tiling';
+  if(trade==='carpenter') return 'timbers';
+  if(trade==='plumber') return 'ff_plumb';
+  return 'strip';
+}
+
+function renderProgramme() {
+  if(!progPhases.length) return;
+  const sdVal = document.getElementById('progStart')?.value;
+  const sd = sdVal ? new Date(sdVal) : new Date();
+  const wpw = 5;
+
+  function addWD(start, wd) {
+    const d=new Date(start);let added=0,s=0;
+    while(added<wd&&s<500){d.setDate(d.getDate()+1);s++;if(d.getDay()===0||d.getDay()===6)continue;added++;}
+    return new Date(d);
+  }
+  function fD(d){if(!d||isNaN(d))return'—';return d.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});}
+
+  let cursor=0;
+  progPhases.forEach(p=>{
+    p.startWD=cursor; p.endWD=cursor+p.days-1;
+    p.startDate=addWD(sd,cursor);
+    p.endDate=addWD(sd,cursor+p.days-1);
+    cursor+=p.days;
+  });
+
+  const totalDays=cursor;
+  const totalWeeks=Math.ceil(totalDays/wpw);
+  const dayRate = 250;
+  const totalLabour=progPhases.filter(p=>p.id!=='dry').reduce((s,p)=>s+p.workers*p.days*(LAB_RATES[p.trade]?.rate||dayRate),0);
+
+  // Summary
+  document.getElementById('progSummaryStrip').innerHTML=[
+    {v:totalDays,l:'Working Days',c:'var(--gold)'},
+    {v:totalWeeks,l:'Weeks',c:'var(--cyan)'},
+    {v:'£'+totalLabour.toLocaleString(),l:'Labour Total',c:'var(--amber)'},
+    {v:fD(sd),l:'Start',c:'var(--text)'},
+    {v:fD(progPhases[progPhases.length-1]?.endDate),l:'Completion',c:'var(--green)'},
+    {v:progPhases.filter(p=>p.done).length+'/'+progPhases.length,l:'Done',c:'var(--gold)'},
+  ].map(s=>`<div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:8px 14px;text-align:center;flex:1;min-width:90px;">
+    <div style="font-size:16px;font-weight:700;color:${s.c};">${s.v}</div>
+    <div style="font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;">${s.l}</div>
+  </div>`).join('');
+
+  // Gantt
+  const DAY_W=28, totalW=totalDays*DAY_W;
+  const isLight=col=>['#d4f244','#f0b840','#40d0b0','#40a0f0','#40e0d0','#40d080','#f0c080','#80c080'].includes(col);
+  let wkH='';
+  for(let w=0;w<totalWeeks;w++) wkH+=`<div style="position:absolute;left:${w*wpw*DAY_W}px;top:0;bottom:0;border-left:1px dashed rgba(255,255,255,.05);pointer-events:none;"><div style="font-size:8px;color:var(--dim);font-family:var(--mono);padding:2px 3px;">W${w+1}</div></div>`;
+
+  document.getElementById('progChart').innerHTML =
+    `<div style="display:flex;border-bottom:1px solid var(--border);background:var(--s2);">
+      <div style="width:200px;flex-shrink:0;padding:7px 14px;border-right:1px solid var(--border);font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;">Phase · Edit days below</div>
+      <div style="flex:1;min-width:${totalW}px;padding:7px 8px;font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;">Programme →</div>
+    </div>` +
+    progPhases.map((p,i)=>{
+      const barL=p.startWD*DAY_W, barW=Math.max(DAY_W,p.days*DAY_W);
+      return`<div style="display:flex;align-items:center;border-bottom:1px solid var(--border);min-height:40px;${p.done?'opacity:.45':''}">
+        <div style="width:200px;flex-shrink:0;padding:6px 14px;border-right:1px solid var(--border);">
+          <div style="font-size:11px;font-weight:600;">${p.name}</div>
+          <div style="font-size:9px;color:var(--muted);font-family:var(--mono);margin-top:2px;">${p.days}d · ${p.id!=='dry'?p.workers+'w':'drying'}</div>
+        </div>
+        <div style="flex:1;position:relative;height:40px;min-width:${totalW}px;">
+          ${wkH}
+          <div style="position:absolute;left:${barL}px;width:${barW}px;height:24px;top:8px;border-radius:4px;background:${p.col};opacity:${p.done?.4:.85};display:flex;align-items:center;padding:0 8px;font-size:10px;font-weight:600;color:${isLight(p.col)?'#000':'#fff'};cursor:pointer;white-space:nowrap;overflow:hidden;" onclick="progPhases[${i}].done=!progPhases[${i}].done;renderProgramme();">
+            ${p.days}d${p.done?' ✓':''}
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+
+  // Table
+  document.getElementById('progTable').innerHTML = progPhases.map((p,i)=>`
+    <tr style="${p.done?'opacity:.45':''}border-bottom:1px solid var(--border);">
+      <td style="padding:8px 14px;font-size:11px;color:var(--muted);font-family:var(--mono);">${i+1}</td>
+      <td style="padding:8px 14px;font-size:11px;font-family:var(--mono);"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${p.col};margin-right:7px;"></span>${p.name}</td>
+      <td style="padding:8px 14px;font-size:11px;color:var(--muted);font-family:var(--mono);">${LAB_RATES[p.trade]?.trade||'—'}</td>
+      <td style="padding:8px 14px;">
+        <input type="number" value="${p.days}" min="1" max="60" style="background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--text);font-family:var(--mono);font-size:11px;width:50px;outline:none;text-align:center;" oninput="progPhases[${i}].days=+this.value;renderProgramme()">
+      </td>
+      <td style="padding:8px 14px;">
+        <input type="number" value="${p.workers}" min="0" max="10" style="background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--gold);font-family:var(--mono);font-size:11px;width:44px;outline:none;text-align:center;" oninput="progPhases[${i}].workers=+this.value;renderProgramme()">
+      </td>
+      <td style="padding:8px 14px;text-align:right;font-size:11px;color:var(--amber);font-family:var(--mono);">${p.id!=='dry'&&p.workers>0?'£'+(p.workers*p.days*(LAB_RATES[p.trade]?.rate||220)).toLocaleString():'—'}</td>
+      <td style="padding:8px 14px;font-size:11px;font-family:var(--mono);color:var(--gold);">${fD(p.startDate)}</td>
+      <td style="padding:8px 14px;font-size:11px;font-family:var(--mono);">${fD(p.endDate)}</td>
+    </tr>`).join('');
+}
+
+// ── MODAL ─────────────────────────────────────────────────
+function openAddRoom(){ document.getElementById('addModal').style.display='flex'; }
+function closeModal(){ document.getElementById('addModal').style.display='none'; }
+function saveRoom(){
+  const name=document.getElementById('nr-name').value.trim();
+  if(!name){alert('Enter a room name.');return;}
+  rooms.push({id:uid(), name, type:document.getElementById('nr-type').value, l:+document.getElementById('nr-l').value||0, w:+document.getElementById('nr-w').value||0, h:+document.getElementById('nr-h').value||2.4});
+  closeModal(); renderRooms(); generateAll();
+  ['nr-name','nr-l','nr-w'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('nr-h').value='2.4';
+}
+document.getElementById('addModal').addEventListener('click',e=>{if(e.target.id==='addModal')closeModal();});
+
+function clearAll(){if(!confirm('Clear all rooms?'))return;rooms=[];progPhases=[];renderRooms();document.getElementById('projectSummary').style.display='none';}
+
+// ── EXPORT EXCEL ──────────────────────────────────────────
+function exportExcel(){
+  if(!rooms.some(r=>r.l&&r.w)){alert('Add and size rooms first.');return;}
+  const wb=XLSX.utils.book_new();
+  const matRows=[['Room','Item','Unit','Qty','Rate £','Total £']];
+  const labRows=[['Room','Trade','Notes','Days','Day Rate £','Total £']];
+  rooms.filter(r=>r.l&&r.w).forEach(r=>{
+    getRoomMaterials(r).forEach(i=>matRows.push([r.name,i.name,i.unit,i.qty,i.rate,i.total]));
+    getRoomLabour(r).forEach(i=>labRows.push([r.name,i.tradeName,i.notes||'',i.days,i.rate,i.total]));
+  });
+  const ws1=XLSX.utils.aoa_to_sheet(matRows);ws1['!cols']=[{wch:16},{wch:45},{wch:8},{wch:10},{wch:12},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,ws1,'Materials');
+  const ws2=XLSX.utils.aoa_to_sheet(labRows);ws2['!cols']=[{wch:16},{wch:22},{wch:40},{wch:10},{wch:14},{wch:12}];
+  XLSX.utils.book_append_sheet(wb,ws2,'Labour');
+  const progRows=[['#','Phase','Trade','Days','Workers','Labour £','Start','Finish']];
+  progPhases.forEach((p,i)=>progRows.push([i+1,p.name,LAB_RATES[p.trade]?.trade||'—',p.days,p.workers,p.id!=='dry'&&p.workers>0?p.workers*p.days*(LAB_RATES[p.trade]?.rate||220):0,p.startDate?.toLocaleDateString('en-GB')||'',p.endDate?.toLocaleDateString('en-GB')||'']));
+  const ws3=XLSX.utils.aoa_to_sheet(progRows);ws3['!cols']=[{wch:5},{wch:28},{wch:22},{wch:10},{wch:10},{wch:14},{wch:16},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws3,'Programme');
+  XLSX.writeFile(wb,'AURUM_Room_Costs.xlsx');
+}
+
+// INIT
+renderRooms();
+
+// Seed a demo room
+rooms=[
+  {id:uid(),name:'Living Room', type:'living',  l:4.5,w:3.8,h:2.4},
+  {id:uid(),name:'Kitchen',     type:'kitchen', l:3.2,w:2.8,h:2.4},
+  {id:uid(),name:'Bedroom 1',   type:'bedroom', l:4.0,w:3.5,h:2.4},
+  {id:uid(),name:'Bathroom',    type:'bathroom',l:2.2,w:1.8,h:2.4},
+];
+renderRooms();
+generateAll();
+</script>
+</body>
+</html>

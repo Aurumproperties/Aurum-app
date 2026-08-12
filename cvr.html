@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CVR Engine — Cost Value Reconciliation</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:#0a0a0a;--paper:#f5f3ee;--paper2:#ede9e0;--paper3:#e4dfd4;
+  --rule:#c8c2b4;--rule2:#b0a898;
+  --gold:#8a6f00;--gold-light:#c49a00;--gold-bg:#fdf8e8;--gold-border:#e8d87a;
+  --red:#9a1a00;--red-bg:#fdf0ee;--red-border:#e8a898;
+  --green:#005a1a;--green-bg:#eef8f0;--green-border:#88d8a0;
+  --blue:#002a6a;--blue-bg:#eef2fc;--blue-border:#88a8e8;
+  --amber:#7a4800;--amber-bg:#fdf4e8;--amber-border:#e8c878;
+  --muted:#6a6258;--dim:#9a9288;
+  --font:'Inter',sans-serif;--mono:'DM Mono',monospace;
+  --r:4px;--r2:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--paper);color:var(--ink);font-family:var(--font);}
+
+/* TOPBAR */
+.topbar{height:52px;background:var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:100;}
+.tbar-logo{font-size:13px;font-weight:700;color:var(--paper);letter-spacing:.12em;text-transform:uppercase;text-decoration:none;}
+.tbar-title{font-size:11px;color:#888;font-family:var(--mono);letter-spacing:.08em;}
+.tbar-actions{display:flex;gap:8px;align-items:center;}
+.btn{font-family:var(--font);font-size:12px;font-weight:600;padding:7px 16px;border-radius:var(--r2);border:1px solid var(--rule);background:white;color:var(--muted);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn:hover{border-color:var(--rule2);color:var(--ink);}
+.btn.primary{background:var(--ink);color:white;border-color:var(--ink);}
+.btn.primary:hover{background:#2a2a2a;}
+.btn.danger{background:var(--red-bg);color:var(--red);border-color:var(--red-border);}
+.btn.success{background:var(--green-bg);color:var(--green);border-color:var(--green-border);}
+
+/* MAIN LAYOUT */
+.main{max-width:1400px;margin:0 auto;padding:28px 24px;}
+
+/* PROJECT HEADER */
+.proj-header{background:white;border:1px solid var(--rule);border-radius:var(--r2);padding:20px 24px;margin-bottom:20px;}
+.proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;}
+.proj-field{display:flex;flex-direction:column;gap:4px;}
+.proj-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);}
+.proj-input{background:var(--paper);border:1px solid var(--rule);border-radius:var(--r);padding:8px 10px;color:var(--ink);font-family:var(--font);font-size:13px;font-weight:600;outline:none;width:100%;}
+.proj-input:focus{border-color:var(--ink);background:white;}
+
+/* PERIOD SELECTOR */
+.period-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;}
+.period-left{display:flex;align-items:center;gap:12px;}
+.period-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-family:var(--mono);}
+.period-input{background:white;border:1px solid var(--rule);border-radius:var(--r);padding:7px 11px;color:var(--ink);font-family:var(--mono);font-size:12px;outline:none;}
+.period-input:focus{border-color:var(--ink);}
+
+/* CVR STATUS STRIP */
+.cvr-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:24px;}
+.cvr-kpi{background:white;border:1px solid var(--rule);border-radius:var(--r2);padding:16px 18px;position:relative;overflow:hidden;}
+.cvr-kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
+.cvr-kpi.pos::before{background:var(--green);}
+.cvr-kpi.neg::before{background:var(--red);}
+.cvr-kpi.neu::before{background:var(--rule2);}
+.cvr-kpi.warn::before{background:var(--gold-light);}
+.cvr-val{font-size:24px;font-weight:800;letter-spacing:-.5px;font-family:var(--mono);}
+.cvr-lbl{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:4px;}
+.cvr-sub{font-size:10px;color:var(--dim);font-family:var(--mono);margin-top:2px;}
+
+/* SECTION */
+.section{background:white;border:1px solid var(--rule);border-radius:var(--r2);overflow:hidden;margin-bottom:16px;}
+.section-head{padding:13px 18px;background:var(--paper2);border-bottom:1px solid var(--rule);display:flex;align-items:center;justify-content:space-between;}
+.section-title{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-family:var(--mono);display:flex;align-items:center;gap:8px;}
+.section-total{font-size:13px;font-weight:700;font-family:var(--mono);}
+.section-body{overflow-x:auto;}
+
+/* CVR TABLE */
+.cvr-table{width:100%;border-collapse:collapse;min-width:900px;}
+.cvr-table thead th{padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--rule);background:var(--paper2);font-family:var(--mono);white-space:nowrap;}
+.cvr-table thead th.num{text-align:right;}
+.cvr-table tbody tr{border-bottom:1px solid var(--paper3);transition:background .08s;}
+.cvr-table tbody tr:hover{background:var(--paper);}
+.cvr-table tbody tr:last-child{border-bottom:none;}
+.cvr-table td{padding:9px 12px;font-size:12px;font-family:var(--mono);}
+.cvr-table td.num{text-align:right;}
+.cvr-table td.desc{font-family:var(--font);font-size:12px;font-weight:500;}
+.row-total td{background:var(--paper2);font-weight:700;border-top:2px solid var(--rule2)!important;}
+.row-grand td{background:var(--ink);color:white;font-weight:700;}
+
+/* Editable inputs */
+.tbl-input{background:transparent;border:none;border-bottom:1px solid transparent;color:inherit;font-family:var(--mono);font-size:12px;font-weight:inherit;outline:none;text-align:right;width:100%;padding:1px 0;transition:border-color .15s;}
+.tbl-input:focus{border-bottom-color:var(--ink);background:rgba(0,0,0,.03);}
+.tbl-input.desc{text-align:left;font-family:var(--font);}
+
+/* RAG badge */
+.rag{font-size:9px;font-weight:700;padding:2px 8px;border-radius:3px;font-family:var(--mono);letter-spacing:.05em;text-transform:uppercase;}
+.rag-g{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border);}
+.rag-a{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
+.rag-r{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--rule);margin-bottom:24px;}
+.tab{padding:11px 20px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
+.tab.active{color:var(--ink);border-bottom-color:var(--ink);}
+.tab:hover{color:var(--ink);}
+
+/* RISK REGISTER */
+.risk-table{width:100%;border-collapse:collapse;}
+.risk-table thead th{padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--rule);background:var(--paper2);font-family:var(--mono);}
+.risk-table tbody tr{border-bottom:1px solid var(--paper3);}
+.risk-table td{padding:9px 12px;font-size:12px;}
+
+/* NOTICES */
+.notice-card{background:white;border:1px solid var(--rule);border-radius:var(--r2);padding:14px 18px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px;}
+.notice-type{font-size:9px;font-weight:700;padding:3px 8px;border-radius:3px;font-family:var(--mono);text-transform:uppercase;flex-shrink:0;margin-top:2px;}
+.nt-ce{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);}
+.nt-ewo{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-border);}
+.nt-cl{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);}
+.nt-warn{background:var(--paper2);color:var(--muted);border:1px solid var(--rule);}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{background:white;border-radius:var(--r2);padding:28px;width:100%;max-width:480px;border:1px solid var(--rule);}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:18px;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-field{display:flex;flex-direction:column;gap:5px;}
+.form-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-family:var(--mono);}
+.form-input{background:var(--paper);border:1px solid var(--rule);border-radius:var(--r);padding:9px 12px;color:var(--ink);font-family:var(--mono);font-size:13px;outline:none;width:100%;}
+.form-input:focus{border-color:var(--ink);}
+.modal-btns{display:flex;gap:8px;margin-top:20px;justify-content:flex-end;}
+
+/* PRINT */
+@media print{
+  .topbar,.tbar-actions,.btn,.tabs,.no-print{display:none!important;}
+  .main{padding:0;}
+  .section{border:1px solid #ccc;break-inside:avoid;}
+  body{background:white;font-size:11px;}
+  .cvr-kpi{border:1px solid #ccc;}
+}
+
+@media(max-width:768px){
+  .proj-grid{grid-template-columns:1fr 1fr;}
+  .cvr-strip{grid-template-columns:1fr 1fr;}
+  .main{padding:16px 14px;}
+  .tbar-title{display:none;}
+  .tabs{overflow-x:auto;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="tbar-logo" href="#">QS Toolkit</a>
+  <div class="tbar-title">// COST VALUE RECONCILIATION ENGINE</div>
+  <div class="tbar-actions">
+    <button class="btn" onclick="window.print()">🖨 Print / PDF</button>
+    <button class="btn" onclick="exportExcel()">📊 Export Excel</button>
+    <button class="btn primary" onclick="saveCVR()">💾 Save</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- PROJECT INFO -->
+  <div class="proj-header" style="margin-bottom:20px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <div>
+        <div style="font-size:20px;font-weight:800;letter-spacing:-.3px;">Cost Value <span style="color:var(--gold-light);">Reconciliation</span></div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">JCT / NEC3 / NEC4 compliant · Monthly reporting</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="text-align:right;">
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:.08em;">Report Period</div>
+          <input type="month" id="reportPeriod" class="period-input" style="font-size:14px;font-weight:700;border:none;background:transparent;outline:none;color:var(--ink);">
+        </div>
+      </div>
+    </div>
+    <div class="proj-grid">
+      <div class="proj-field"><div class="proj-label">Project Name</div><input class="proj-input" id="projName" placeholder="e.g. A19 Junction Improvement"></div>
+      <div class="proj-field"><div class="proj-label">Project Number</div><input class="proj-input" id="projNum" placeholder="JP-2026-001"></div>
+      <div class="proj-field"><div class="proj-label">Client</div><input class="proj-input" id="projClient" placeholder="National Highways"></div>
+      <div class="proj-field"><div class="proj-label">Contract Type</div>
+        <select class="proj-input" id="projContract">
+          <option>NEC4 ECC Option A</option><option>NEC4 ECC Option B</option>
+          <option>NEC3 ECC Option A</option><option>NEC3 ECC Option C</option>
+          <option>JCT Intermediate 2016</option><option>JCT D&B 2016</option>
+          <option>JCT Minor Works 2016</option><option>Schedule of Rates</option>
+        </select>
+      </div>
+      <div class="proj-field"><div class="proj-label">Contract Value £</div><input class="proj-input" id="projCV" type="number" placeholder="5,000,000"></div>
+      <div class="proj-field"><div class="proj-label">Approved Budget £</div><input class="proj-input" id="projBudget" type="number" placeholder="4,750,000"></div>
+      <div class="proj-field"><div class="proj-label">QS / Author</div><input class="proj-input" id="projQS" placeholder="Leon / MRICS MCIOB"></div>
+      <div class="proj-field"><div class="proj-label">Programme Completion</div><input class="proj-input" id="projCompletion" type="date"></div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" id="tab-cvr" onclick="showTab('cvr')">📊 CVR</div>
+    <div class="tab" id="tab-valuation" onclick="showTab('valuation')">📋 Valuation / Application</div>
+    <div class="tab" id="tab-ce" onclick="showTab('ce')">⚡ Change / CE Log</div>
+    <div class="tab" id="tab-subcontract" onclick="showTab('subcontract')">🤝 Subcontracts</div>
+    <div class="tab" id="tab-risk" onclick="showTab('risk')">⚠️ Risk Register</div>
+    <div class="tab" id="tab-notices" onclick="showTab('notices')">📨 Notices</div>
+  </div>
+
+  <!-- TAB: CVR -->
+  <div id="panel-cvr">
+
+    <!-- KPI STRIP -->
+    <div class="cvr-strip" id="cvrStrip"></div>
+
+    <!-- VALUE SECTION -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">💰 VALUE — Applications / Earned Value</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="section-total" id="val-total">£0</div>
+          <button class="btn" onclick="addValueRow()" style="font-size:11px;padding:5px 12px;">+ Add Row</button>
+        </div>
+      </div>
+      <div class="section-body">
+        <table class="cvr-table">
+          <thead><tr>
+            <th style="width:40px;">#</th>
+            <th>Description</th>
+            <th class="num" style="width:130px;">Contract Sum £</th>
+            <th class="num" style="width:130px;">Previous £</th>
+            <th class="num" style="width:130px;">This Period £</th>
+            <th class="num" style="width:130px;">Total to Date £</th>
+            <th class="num" style="width:80px;">% Complete</th>
+            <th style="width:60px;"></th>
+          </tr></thead>
+          <tbody id="valueBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- COST SECTION -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">💸 COST — Actual + Accrued Expenditure</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div class="section-total" id="cost-total">£0</div>
+          <button class="btn" onclick="addCostRow()" style="font-size:11px;padding:5px 12px;">+ Add Row</button>
+        </div>
+      </div>
+      <div class="section-body">
+        <table class="cvr-table">
+          <thead><tr>
+            <th style="width:40px;">#</th>
+            <th>Cost Category</th>
+            <th class="num" style="width:130px;">Budget £</th>
+            <th class="num" style="width:130px;">Actual to Date £</th>
+            <th class="num" style="width:130px;">Accrual £</th>
+            <th class="num" style="width:130px;">Total Cost £</th>
+            <th class="num" style="width:130px;">EAC (Forecast) £</th>
+            <th class="num" style="width:100px;">Variance £</th>
+            <th style="width:60px;"></th>
+          </tr></thead>
+          <tbody id="costBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CVR SUMMARY -->
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">📊 CVR SUMMARY — Margin Analysis</div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn" onclick="addCEAdjustment()" style="font-size:11px;padding:5px 12px;">+ CE Adjustment</button>
+          <button class="btn" onclick="addProvision()" style="font-size:11px;padding:5px 12px;">+ Provision / Risk</button>
+        </div>
+      </div>
+      <div class="section-body">
+        <table class="cvr-table">
+          <thead><tr>
+            <th>Item</th>
+            <th class="num" style="width:160px;">This Period £</th>
+            <th class="num" style="width:160px;">Cumulative £</th>
+            <th class="num" style="width:160px;">EAC £</th>
+            <th class="num" style="width:100px;">Margin %</th>
+            <th class="num" style="width:80px;">RAG</th>
+          </tr></thead>
+          <tbody id="cvrSummaryBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- NARRATIVE -->
+    <div class="section">
+      <div class="section-head"><div class="section-title">📝 Director Narrative / Commentary</div></div>
+      <div style="padding:16px 18px;">
+        <textarea id="cvrNarrative" placeholder="Key movements this period:&#10;&#10;1. Value: [describe key application movements, CE inclusions/exclusions]&#10;2. Cost: [describe key cost movements, subcontractor accruals, labour costs]&#10;3. Margin: [explain variance vs budget, provisions held, risk/opportunity]&#10;4. Programme: [comment on programme status, delays, acceleration measures]&#10;5. Actions: [outstanding items, notices required, client approvals needed]"
+          style="width:100%;min-height:160px;background:var(--paper);border:1px solid var(--rule);border-radius:var(--r);padding:12px;font-family:var(--font);font-size:13px;color:var(--ink);outline:none;line-height:1.7;resize:vertical;"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: VALUATION -->
+  <div id="panel-valuation" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-size:18px;font-weight:700;">Monthly Application <span style="color:var(--gold-light);" id="valAppNum">No. 1</span></div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">Interim Application for Payment · JCT/NEC compliant</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn" onclick="addValuationSection()">+ Section</button>
+        <button class="btn primary" onclick="window.print()">🖨 Print Application</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">📋 Application Details</div>
+      </div>
+      <div style="padding:16px 18px;">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;margin-bottom:16px;">
+          <div class="proj-field"><div class="proj-label">Application No.</div><input class="proj-input" id="valNo" type="number" value="1" oninput="document.getElementById('valAppNum').textContent='No. '+this.value"></div>
+          <div class="proj-field"><div class="proj-label">Application Date</div><input class="proj-input" id="valDate" type="date"></div>
+          <div class="proj-field"><div class="proj-label">Assessment Date</div><input class="proj-input" id="valAssessDate" type="date"></div>
+          <div class="proj-field"><div class="proj-label">Due Date for Payment</div><input class="proj-input" id="valDueDate" type="date"></div>
+          <div class="proj-field"><div class="proj-label">Previous Certified £</div><input class="proj-input" id="valPrevCert" type="number" placeholder="0" oninput="recalcValuation()"></div>
+          <div class="proj-field"><div class="proj-label">Retention % Held</div><input class="proj-input" id="valRetention" type="number" value="3" step="0.5" oninput="recalcValuation()"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-head">
+        <div class="section-title">📐 Measured Works</div>
+        <button class="btn" onclick="addValRow()" style="font-size:11px;padding:5px 12px;">+ Add Item</button>
+      </div>
+      <div class="section-body">
+        <table class="cvr-table">
+          <thead><tr>
+            <th>Ref.</th><th>Description</th><th class="num">Contract Sum £</th>
+            <th class="num">% Complete</th><th class="num">Value Claimed £</th><th class="num">Previous £</th><th class="num">This Period £</th><th></th>
+          </tr></thead>
+          <tbody id="valBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="section">
+        <div class="section-head"><div class="section-title">⚡ Compensation Events</div><button class="btn" onclick="addCEValRow()" style="font-size:11px;padding:5px 12px;">+ Add CE</button></div>
+        <div class="section-body"><table class="cvr-table"><thead><tr><th>CE Ref.</th><th>Description</th><th class="num">Status</th><th class="num">Value £</th><th></th></tr></thead><tbody id="ceValBody"></tbody></table></div>
+      </div>
+      <div class="section">
+        <div class="section-head"><div class="section-title">💰 Application Summary</div></div>
+        <div style="padding:16px 18px;" id="valSummary"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: CE LOG -->
+  <div id="panel-ce" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-size:18px;font-weight:700;">Compensation Event <span style="color:var(--gold-light);">Log</span></div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">JCT Changes / NEC CEs · Full audit trail</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn primary" onclick="openCEModal()">+ New CE / Change</button>
+      </div>
+    </div>
+
+    <!-- CE STATS -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:20px;" id="ceStats"></div>
+
+    <div class="section">
+      <div class="section-head"><div class="section-title">📋 All Changes & Compensation Events</div></div>
+      <div class="section-body">
+        <table class="cvr-table">
+          <thead><tr>
+            <th style="width:80px;">Ref.</th>
+            <th>Description</th>
+            <th class="num" style="width:80px;">Type</th>
+            <th class="num" style="width:90px;">Notified</th>
+            <th class="num" style="width:90px;">Quoted</th>
+            <th class="num" style="width:90px;">Agreed</th>
+            <th class="num" style="width:110px;">Value £</th>
+            <th class="num" style="width:90px;">Status</th>
+            <th style="width:60px;"></th>
+          </tr></thead>
+          <tbody id="ceBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: SUBCONTRACTS -->
+  <div id="panel-subcontract" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-size:18px;font-weight:700;">Subcontract <span style="color:var(--gold-light);">Manager</span></div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">Works packages · Interim assessments · Change management</div>
+      </div>
+      <button class="btn primary" onclick="openSCModal()">+ Add Subcontract</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:20px;" id="scStats"></div>
+
+    <div class="section">
+      <div class="section-head"><div class="section-title">🤝 Subcontract Packages</div></div>
+      <div class="section-body">
+        <table class="cvr-table">
+          <thead><tr>
+            <th>Package / Trade</th>
+            <th>Subcontractor</th>
+            <th class="num">Contract Sum £</th>
+            <th class="num">Cert'd to Date £</th>
+            <th class="num">This Month £</th>
+            <th class="num">CEs Approved £</th>
+            <th class="num">EAC £</th>
+            <th class="num">Variance £</th>
+            <th class="num">Status</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="scBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: RISK REGISTER -->
+  <div id="panel-risk" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-size:18px;font-weight:700;">Risk <span style="color:var(--gold-light);">Register</span></div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">Live RAG status · Quantified risk · Mitigation actions</div>
+      </div>
+      <button class="btn primary" onclick="openRiskModal()">+ Add Risk / Opportunity</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:20px;" id="riskStats"></div>
+
+    <div class="section">
+      <div class="section-head"><div class="section-title">⚠️ Risks & Opportunities</div></div>
+      <div style="overflow-x:auto;">
+        <table class="risk-table" style="min-width:1000px;">
+          <thead><tr>
+            <th style="width:80px;">Ref.</th>
+            <th>Description</th>
+            <th style="width:80px;">Owner</th>
+            <th style="width:70px;">Prob. %</th>
+            <th style="width:100px;">Gross £</th>
+            <th style="width:100px;">Net £</th>
+            <th style="width:80px;">RAG</th>
+            <th>Mitigation</th>
+            <th style="width:90px;">Review Date</th>
+            <th style="width:50px;"></th>
+          </tr></thead>
+          <tbody id="riskBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: NOTICES -->
+  <div id="panel-notices" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-size:18px;font-weight:700;">Contractual <span style="color:var(--gold-light);">Notices</span></div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">Early Warnings · CE Notifications · Payment Notices · Claims</div>
+      </div>
+      <button class="btn primary" onclick="openNoticeModal()">+ Issue Notice</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:20px;" id="noticeStats"></div>
+
+    <div id="noticesList"></div>
+  </div>
+
+</div>
+
+<!-- MODALS -->
+<div class="modal-bg" id="ceModal" style="display:none;">
+  <div class="modal">
+    <div class="modal-title">+ New Compensation Event / Change</div>
+    <div class="form-row">
+      <div class="form-field"><div class="form-label">Reference</div><input class="form-input" id="ce-ref" placeholder="CE-001"></div>
+      <div class="form-field"><div class="form-label">Type</div>
+        <select class="form-input" id="ce-type">
+          <option>NEC — Compensation Event</option><option>NEC — Early Warning</option>
+          <option>JCT — Variation / Change</option><option>JCT — Loss & Expense</option>
+          <option>Extension of Time</option><option>Disputed CE</option><option>Claim</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-field" style="margin-bottom:12px;"><div class="form-label">Description</div><textarea class="form-input" id="ce-desc" rows="3" placeholder="Brief description of the change / event..."></textarea></div>
+    <div class="form-row">
+      <div class="form-field"><div class="form-label">Date Notified</div><input class="form-input" id="ce-notified" type="date"></div>
+      <div class="form-field"><div class="form-label">Quotation Deadline</div><input class="form-input" id="ce-deadline" type="date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><div class="form-label">Quoted Value £</div><input class="form-input" id="ce-quoted" type="number" placeholder="0"></div>
+      <div class="form-field"><div class="form-label">Status</div>
+        <select class="form-input" id="ce-status">
+          <option>Notified</option><option>Quoted</option><option>Under Assessment</option>
+          <option>Agreed</option><option>Implemented</option><option>Disputed</option><option>Withdrawn</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-btns"><button class="btn" onclick="closeModals()">Cancel</button><button class="btn primary" onclick="saveCE()">Add CE</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="scModal" style="display:none;">
+  <div class="modal">
+    <div class="modal-title">+ Add Subcontract Package</div>
+    <div class="form-row">
+      <div class="form-field"><div class="form-label">Trade / Package</div><input class="form-input" id="sc-trade" placeholder="Groundworks, Electrics..."></div>
+      <div class="form-field"><div class="form-label">Subcontractor</div><input class="form-input" id="sc-name" placeholder="Company name"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><div class="form-label">Contract Type</div>
+        <select class="form-input" id="sc-contract">
+          <option>DOM/2</option><option>NEC4 Subcontract</option><option>JCT Subcontract 2016</option>
+          <option>Bespoke / Lump Sum</option><option>Schedule of Rates</option><option>Dayworks</option>
+        </select>
+      </div>
+      <div class="form-field"><div class="form-label">Contract Sum £</div><input class="form-input" id="sc-sum" type="number" placeholder="0"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><div class="form-label">Start Date</div><input class="form-input" id="sc-start" type="date"></div>
+      <div class="form-field"><div class="form-label">Completion Date</div><input class="form-input" id="sc-end" type="date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><div class="form-label">Retention %</div><input class="form-input" id="sc-ret" type="number" value="3" step="0.5"></div>
+      <div class="form-field"><div class="form-label">Certified to Date £</div><input class="form-input" id="sc-cert" type="number" placeholder="0"></div>
+    </div>
+    <div class="modal-btns"><button class="btn" onclick="closeModals()">Cancel</button><button class="btn primary" onclick="saveSC()">Add Subcontract</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="riskModal" style="display:none;">
+  <div class="modal">
+    <div class="modal-title">+ Add Risk / Opportunity</div>
+    <div class="form-row">
+      <div class="form-field"><div class="form-label">Reference</div><input class="form-input" id="risk-ref" placeholder="R-001"></div>
+      <div class="form-field"><div class="form-label">Category</div>
+        <select class="form-input" id="risk-cat">
+          <option>Commercial</option><option>Programme</option><option>Design</option><option>Ground Conditions</option>
+          <option>Subcontractor</option><option>Client</option><option>Weather</option><option>Opportunity</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-field" style="margin-bottom:12px;"><div class="form-label">Description</div><textarea class="form-input" id="risk-desc" rows="2" placeholder="Describe the risk or opportunity..."></textarea></div>
+    <div class="form-row">
+      <div class="form-field"><div class="form-label">Owner</div><input class="form-input" id="risk-owner" placeholder="QS, PM, Engineer..."></div>
+      <div class="form-field"><div class="form-label">Probability %</div><input class="form-input" id="risk-prob" type="number" value="50" min="0" max="100"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><div class="form-label">Gross Value £</div><input class="form-input" id="risk-gross" type="number" placeholder="0"></div>
+      <div class="form-field"><div class="form-label">Review Date</div><input class="form-input" id="risk-review" type="date"></div>
+    </div>
+    <div class="form-field" style="margin-bottom:12px;"><div class="form-label">Mitigation Action</div><input class="form-input" id="risk-mitigation" placeholder="Action to reduce risk..."></div>
+    <div class="modal-btns"><button class="btn" onclick="closeModals()">Cancel</button><button class="btn primary" onclick="saveRisk()">Add Risk</button></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="noticeModal" style="display:none;">
+  <div class="modal">
+    <div class="modal-title">+ Issue Contractual Notice</div>
+    <div class="form-row">
+      <div class="form-field"><div class="form-label">Notice Type</div>
+        <select class="form-input" id="notice-type">
+          <option>NEC — Early Warning Notice</option>
+          <option>NEC — CE Notification (cl.61.3)</option>
+          <option>NEC — CE Quotation Submission</option>
+          <option>NEC — Programme Submission</option>
+          <option>JCT — Variation Instruction</option>
+          <option>JCT — Payment Notice</option>
+          <option>JCT — Pay Less Notice</option>
+          <option>JCT — Loss & Expense Notice</option>
+          <option>JCT — Extension of Time Request</option>
+          <option>Letter — Default Notice to SC</option>
+          <option>Letter — Dispute Notice</option>
+          <option>General Correspondence</option>
+        </select>
+      </div>
+      <div class="form-field"><div class="form-label">Direction</div>
+        <select class="form-input" id="notice-dir">
+          <option>To Client</option><option>From Client</option>
+          <option>To Subcontractor</option><option>From Subcontractor</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-field" style="margin-bottom:12px;"><div class="form-label">Subject / Description</div><textarea class="form-input" id="notice-desc" rows="3" placeholder="Brief description of notice..."></textarea></div>
+    <div class="form-row">
+      <div class="form-field"><div class="form-label">Date Issued</div><input class="form-input" id="notice-date" type="date"></div>
+      <div class="form-field"><div class="form-label">Response Required By</div><input class="form-input" id="notice-response" type="date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><div class="form-label">Reference No.</div><input class="form-input" id="notice-ref" placeholder="EWN-001 / CE-001 / PI-001"></div>
+      <div class="form-field"><div class="form-label">Value £ (if applicable)</div><input class="form-input" id="notice-value" type="number" placeholder="0"></div>
+    </div>
+    <div class="modal-btns"><button class="btn" onclick="closeModals()">Cancel</button><button class="btn primary" onclick="saveNotice()">Issue Notice</button></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let state = {
+  valueRows: [],
+  costRows: [],
+  ceRows: [],
+  scRows: [],
+  riskRows: [],
+  noticeRows: [],
+  valRows: [],
+  ceValRows: [],
+  provisions: [],
+};
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  document.getElementById('reportPeriod').value = now.toISOString().slice(0,7);
+  document.getElementById('valDate').valueAsDate = now;
+  document.getElementById('notice-date').valueAsDate = now;
+  loadState();
+  seedDefaultRows();
+  renderAll();
+  setupAutoSave();
+});
+
+function seedDefaultRows() {
+  if(state.valueRows.length === 0) {
+    state.valueRows = [
+      {id:uid(), desc:'Preliminaries', contractSum:0, previous:0, thisPeriod:0},
+      {id:uid(), desc:'Measured Works', contractSum:0, previous:0, thisPeriod:0},
+      {id:uid(), desc:'Compensation Events (Approved)', contractSum:0, previous:0, thisPeriod:0},
+      {id:uid(), desc:'Fluctuations', contractSum:0, previous:0, thisPeriod:0},
+    ];
+  }
+  if(state.costRows.length === 0) {
+    state.costRows = [
+      {id:uid(), desc:'Preliminaries / Site Overheads', budget:0, actual:0, accrual:0, eac:0},
+      {id:uid(), desc:'Labour (Direct)', budget:0, actual:0, accrual:0, eac:0},
+      {id:uid(), desc:'Plant & Equipment', budget:0, actual:0, accrual:0, eac:0},
+      {id:uid(), desc:'Materials', budget:0, actual:0, accrual:0, eac:0},
+      {id:uid(), desc:'Subcontractors', budget:0, actual:0, accrual:0, eac:0},
+      {id:uid(), desc:'Temporary Works', budget:0, actual:0, accrual:0, eac:0},
+      {id:uid(), desc:'Head Office Overheads', budget:0, actual:0, accrual:0, eac:0},
+    ];
+  }
+  if(state.valRows.length === 0) {
+    state.valRows = [
+      {id:uid(), ref:'1.0', desc:'Preliminaries', contractSum:0, pct:0},
+      {id:uid(), ref:'2.0', desc:'Measured Works', contractSum:0, pct:0},
+      {id:uid(), ref:'3.0', desc:'Provisional Sums', contractSum:0, pct:0},
+    ];
+  }
+}
+
+function uid() { return Math.random().toString(36).slice(2,9); }
+
+// ══════════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════════
+function showTab(tab) {
+  ['cvr','valuation','ce','subcontract','risk','notices'].forEach(t => {
+    document.getElementById('panel-'+t).style.display = t===tab ? 'block' : 'none';
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+  });
+  renderAll();
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER ALL
+// ══════════════════════════════════════════════════════════
+function renderAll() {
+  renderValueTable();
+  renderCostTable();
+  renderCVRSummary();
+  renderCVRStrip();
+  renderValuation();
+  renderCETable();
+  renderCEStats();
+  renderSCTable();
+  renderSCStats();
+  renderRiskTable();
+  renderRiskStats();
+  renderNotices();
+  renderNoticeStats();
+}
+
+// ══════════════════════════════════════════════════════════
+// FORMAT
+// ══════════════════════════════════════════════════════════
+function fGBP(n) { n=+n||0; if(n===0)return'—'; const neg=n<0;n=Math.abs(n); let s=n>=1000000?'£'+(n/1000000).toFixed(2)+'M':n>=1000?'£'+Math.round(n).toLocaleString('en-GB'):'£'+Math.round(n); return neg?'('+s+')':s; }
+function fPct(n) { n=+n||0; return n.toFixed(1)+'%'; }
+function fDate(s) { if(!s)return'—'; return new Date(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+
+// ══════════════════════════════════════════════════════════
+// VALUE TABLE
+// ══════════════════════════════════════════════════════════
+function renderValueTable() {
+  const tbody = document.getElementById('valueBody');
+  if(!tbody) return;
+  let totalTTD = 0;
+  tbody.innerHTML = state.valueRows.map((r,i) => {
+    const ttd = (r.previous||0) + (r.thisPeriod||0);
+    totalTTD += ttd;
+    const pct = r.contractSum > 0 ? (ttd/r.contractSum*100) : 0;
+    return `<tr>
+      <td style="color:var(--muted);">${i+1}</td>
+      <td class="desc"><input class="tbl-input desc" value="${r.desc||''}" oninput="state.valueRows[${i}].desc=this.value;recalc()"></td>
+      <td class="num"><input class="tbl-input" type="number" value="${r.contractSum||''}" placeholder="0" oninput="state.valueRows[${i}].contractSum=+this.value;recalc()"></td>
+      <td class="num"><input class="tbl-input" type="number" value="${r.previous||''}" placeholder="0" oninput="state.valueRows[${i}].previous=+this.value;recalc()"></td>
+      <td class="num"><input class="tbl-input" type="number" value="${r.thisPeriod||''}" placeholder="0" oninput="state.valueRows[${i}].thisPeriod=+this.value;recalc()"></td>
+      <td class="num" style="font-weight:700;color:${ttd>0?'var(--green)':'var(--ink)'};">${fGBP(ttd)}</td>
+      <td class="num"><span class="rag ${pct>=80?'rag-g':pct>=40?'rag-a':'rag-r'}">${pct.toFixed(0)}%</span></td>
+      <td><button onclick="delRow('valueRows',${i})" style="background:none;border:none;cursor:pointer;color:var(--rule2);font-size:13px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--rule2)'">✕</button></td>
+    </tr>`;
+  }).join('');
+  // Totals row
+  const totalCS = state.valueRows.reduce((s,r)=>s+(r.contractSum||0),0);
+  const totalPrev = state.valueRows.reduce((s,r)=>s+(r.previous||0),0);
+  const totalTP = state.valueRows.reduce((s,r)=>s+(r.thisPeriod||0),0);
+  tbody.innerHTML += `<tr class="row-total">
+    <td></td><td class="desc" style="font-weight:700;">TOTAL VALUE TO DATE</td>
+    <td class="num">${fGBP(totalCS)}</td><td class="num">${fGBP(totalPrev)}</td><td class="num">${fGBP(totalTP)}</td>
+    <td class="num" style="font-size:14px;color:var(--green);">${fGBP(totalTTD)}</td>
+    <td class="num">${totalCS>0?`<span class="rag rag-g">${(totalTTD/totalCS*100).toFixed(0)}%</span>`:'—'}</td><td></td>
+  </tr>`;
+  document.getElementById('val-total').textContent = fGBP(totalTTD);
+}
+
+function addValueRow() {
+  state.valueRows.push({id:uid(), desc:'New Item', contractSum:0, previous:0, thisPeriod:0});
+  renderValueTable(); renderCVRSummary(); renderCVRStrip();
+}
+
+// ══════════════════════════════════════════════════════════
+// COST TABLE
+// ══════════════════════════════════════════════════════════
+function renderCostTable() {
+  const tbody = document.getElementById('costBody');
+  if(!tbody) return;
+  let totalCost = 0;
+  tbody.innerHTML = state.costRows.map((r,i) => {
+    const totalC = (r.actual||0) + (r.accrual||0);
+    const eac = r.eac || totalC;
+    const variance = (r.budget||0) - eac;
+    totalCost += totalC;
+    return `<tr>
+      <td style="color:var(--muted);">${i+1}</td>
+      <td class="desc"><input class="tbl-input desc" value="${r.desc||''}" oninput="state.costRows[${i}].desc=this.value;recalc()"></td>
+      <td class="num"><input class="tbl-input" type="number" value="${r.budget||''}" placeholder="0" oninput="state.costRows[${i}].budget=+this.value;recalc()"></td>
+      <td class="num"><input class="tbl-input" type="number" value="${r.actual||''}" placeholder="0" oninput="state.costRows[${i}].actual=+this.value;recalc()"></td>
+      <td class="num"><input class="tbl-input" type="number" value="${r.accrual||''}" placeholder="0" oninput="state.costRows[${i}].accrual=+this.value;recalc()"></td>
+      <td class="num" style="font-weight:700;">${fGBP(totalC)}</td>
+      <td class="num"><input class="tbl-input" type="number" value="${r.eac||totalC||''}" placeholder="${totalC}" oninput="state.costRows[${i}].eac=+this.value;recalc()"></td>
+      <td class="num" style="font-weight:700;color:${variance>=0?'var(--green)':'var(--red)'};">${fGBP(variance)}</td>
+      <td><button onclick="delRow('costRows',${i})" style="background:none;border:none;cursor:pointer;color:var(--rule2);font-size:13px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--rule2)'">✕</button></td>
+    </tr>`;
+  }).join('');
+  const totalBudget = state.costRows.reduce((s,r)=>s+(r.budget||0),0);
+  const totalActual = state.costRows.reduce((s,r)=>s+(r.actual||0),0);
+  const totalAccrual = state.costRows.reduce((s,r)=>s+(r.accrual||0),0);
+  const totalEAC = state.costRows.reduce((s,r)=>s+(r.eac||(r.actual||0)+(r.accrual||0)),0);
+  const totalVar = totalBudget - totalEAC;
+  tbody.innerHTML += `<tr class="row-total">
+    <td></td><td class="desc" style="font-weight:700;">TOTAL COST TO DATE</td>
+    <td class="num">${fGBP(totalBudget)}</td><td class="num">${fGBP(totalActual)}</td><td class="num">${fGBP(totalAccrual)}</td>
+    <td class="num" style="font-size:14px;">${fGBP(totalCost)}</td>
+    <td class="num" style="font-size:14px;">${fGBP(totalEAC)}</td>
+    <td class="num" style="font-size:14px;color:${totalVar>=0?'var(--green)':'var(--red)'};">${fGBP(totalVar)}</td><td></td>
+  </tr>`;
+  document.getElementById('cost-total').textContent = fGBP(totalCost);
+}
+
+function addCostRow() {
+  state.costRows.push({id:uid(), desc:'New Cost Category', budget:0, actual:0, accrual:0, eac:0});
+  renderCostTable(); renderCVRSummary(); renderCVRStrip();
+}
+
+// ══════════════════════════════════════════════════════════
+// CVR SUMMARY
+// ══════════════════════════════════════════════════════════
+function calcCVR() {
+  const value = state.valueRows.reduce((s,r)=>s+(r.previous||0)+(r.thisPeriod||0),0);
+  const cost = state.costRows.reduce((s,r)=>s+(r.actual||0)+(r.accrual||0),0);
+  const budget = state.costRows.reduce((s,r)=>s+(r.budget||0),0);
+  const eac = state.costRows.reduce((s,r)=>s+(r.eac||(r.actual||0)+(r.accrual||0)),0);
+  const margin = value - cost;
+  const marginPct = value > 0 ? (margin/value*100) : 0;
+  const eacMargin = value - eac;
+  const eacPct = value > 0 ? (eacMargin/value*100) : 0;
+  const valuePrev = state.valueRows.reduce((s,r)=>s+(r.previous||0),0);
+  const valueTP = state.valueRows.reduce((s,r)=>s+(r.thisPeriod||0),0);
+  const ceApproved = state.ceRows.filter(c=>c.status==='Agreed'||c.status==='Implemented').reduce((s,c)=>s+(+c.value||0),0);
+  const cePending = state.ceRows.filter(c=>c.status==='Quoted'||c.status==='Under Assessment').reduce((s,c)=>s+(+c.value||0),0);
+  const riskNet = state.riskRows.reduce((s,r)=>s+((+r.grossValue||0)*(+r.prob||50)/100),0);
+  return { value, cost, budget, eac, margin, marginPct, eacMargin, eacPct, valueTP, valuePrev, ceApproved, cePending, riskNet };
+}
+
+function renderCVRStrip() {
+  const c = calcCVR();
+  const el = document.getElementById('cvrStrip');
+  if(!el) return;
+  el.innerHTML = [
+    {v:fGBP(c.value), l:'Value to Date', sub:'Applications submitted', cls:c.value>0?'pos':'neu'},
+    {v:fGBP(c.cost),  l:'Cost to Date', sub:'Actual + accruals', cls:'neu'},
+    {v:fGBP(c.margin),l:'Margin to Date', sub:fPct(c.marginPct)+' margin', cls:c.margin>0?'pos':'neg'},
+    {v:fGBP(c.eacMargin),l:'EAC Margin', sub:'Forecast at completion', cls:c.eacMargin>0?'pos':'neg'},
+    {v:fGBP(c.valueTP),l:'This Period', sub:'Applications this month', cls:c.valueTP>0?'pos':'neu'},
+    {v:fGBP(c.ceApproved),l:'CEs Approved', sub:fGBP(c.cePending)+' pending', cls:'warn'},
+    {v:fGBP(c.riskNet),l:'Net Risk Exposure', sub:'Probability weighted', cls:c.riskNet>0?'warn':'pos'},
+    {v:fPct(c.marginPct),l:'Margin %', sub:c.marginPct>=5?'On target':'Below target', cls:c.marginPct>=5?'pos':'neg'},
+  ].map(k=>`<div class="cvr-kpi ${k.cls}">
+    <div class="cvr-val" style="color:${k.cls==='pos'?'var(--green)':k.cls==='neg'?'var(--red)':k.cls==='warn'?'var(--gold-light)':'var(--ink)'};">${k.v}</div>
+    <div class="cvr-lbl">${k.l}</div>
+    <div class="cvr-sub">${k.sub}</div>
+  </div>`).join('');
+}
+
+function renderCVRSummary() {
+  const c = calcCVR();
+  const tbody = document.getElementById('cvrSummaryBody');
+  if(!tbody) return;
+  const rows = [
+    {item:'Gross Value (Applications to Date)',  tp:c.valueTP, cum:c.value,   eac:c.value,  pct:null, rag:'g'},
+    {item:'Total Cost Incurred (Actual + Accruals)', tp:-(c.cost-c.valueTP>0?0:0),cum:-c.cost,eac:-c.eac, pct:null, rag:c.cost/c.value>0.95?'r':c.cost/c.value>0.85?'a':'g'},
+    {item:'━━ GROSS MARGIN', tp:c.valueTP, cum:c.margin, eac:c.eacMargin, pct:c.marginPct, rag:c.marginPct>=5?'g':c.marginPct>=2?'a':'r', bold:true},
+    ...state.provisions.map(p=>({item:'Provision: '+p.desc, tp:0, cum:-p.value, eac:-p.value, pct:null, rag:'a'})),
+    {item:'━━ NET MARGIN (after provisions)', tp:null, cum:c.margin-state.provisions.reduce((s,p)=>s+p.value,0), eac:c.eacMargin-state.provisions.reduce((s,p)=>s+p.value,0), pct:c.value>0?(c.margin-state.provisions.reduce((s,p)=>s+p.value,0))/c.value*100:0, rag:'g', bold:true},
+  ];
+  tbody.innerHTML = rows.map(r=>`<tr style="${r.bold?'background:var(--paper2);':''}border-bottom:1px solid var(--paper3);">
+    <td class="desc" style="${r.bold?'font-weight:700;':''}">${r.item}</td>
+    <td class="num" style="font-weight:${r.bold?700:500};">${r.tp!==null?fGBP(r.tp):'—'}</td>
+    <td class="num" style="font-weight:${r.bold?700:500};color:${r.cum>=0?'':'var(--red)'};">${fGBP(r.cum)}</td>
+    <td class="num" style="font-weight:${r.bold?700:500};">${fGBP(r.eac)}</td>
+    <td class="num">${r.pct!==null?`<span style="font-weight:700;color:${r.pct>=5?'var(--green)':r.pct>=2?'var(--amber)':'var(--red)'};">${r.pct.toFixed(1)}%</span>`:'—'}</td>
+    <td class="num"><span class="rag rag-${r.rag}">${r.rag.toUpperCase()}</span></td>
+  </tr>`).join('');
+}
+
+function addCEAdjustment() {
+  const desc = prompt('CE / Change description:'); if(!desc)return;
+  const val = +prompt('Value £:')||0;
+  state.provisions.push({id:uid(), desc:'CE: '+desc, value:-val});
+  renderCVRSummary();
+}
+
+function addProvision() {
+  const desc = prompt('Provision description (e.g. "Ground risk allowance"):'); if(!desc)return;
+  const val = +prompt('Provision value £:')||0;
+  state.provisions.push({id:uid(), desc, value:val});
+  renderCVRSummary();
+}
+
+// ══════════════════════════════════════════════════════════
+// VALUATION
+// ══════════════════════════════════════════════════════════
+function renderValuation() {
+  renderValTable();
+  recalcValuation();
+}
+
+function renderValTable() {
+  const tbody = document.getElementById('valBody');
+  if(!tbody) return;
+  tbody.innerHTML = state.valRows.map((r,i) => {
+    const claimed = Math.round((r.contractSum||0)*(r.pct||0)/100);
+    const prev = r.previous||0;
+    const thisPeriod = claimed - prev;
+    return `<tr>
+      <td><input class="tbl-input" value="${r.ref||''}" style="width:50px;text-align:left;" oninput="state.valRows[${i}].ref=this.value"></td>
+      <td class="desc"><input class="tbl-input desc" value="${r.desc||''}" oninput="state.valRows[${i}].desc=this.value;recalcValuation()"></td>
+      <td class="num"><input class="tbl-input" type="number" value="${r.contractSum||''}" placeholder="0" oninput="state.valRows[${i}].contractSum=+this.value;recalcValuation()"></td>
+      <td class="num"><input class="tbl-input" type="number" value="${r.pct||''}" placeholder="0" min="0" max="100" style="width:60px;" oninput="state.valRows[${i}].pct=+this.value;recalcValuation()">%</td>
+      <td class="num" style="font-weight:700;">${fGBP(claimed)}</td>
+      <td class="num"><input class="tbl-input" type="number" value="${r.previous||''}" placeholder="0" oninput="state.valRows[${i}].previous=+this.value;recalcValuation()"></td>
+      <td class="num" style="font-weight:700;color:${thisPeriod>=0?'var(--green)':'var(--red)'};">${fGBP(thisPeriod)}</td>
+      <td><button onclick="delRow('valRows',${i});renderValTable();recalcValuation()" style="background:none;border:none;cursor:pointer;color:var(--rule2);font-size:13px;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--rule2)'">✕</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function recalcValuation() {
+  renderValTable();
+  const measuredTotal = state.valRows.reduce((s,r)=>s+Math.round((r.contractSum||0)*(r.pct||0)/100),0);
+  const ceTotal = state.ceValRows.filter(c=>c.included).reduce((s,c)=>s+(+c.value||0),0);
+  const grossTotal = measuredTotal + ceTotal;
+  const retention = +document.getElementById('valRetention')?.value||3;
+  const prevCert = +document.getElementById('valPrevCert')?.value||0;
+  const retAmt = Math.round(grossTotal * retention / 100);
+  const netThisPeriod = grossTotal - retAmt - prevCert;
+
+  const el = document.getElementById('valSummary');
+  if(!el) return;
+  el.innerHTML = [
+    ['Measured Works to Date', fGBP(measuredTotal), 'var(--ink)'],
+    ['Compensation Events (incl.)', fGBP(ceTotal), 'var(--blue)'],
+    ['━━ Gross Application', fGBP(grossTotal), 'var(--ink)', true],
+    [`Retention Held (${retention}%)`, `(${fGBP(retAmt)})`, 'var(--red)'],
+    ['━━ Net Value (incl. retention)', fGBP(grossTotal-retAmt), 'var(--ink)', true],
+    ['Previous Certificate', `(${fGBP(prevCert)})`, 'var(--muted)'],
+    ['━━ THIS PERIOD CLAIMED', fGBP(netThisPeriod), netThisPeriod>0?'var(--green)':'var(--red)', true],
+  ].map(([l,v,c,bold])=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--paper3);${bold?'background:var(--gold-bg);padding:8px 10px;border-radius:var(--r);margin:4px -10px;':''}">
+    <span style="font-size:12px;${bold?'font-weight:700;':''}color:var(--muted);">${l}</span>
+    <span style="font-size:${bold?14:12}px;font-weight:${bold?700:600};color:${c};">${v}</span>
+  </div>`).join('');
+}
+
+function addValRow() {
+  state.valRows.push({id:uid(), ref:(state.valRows.length+1)+'.0', desc:'New Section', contractSum:0, pct:0, previous:0});
+  renderValTable(); recalcValuation();
+}
+
+function addCEValRow() {
+  const ref = prompt('CE Reference (e.g. CE-005):')||'CE-00'+state.ceValRows.length;
+  const desc = prompt('CE Description:')||'Compensation Event';
+  const value = +prompt('Value £:')||0;
+  state.ceValRows.push({id:uid(), ref, desc, value, included:true});
+  renderCEValTable(); recalcValuation();
+}
+
+function renderCEValTable() {
+  const tbody = document.getElementById('ceValBody');
+  if(!tbody) return;
+  tbody.innerHTML = state.ceValRows.map((r,i)=>`<tr>
+    <td><input class="tbl-input" value="${r.ref}" style="width:60px;text-align:left;"></td>
+    <td class="desc">${r.desc}</td>
+    <td class="num"><input type="checkbox" ${r.included?'checked':''} onchange="state.ceValRows[${i}].included=this.checked;recalcValuation()" style="accent-color:var(--ink);"></td>
+    <td class="num" style="font-weight:700;">${fGBP(r.value)}</td>
+    <td><button onclick="state.ceValRows.splice(${i},1);renderCEValTable();recalcValuation()" style="background:none;border:none;cursor:pointer;color:var(--rule2);">✕</button></td>
+  </tr>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// CE LOG
+// ══════════════════════════════════════════════════════════
+function renderCETable() {
+  const tbody = document.getElementById('ceBody');
+  if(!tbody) return;
+  tbody.innerHTML = state.ceRows.length ? state.ceRows.map((r,i)=>`<tr>
+    <td style="font-weight:700;font-family:var(--mono);color:var(--gold-light);">${r.ref}</td>
+    <td class="desc" style="max-width:280px;">${r.desc}</td>
+    <td class="num"><span style="font-size:9px;padding:2px 7px;border-radius:3px;background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);font-family:var(--mono);">${r.type?.split('—')[0]?.trim()||'CE'}</span></td>
+    <td class="num" style="font-size:11px;">${fDate(r.notified)}</td>
+    <td class="num" style="font-size:11px;">${fDate(r.deadline)}</td>
+    <td class="num" style="font-size:11px;">${r.agreed?fDate(r.agreed):'—'}</td>
+    <td class="num" style="font-weight:700;color:var(--green);">${fGBP(r.value)}</td>
+    <td class="num"><span class="rag ${r.status==='Agreed'||r.status==='Implemented'?'rag-g':r.status==='Disputed'?'rag-r':'rag-a'}">${r.status}</span></td>
+    <td><button onclick="state.ceRows.splice(${i},1);renderCETable();renderCEStats();renderCVRStrip()" style="background:none;border:none;cursor:pointer;color:var(--rule2);" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--rule2)'">✕</button></td>
+  </tr>`).join('') :
+  `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--dim);font-size:12px;">No changes or compensation events recorded. Click "+ New CE / Change" to add one.</td></tr>`;
+}
+
+function renderCEStats() {
+  const el = document.getElementById('ceStats');
+  if(!el) return;
+  const total = state.ceRows.length;
+  const agreed = state.ceRows.filter(c=>c.status==='Agreed'||c.status==='Implemented');
+  const pending = state.ceRows.filter(c=>c.status==='Quoted'||c.status==='Under Assessment');
+  const disputed = state.ceRows.filter(c=>c.status==='Disputed');
+  const agreedVal = agreed.reduce((s,c)=>s+(+c.value||0),0);
+  el.innerHTML = [
+    {v:total, l:'Total Changes', c:'var(--ink)'},
+    {v:agreed.length, l:'Agreed / Implemented', c:'var(--green)'},
+    {v:pending.length, l:'Pending Assessment', c:'var(--amber)'},
+    {v:disputed.length, l:'Disputed', c:'var(--red)'},
+    {v:fGBP(agreedVal), l:'Total Agreed Value', c:'var(--green)'},
+  ].map(s=>`<div style="background:white;border:1px solid var(--rule);border-radius:var(--r2);padding:12px 16px;">
+    <div style="font-size:20px;font-weight:700;color:${s.c};font-family:var(--mono);">${s.v}</div>
+    <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;">${s.l}</div>
+  </div>`).join('');
+}
+
+function openCEModal() {
+  document.getElementById('ceModal').style.display='flex';
+  document.getElementById('ce-ref').value='CE-'+(String(state.ceRows.length+1).padStart(3,'0'));
+  document.getElementById('ce-notified').valueAsDate=new Date();
+  // Set deadline 21 days (NEC default)
+  const dl=new Date();dl.setDate(dl.getDate()+21);
+  document.getElementById('ce-deadline').valueAsDate=dl;
+}
+
+function saveCE() {
+  state.ceRows.push({
+    id:uid(),
+    ref:document.getElementById('ce-ref').value,
+    type:document.getElementById('ce-type').value,
+    desc:document.getElementById('ce-desc').value,
+    notified:document.getElementById('ce-notified').value,
+    deadline:document.getElementById('ce-deadline').value,
+    value:+document.getElementById('ce-quoted').value||0,
+    status:document.getElementById('ce-status').value,
+  });
+  closeModals(); renderCETable(); renderCEStats(); renderCVRStrip();
+}
+
+// ══════════════════════════════════════════════════════════
+// SUBCONTRACTS
+// ══════════════════════════════════════════════════════════
+function renderSCTable() {
+  const tbody = document.getElementById('scBody');
+  if(!tbody) return;
+  tbody.innerHTML = state.scRows.length ? state.scRows.map((r,i)=>{
+    const eac = r.eac || r.contractSum;
+    const variance = (r.contractSum||0) - eac;
+    return `<tr>
+      <td style="font-weight:700;">${r.trade}</td>
+      <td>${r.name}</td>
+      <td class="num">${fGBP(r.contractSum)}</td>
+      <td class="num">${fGBP(r.certified)}</td>
+      <td class="num"><input class="tbl-input" type="number" value="${r.thisMonth||''}" placeholder="0" oninput="state.scRows[${i}].thisMonth=+this.value;renderSCStats()"></td>
+      <td class="num">${fGBP(r.cesApproved||0)}</td>
+      <td class="num"><input class="tbl-input" type="number" value="${r.eac||r.contractSum||''}" placeholder="${r.contractSum}" oninput="state.scRows[${i}].eac=+this.value;renderSCStats()"></td>
+      <td class="num" style="font-weight:700;color:${variance>=0?'var(--green)':'var(--red)'};">${fGBP(variance)}</td>
+      <td class="num"><span class="rag ${r.status==='Active'?'rag-g':r.status==='Complete'?'rag-g':'rag-a'}">${r.status||'Active'}</span></td>
+      <td><button onclick="state.scRows.splice(${i},1);renderSCTable();renderSCStats()" style="background:none;border:none;cursor:pointer;color:var(--rule2);">✕</button></td>
+    </tr>`;
+  }).join('') :
+  `<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--dim);font-size:12px;">No subcontracts added. Click "+ Add Subcontract" to begin.</td></tr>`;
+}
+
+function renderSCStats() {
+  const el = document.getElementById('scStats');
+  if(!el) return;
+  const totalSum = state.scRows.reduce((s,r)=>s+(r.contractSum||0),0);
+  const totalCert = state.scRows.reduce((s,r)=>s+(r.certified||0),0);
+  const totalEAC = state.scRows.reduce((s,r)=>s+(r.eac||r.contractSum||0),0);
+  const totalVar = totalSum - totalEAC;
+  el.innerHTML = [
+    {v:state.scRows.length, l:'Packages', c:'var(--ink)'},
+    {v:fGBP(totalSum), l:'Total SC Value', c:'var(--ink)'},
+    {v:fGBP(totalCert), l:'Certified to Date', c:'var(--green)'},
+    {v:fGBP(totalEAC), l:'EAC Total', c:'var(--amber)'},
+    {v:fGBP(totalVar), l:'Total Variance', c:totalVar>=0?'var(--green)':'var(--red)'},
+  ].map(s=>`<div style="background:white;border:1px solid var(--rule);border-radius:var(--r2);padding:12px 16px;">
+    <div style="font-size:20px;font-weight:700;color:${s.c};font-family:var(--mono);">${s.v}</div>
+    <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;">${s.l}</div>
+  </div>`).join('');
+}
+
+function openSCModal() {
+  document.getElementById('scModal').style.display='flex';
+  document.getElementById('sc-start').valueAsDate=new Date();
+}
+
+function saveSC() {
+  state.scRows.push({
+    id:uid(),
+    trade:document.getElementById('sc-trade').value,
+    name:document.getElementById('sc-name').value,
+    contractType:document.getElementById('sc-contract').value,
+    contractSum:+document.getElementById('sc-sum').value||0,
+    retention:+document.getElementById('sc-ret').value||3,
+    certified:+document.getElementById('sc-cert').value||0,
+    start:document.getElementById('sc-start').value,
+    end:document.getElementById('sc-end').value,
+    status:'Active',
+  });
+  closeModals(); renderSCTable(); renderSCStats();
+}
+
+// ══════════════════════════════════════════════════════════
+// RISK REGISTER
+// ══════════════════════════════════════════════════════════
+function renderRiskTable() {
+  const tbody = document.getElementById('riskBody');
+  if(!tbody) return;
+  tbody.innerHTML = state.riskRows.length ? state.riskRows.map((r,i)=>{
+    const prob = +r.prob||50;
+    const gross = +r.grossValue||0;
+    const net = Math.round(gross*prob/100);
+    const rag = prob>=70?'r':prob>=40?'a':'g';
+    return `<tr>
+      <td style="font-weight:700;font-family:var(--mono);color:${r.cat==='Opportunity'?'var(--green)':'var(--red)'};">${r.ref}</td>
+      <td style="font-size:12px;"><div style="font-weight:600;">${r.desc}</div><div style="font-size:10px;color:var(--muted);margin-top:2px;">${r.cat}</div></td>
+      <td style="font-size:11px;">${r.owner||'—'}</td>
+      <td style="text-align:right;font-weight:700;font-family:var(--mono);color:${prob>=70?'var(--red)':prob>=40?'var(--amber)':'var(--green)'};">${prob}%</td>
+      <td style="text-align:right;font-family:var(--mono);">${fGBP(gross)}</td>
+      <td style="text-align:right;font-weight:700;font-family:var(--mono);">${fGBP(net)}</td>
+      <td><span class="rag rag-${rag}">${rag.toUpperCase()}</span></td>
+      <td style="font-size:11px;color:var(--muted);">${r.mitigation||'—'}</td>
+      <td style="font-size:11px;">${fDate(r.review)}</td>
+      <td><button onclick="state.riskRows.splice(${i},1);renderRiskTable();renderRiskStats();renderCVRStrip()" style="background:none;border:none;cursor:pointer;color:var(--rule2);">✕</button></td>
+    </tr>`;
+  }).join('') :
+  `<tr><td colspan="10" style="text-align:center;padding:24px;color:var(--dim);font-size:12px;">No risks recorded. Click "+ Add Risk / Opportunity" to begin.</td></tr>`;
+}
+
+function renderRiskStats() {
+  const el = document.getElementById('riskStats');
+  if(!el) return;
+  const red = state.riskRows.filter(r=>+r.prob>=70).length;
+  const amber = state.riskRows.filter(r=>+r.prob>=40&&+r.prob<70).length;
+  const green = state.riskRows.filter(r=>+r.prob<40).length;
+  const totalNet = state.riskRows.reduce((s,r)=>s+Math.round((+r.grossValue||0)*(+r.prob||50)/100),0);
+  const opps = state.riskRows.filter(r=>r.cat==='Opportunity');
+  el.innerHTML = [
+    {v:state.riskRows.length, l:'Total Items', c:'var(--ink)'},
+    {v:red, l:'High Risk (≥70%)', c:'var(--red)'},
+    {v:amber, l:'Medium Risk', c:'var(--amber)'},
+    {v:green, l:'Low Risk', c:'var(--green)'},
+    {v:fGBP(totalNet), l:'Net Risk (P-weighted)', c:'var(--red)'},
+    {v:opps.length, l:'Opportunities', c:'var(--green)'},
+  ].map(s=>`<div style="background:white;border:1px solid var(--rule);border-radius:var(--r2);padding:12px 16px;">
+    <div style="font-size:20px;font-weight:700;color:${s.c};font-family:var(--mono);">${s.v}</div>
+    <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;">${s.l}</div>
+  </div>`).join('');
+}
+
+function openRiskModal() {
+  document.getElementById('riskModal').style.display='flex';
+  document.getElementById('risk-ref').value='R-'+(String(state.riskRows.length+1).padStart(3,'0'));
+  const d=new Date();d.setMonth(d.getMonth()+1);
+  document.getElementById('risk-review').valueAsDate=d;
+}
+
+function saveRisk() {
+  state.riskRows.push({
+    id:uid(),
+    ref:document.getElementById('risk-ref').value,
+    cat:document.getElementById('risk-cat').value,
+    desc:document.getElementById('risk-desc').value,
+    owner:document.getElementById('risk-owner').value,
+    prob:+document.getElementById('risk-prob').value||50,
+    grossValue:+document.getElementById('risk-gross').value||0,
+    mitigation:document.getElementById('risk-mitigation').value,
+    review:document.getElementById('risk-review').value,
+  });
+  closeModals(); renderRiskTable(); renderRiskStats(); renderCVRStrip();
+}
+
+// ══════════════════════════════════════════════════════════
+// NOTICES
+// ══════════════════════════════════════════════════════════
+function renderNotices() {
+  const el = document.getElementById('noticesList');
+  if(!el) return;
+  if(!state.noticeRows.length) {
+    el.innerHTML=`<div style="text-align:center;padding:40px;color:var(--dim);font-size:12px;">No notices issued. Click "+ Issue Notice" to record a contractual notice.</div>`;
+    return;
+  }
+  const typeStyle = {
+    'NEC — Early Warning Notice':'nt-warn',
+    'NEC — CE Notification (cl.61.3)':'nt-ce',
+    'NEC — CE Quotation Submission':'nt-ce',
+    'JCT — Variation Instruction':'nt-ewo',
+    'JCT — Payment Notice':'nt-ce',
+    'JCT — Pay Less Notice':'nt-cl',
+    'JCT — Loss & Expense Notice':'nt-ewo',
+    'Letter — Default Notice to SC':'nt-cl',
+    'Letter — Dispute Notice':'nt-cl',
+  };
+  el.innerHTML = [...state.noticeRows].reverse().map((n,i)=>`
+    <div class="notice-card">
+      <span class="notice-type ${typeStyle[n.type]||'nt-warn'}">${n.type?.split('—')[0]?.trim()||'Notice'}</span>
+      <div style="flex:1;">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px;">
+          <span style="font-size:13px;font-weight:700;">${n.ref||'—'} — ${n.type}</span>
+          <span style="font-size:11px;color:var(--muted);font-family:var(--mono);">${n.direction}</span>
+          ${n.value?`<span style="font-size:11px;font-weight:700;color:var(--green);font-family:var(--mono);">${fGBP(n.value)}</span>`:''}
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">${n.desc}</div>
+        <div style="display:flex;gap:16px;font-size:10px;color:var(--dim);font-family:var(--mono);">
+          <span>Issued: ${fDate(n.date)}</span>
+          ${n.responseBy?`<span style="color:${new Date(n.responseBy)<new Date()?'var(--red)':'var(--ink)'};">Response due: ${fDate(n.responseBy)}</span>`:''}
+        </div>
+      </div>
+      <button onclick="state.noticeRows.splice(state.noticeRows.length-1-${i},1);renderNotices();renderNoticeStats()" style="background:none;border:none;cursor:pointer;color:var(--rule2);font-size:13px;align-self:flex-start;" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--rule2)'">✕</button>
+    </div>`).join('');
+}
+
+function renderNoticeStats() {
+  const el = document.getElementById('noticeStats');
+  if(!el) return;
+  const toClient = state.noticeRows.filter(n=>n.direction?.includes('Client')).length;
+  const toSC = state.noticeRows.filter(n=>n.direction?.includes('Subcontractor')).length;
+  const overdue = state.noticeRows.filter(n=>n.responseBy&&new Date(n.responseBy)<new Date()).length;
+  el.innerHTML = [
+    {v:state.noticeRows.length, l:'Total Notices', c:'var(--ink)'},
+    {v:toClient, l:'To / From Client', c:'var(--blue)'},
+    {v:toSC, l:'To / From SC', c:'var(--amber)'},
+    {v:overdue, l:'Overdue Responses', c:'var(--red)'},
+  ].map(s=>`<div style="background:white;border:1px solid var(--rule);border-radius:var(--r2);padding:12px 16px;">
+    <div style="font-size:20px;font-weight:700;color:${s.c};font-family:var(--mono);">${s.v}</div>
+    <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;">${s.l}</div>
+  </div>`).join('');
+}
+
+function openNoticeModal() {
+  document.getElementById('noticeModal').style.display='flex';
+  const n=state.noticeRows.length+1;
+  document.getElementById('notice-ref').value='EWN-'+String(n).padStart(3,'0');
+  document.getElementById('notice-date').valueAsDate=new Date();
+  const d=new Date();d.setDate(d.getDate()+14);
+  document.getElementById('notice-response').valueAsDate=d;
+}
+
+function saveNotice() {
+  state.noticeRows.push({
+    id:uid(),
+    type:document.getElementById('notice-type').value,
+    direction:document.getElementById('notice-dir').value,
+    desc:document.getElementById('notice-desc').value,
+    date:document.getElementById('notice-date').value,
+    responseBy:document.getElementById('notice-response').value,
+    ref:document.getElementById('notice-ref').value,
+    value:+document.getElementById('notice-value').value||0,
+  });
+  closeModals(); renderNotices(); renderNoticeStats();
+}
+
+// ══════════════════════════════════════════════════════════
+// SHARED UTILS
+// ══════════════════════════════════════════════════════════
+function closeModals() { document.querySelectorAll('.modal-bg').forEach(m=>m.style.display='none'); }
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModals();}));
+
+function delRow(arr, i) { state[arr].splice(i,1); renderAll(); }
+function recalc() { renderCVRSummary(); renderCVRStrip(); }
+
+// ══════════════════════════════════════════════════════════
+// SAVE / LOAD
+// ══════════════════════════════════════════════════════════
+function saveCVR() {
+  const data = {
+    ...state,
+    projName: document.getElementById('projName').value,
+    projNum: document.getElementById('projNum').value,
+    projClient: document.getElementById('projClient').value,
+    projContract: document.getElementById('projContract').value,
+    projCV: document.getElementById('projCV').value,
+    projBudget: document.getElementById('projBudget').value,
+    projQS: document.getElementById('projQS').value,
+    reportPeriod: document.getElementById('reportPeriod').value,
+    narrative: document.getElementById('cvrNarrative').value,
+  };
+  localStorage.setItem('aurum_cvr', JSON.stringify(data));
+  const btn = event?.target;
+  if(btn){btn.textContent='✓ Saved';setTimeout(()=>btn.textContent='💾 Save',2000);}
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('aurum_cvr');
+    if(!saved) return;
+    const data = JSON.parse(saved);
+    state = { valueRows:data.valueRows||[], costRows:data.costRows||[], ceRows:data.ceRows||[], scRows:data.scRows||[], riskRows:data.riskRows||[], noticeRows:data.noticeRows||[], valRows:data.valRows||[], ceValRows:data.ceValRows||[], provisions:data.provisions||[] };
+    ['projName','projNum','projClient','projContract','projCV','projBudget','projQS','reportPeriod'].forEach(id=>{const el=document.getElementById(id);if(el&&data[id])el.value=data[id];});
+    if(data.narrative) document.getElementById('cvrNarrative').value = data.narrative;
+  } catch(e) {}
+}
+
+function setupAutoSave() { setInterval(saveCVR, 60000); }
+
+// ══════════════════════════════════════════════════════════
+// EXPORT EXCEL
+// ══════════════════════════════════════════════════════════
+function exportExcel() {
+  if(typeof XLSX === 'undefined'){alert('Excel library loading... try again in a moment.');return;}
+  const wb = XLSX.utils.book_new();
+  const proj = document.getElementById('projName').value||'Project';
+  const period = document.getElementById('reportPeriod').value||'';
+  const c = calcCVR();
+
+  // CVR Summary sheet
+  const cvrData = [
+    ['COST VALUE RECONCILIATION'],
+    ['Project:', proj, '', 'Period:', period],
+    ['Contract:', document.getElementById('projContract').value, '', 'QS:', document.getElementById('projQS').value],
+    [],
+    ['VALUE'],
+    ['Description','Contract Sum £','Previous £','This Period £','Total to Date £','% Complete'],
+    ...state.valueRows.map(r=>[r.desc,r.contractSum||0,r.previous||0,r.thisPeriod||0,(r.previous||0)+(r.thisPeriod||0),r.contractSum>0?Math.round(((r.previous||0)+(r.thisPeriod||0))/r.contractSum*100)+'%':'—']),
+    ['TOTAL VALUE',state.valueRows.reduce((s,r)=>s+(r.contractSum||0),0),'','',c.value,''],
+    [],
+    ['COST'],
+    ['Description','Budget £','Actual to Date £','Accrual £','Total Cost £','EAC £','Variance £'],
+    ...state.costRows.map(r=>[r.desc,r.budget||0,r.actual||0,r.accrual||0,(r.actual||0)+(r.accrual||0),r.eac||(r.actual||0)+(r.accrual||0),(r.budget||0)-(r.eac||(r.actual||0)+(r.accrual||0))]),
+    ['TOTAL COST',state.costRows.reduce((s,r)=>s+(r.budget||0),0),'','',c.cost,state.costRows.reduce((s,r)=>s+(r.eac||(r.actual||0)+(r.accrual||0)),0),''],
+    [],
+    ['CVR SUMMARY'],
+    ['Gross Value',c.value],['Total Cost',c.cost],['MARGIN',c.margin],['Margin %',c.marginPct.toFixed(1)+'%'],
+    ['EAC Margin',c.eacMargin],['CEs Approved',c.ceApproved],['Risk Exposure',c.riskNet],
+  ];
+  const ws1 = XLSX.utils.aoa_to_sheet(cvrData);
+  ws1['!cols']=[{wch:35},{wch:16},{wch:16},{wch:16},{wch:16},{wch:12},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws1,'CVR');
+
+  // CE Log
+  if(state.ceRows.length){
+    const ceData=[['CE / CHANGE LOG'],['Ref.','Type','Description','Notified','Deadline','Value £','Status'],...state.ceRows.map(r=>[r.ref,r.type,r.desc,r.notified,r.deadline,r.value||0,r.status])];
+    const ws2=XLSX.utils.aoa_to_sheet(ceData);
+    ws2['!cols']=[{wch:10},{wch:25},{wch:40},{wch:14},{wch:14},{wch:14},{wch:15}];
+    XLSX.utils.book_append_sheet(wb,ws2,'CE Log');
+  }
+
+  // Subcontracts
+  if(state.scRows.length){
+    const scData=[['SUBCONTRACT REGISTER'],['Trade','Subcontractor','Contract Type','Contract Sum £','Certified £','EAC £','Status'],...state.scRows.map(r=>[r.trade,r.name,r.contractType,r.contractSum||0,r.certified||0,r.eac||r.contractSum||0,r.status||'Active'])];
+    const ws3=XLSX.utils.aoa_to_sheet(scData);
+    ws3['!cols']=[{wch:20},{wch:25},{wch:20},{wch:16},{wch:16},{wch:16},{wch:12}];
+    XLSX.utils.book_append_sheet(wb,ws3,'Subcontracts');
+  }
+
+  // Risk Register
+  if(state.riskRows.length){
+    const rData=[['RISK REGISTER'],['Ref.','Category','Description','Owner','Probability %','Gross Value £','Net Value £','RAG','Mitigation','Review Date'],...state.riskRows.map(r=>[r.ref,r.cat,r.desc,r.owner,r.prob,r.grossValue||0,Math.round((+r.grossValue||0)*(+r.prob||50)/100),+r.prob>=70?'R':+r.prob>=40?'A':'G',r.mitigation,r.review])];
+    const ws4=XLSX.utils.aoa_to_sheet(rData);
+    ws4['!cols']=[{wch:10},{wch:15},{wch:40},{wch:12},{wch:14},{wch:14},{wch:14},{wch:6},{wch:35},{wch:14}];
+    XLSX.utils.book_append_sheet(wb,ws4,'Risk Register');
+  }
+
+  XLSX.writeFile(wb, `CVR_${proj.replace(/\s/g,'_')}_${period}.xlsx`);
+}
+</script>
+</body>
+</html>
