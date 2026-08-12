@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEC3 CE Workflow Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f3ee;--s1:#ffffff;--s2:#f0ede6;--s3:#e8e4dc;
+  --border:#ddd8ce;--border2:#c8c2b4;
+  --ink:#0a0a0a;--muted:#6a6258;--dim:#9a9288;
+  --gold:#8a6000;--gold-bg:#fdf8e8;--gold-border:#e8d060;
+  --red:#8a1000;--red-bg:#fdf0ee;--red-border:#e8a090;
+  --green:#005a18;--green-bg:#eef8f0;--green-border:#80d898;
+  --blue:#002a6a;--blue-bg:#eef2fc;--blue-border:#80a8e8;
+  --amber:#7a4000;--amber-bg:#fdf4e8;--amber-border:#e8b870;
+  --purple:#4a008a;--purple-bg:#f4eefe;--purple-border:#c090e8;
+  --font:'Inter',sans-serif;--mono:'DM Mono',monospace;
+  --r:6px;--r2:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);}
+.topbar{height:52px;background:var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:100;}
+.logo{font-size:13px;font-weight:800;color:#f5f3ee;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;}
+.topbar-center{font-size:11px;color:#888;font-family:var(--mono);letter-spacing:.06em;}
+.btn{font-family:var(--font);font-size:12px;font-weight:600;padding:7px 14px;border-radius:var(--r2);border:1px solid var(--border);background:var(--s1);color:var(--muted);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;text-decoration:none;}
+.btn:hover{border-color:var(--border2);color:var(--ink);}
+.btn.primary{background:var(--ink);color:#f5f3ee;border-color:var(--ink);}
+.btn.primary:hover{background:#2a2a2a;}
+.btn.success{background:var(--green-bg);color:var(--green);border-color:var(--green-border);}
+.btn.danger{background:var(--red-bg);color:var(--red);border-color:var(--red-border);}
+.btn.amber{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-border);}
+.main{max-width:1300px;margin:0 auto;padding:28px 24px;}
+
+/* PROJECT INFO */
+.proj-bar{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.proj-field{display:flex;flex-direction:column;gap:3px;flex:1;min-width:140px;}
+.proj-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-family:var(--mono);}
+.proj-input{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:7px 10px;color:var(--ink);font-family:var(--font);font-size:13px;font-weight:600;outline:none;width:100%;}
+.proj-input:focus{border-color:var(--ink);}
+
+/* STATS */
+.stats-strip{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:20px;}
+.stat-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;border-left:3px solid transparent;}
+.stat-val{font-size:22px;font-weight:800;letter-spacing:-.3px;font-family:var(--mono);}
+.stat-lbl{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;}
+.stat-sub{font-size:10px;color:var(--dim);font-family:var(--mono);margin-top:2px;}
+
+/* NEC3 WORKFLOW PIPELINE */
+.pipeline{display:flex;gap:0;margin-bottom:24px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;}
+.pipe-stage{flex:1;padding:12px 10px;text-align:center;border-right:1px solid var(--border);position:relative;}
+.pipe-stage:last-child{border-right:none;}
+.pipe-stage.active{background:var(--gold-bg);}
+.pipe-num{font-size:9px;font-weight:700;color:var(--dim);font-family:var(--mono);margin-bottom:3px;}
+.pipe-name{font-size:11px;font-weight:700;color:var(--muted);}
+.pipe-clause{font-size:9px;color:var(--dim);font-family:var(--mono);margin-top:2px;}
+.pipe-count{font-size:18px;font-weight:800;color:var(--ink);font-family:var(--mono);}
+.pipe-arrow{position:absolute;right:-8px;top:50%;transform:translateY(-50%);font-size:12px;color:var(--border2);z-index:1;}
+
+/* CE CARDS */
+.ce-list{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.ce-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;transition:box-shadow .15s;}
+.ce-card:hover{box-shadow:0 2px 12px rgba(0,0,0,.08);}
+.ce-card.overdue{border-color:var(--red-border);background:var(--red-bg);}
+.ce-card.warning{border-color:var(--amber-border);}
+.ce-header{padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;cursor:pointer;}
+.ce-ref{font-size:12px;font-weight:800;color:var(--gold);font-family:var(--mono);background:var(--gold-bg);border:1px solid var(--gold-border);padding:3px 10px;border-radius:4px;flex-shrink:0;}
+.ce-desc{font-size:13px;font-weight:600;flex:1;}
+.ce-type-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;font-family:var(--mono);text-transform:uppercase;flex-shrink:0;}
+.ce-value{font-size:13px;font-weight:700;color:var(--green);font-family:var(--mono);flex-shrink:0;}
+.ce-body{border-top:1px solid var(--border);padding:16px;display:none;}
+.ce-body.open{display:block;}
+
+/* WORKFLOW STEPS */
+.wf-steps{display:flex;gap:0;margin-bottom:16px;border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;}
+.wf-step{flex:1;padding:8px 6px;text-align:center;border-right:1px solid var(--border);cursor:pointer;transition:all .15s;}
+.wf-step:last-child{border-right:none;}
+.wf-step.done{background:var(--green-bg);}
+.wf-step.current{background:var(--gold-bg);border-bottom:2px solid var(--gold);}
+.wf-step.overdue-step{background:var(--red-bg);}
+.wf-step-num{font-size:9px;font-family:var(--mono);color:var(--dim);margin-bottom:2px;}
+.wf-step.done .wf-step-num{color:var(--green);}
+.wf-step.current .wf-step-num{color:var(--gold);}
+.wf-step-name{font-size:10px;font-weight:700;color:var(--muted);}
+.wf-step.done .wf-step-name{color:var(--green);}
+.wf-step.current .wf-step-name{color:var(--ink);}
+
+/* DETAIL GRID */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;}
+.detail-field{display:flex;flex-direction:column;gap:4px;}
+.detail-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-family:var(--mono);}
+.detail-input{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:7px 10px;color:var(--ink);font-family:var(--mono);font-size:12px;outline:none;width:100%;}
+.detail-input:focus{border-color:var(--ink);}
+.detail-val{font-size:12px;font-weight:600;font-family:var(--mono);padding:7px 0;}
+
+/* DATES ROW */
+.dates-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;background:var(--s2);border-radius:var(--r2);padding:12px 14px;margin-bottom:14px;}
+.date-item{display:flex;flex-direction:column;gap:3px;}
+.date-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono);}
+.date-val{font-size:12px;font-weight:600;font-family:var(--mono);}
+.date-val.overdue{color:var(--red);font-weight:700;}
+.date-val.due-soon{color:var(--amber);font-weight:700;}
+.date-val.ok{color:var(--green);}
+
+/* ALERT BOX */
+.alert{border-radius:var(--r);padding:10px 14px;font-size:12px;font-family:var(--mono);margin-bottom:12px;display:flex;align-items:flex-start;gap:8px;line-height:1.5;}
+.alert.red{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red);}
+.alert.amber{background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--amber);}
+.alert.green{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green);}
+.alert.blue{background:var(--blue-bg);border:1px solid var(--blue-border);color:var(--blue);}
+
+/* QUOTATION TABLE */
+.quot-table{width:100%;border-collapse:collapse;font-size:12px;}
+.quot-table thead th{padding:7px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono);}
+.quot-table thead th.r{text-align:right;}
+.quot-table tbody tr{border-bottom:1px solid var(--border);}
+.quot-table td{padding:8px 12px;font-family:var(--mono);}
+.quot-table td.r{text-align:right;}
+.editable{background:var(--s2);border:1px solid var(--border);border-radius:3px;padding:3px 7px;font-family:var(--mono);font-size:11px;outline:none;width:100%;}
+.editable:focus{border-color:var(--ink);}
+
+/* EWN REGISTER */
+.ewn-table{width:100%;border-collapse:collapse;}
+.ewn-table thead th{padding:8px 12px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--border);background:var(--s2);font-family:var(--mono);}
+.ewn-table tbody tr{border-bottom:1px solid var(--border);transition:background .1s;}
+.ewn-table tbody tr:hover{background:var(--s2);}
+.ewn-table td{padding:9px 12px;font-size:12px;}
+
+/* TABS */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;}
+.tab{padding:10px 18px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
+.tab.active{color:var(--ink);border-bottom-color:var(--ink);}
+.tab:hover{color:var(--ink);}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:26px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:17px;font-weight:800;margin-bottom:18px;}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.form-field{display:flex;flex-direction:column;gap:4px;}
+.form-field.full{grid-column:1/-1;}
+.form-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-family:var(--mono);}
+.form-input{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:8px 11px;color:var(--ink);font-family:var(--mono);font-size:13px;outline:none;width:100%;}
+.form-input:focus{border-color:var(--ink);}
+.modal-btns{display:flex;gap:8px;margin-top:18px;justify-content:flex-end;}
+
+/* PRINT */
+@media print{.topbar,.btn,.tabs,.no-print{display:none!important;}.main{padding:0;}body{background:white;font-size:10px;}}
+@media(max-width:768px){.detail-grid{grid-template-columns:1fr 1fr;}.wf-steps{flex-wrap:wrap;}.main{padding:16px 14px;}.topbar-center{display:none;}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a class="logo" href="#">QS Toolkit</a>
+  <div class="topbar-center">// NEC3 Compensation Event Workflow Manager · cl.60–64</div>
+  <div style="display:flex;gap:8px;">
+    <a class="btn" href="cvr.html">📊 CVR</a>
+    <a class="btn" href="projects.html">🗂 Projects</a>
+    <button class="btn" onclick="exportExcel()">📊 Export</button>
+    <button class="btn primary" onclick="openCEModal()">+ New CE</button>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- PROJECT INFO -->
+  <div class="proj-bar">
+    <div class="proj-field"><div class="proj-label">Project</div><input class="proj-input" id="projName" placeholder="A19 Junction Improvement"></div>
+    <div class="proj-field"><div class="proj-label">Contract</div>
+      <select class="proj-input" id="projContract">
+        <option>NEC3 ECC Option A</option><option>NEC3 ECC Option B</option>
+        <option>NEC3 ECC Option C</option><option>NEC3 ECC Option D</option>
+        <option>NEC3 ECC Option E</option><option>NEC4 ECC Option A</option>
+        <option>NEC4 ECC Option C</option>
+      </select>
+    </div>
+    <div class="proj-field"><div class="proj-label">PM / Client</div><input class="proj-input" id="projPM" placeholder="Network Rail / Highways England"></div>
+    <div class="proj-field"><div class="proj-label">Contract Date</div><input class="proj-input" id="projDate" type="date"></div>
+    <div class="proj-field"><div class="proj-label">Completion Date</div><input class="proj-input" id="projCompletion" type="date"></div>
+    <div class="proj-field"><div class="proj-label">QS</div><input class="proj-input" id="projQS" placeholder="Leon — MRICS MCIOB"></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" id="tab-ce" onclick="showTab('ce')">⚡ CE Register</div>
+    <div class="tab" id="tab-ewn" onclick="showTab('ewn')">⚠️ Early Warning Register</div>
+    <div class="tab" id="tab-programme" onclick="showTab('programme')">📅 Accepted Programme</div>
+    <div class="tab" id="tab-defined" onclick="showTab('defined')">💸 Defined Cost (Option C)</div>
+  </div>
+
+  <!-- CE REGISTER -->
+  <div id="panel-ce">
+
+    <!-- PIPELINE -->
+    <div class="pipeline" id="cePipeline"></div>
+
+    <!-- STATS -->
+    <div class="stats-strip" id="ceStats"></div>
+
+    <!-- ALERTS -->
+    <div id="ceAlerts"></div>
+
+    <!-- FILTER BAR -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);font-family:var(--mono);">Filter:</div>
+      <button class="btn" id="filter-all" onclick="setFilter('all')" style="font-size:11px;padding:5px 12px;">All</button>
+      <button class="btn" id="filter-open" onclick="setFilter('open')" style="font-size:11px;padding:5px 12px;">Open</button>
+      <button class="btn" id="filter-overdue" onclick="setFilter('overdue')" style="font-size:11px;padding:5px 12px;border-color:var(--red-border);color:var(--red);">Overdue</button>
+      <button class="btn" id="filter-agreed" onclick="setFilter('agreed')" style="font-size:11px;padding:5px 12px;border-color:var(--green-border);color:var(--green);">Agreed</button>
+      <div style="margin-left:auto;display:flex;gap:8px;">
+        <button class="btn primary" onclick="openCEModal()">+ New CE</button>
+      </div>
+    </div>
+
+    <div class="ce-list" id="ceList">
+      <div style="text-align:center;padding:40px;color:var(--muted);font-family:var(--mono);font-size:13px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);">
+        No compensation events yet.<br><br>
+        <button class="btn primary" onclick="openCEModal()">+ Add First CE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EWN REGISTER -->
+  <div id="panel-ewn" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-size:18px;font-weight:800;">Early Warning <span style="color:var(--gold);">Register</span></div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">NEC3 cl.16 · 4-week response obligation · Risk Reduction Meetings</div>
+      </div>
+      <button class="btn primary" onclick="openEWNModal()">+ New Early Warning</button>
+    </div>
+
+    <div class="alert blue" style="margin-bottom:16px;">
+      📋 <strong>NEC3 cl.16.1:</strong> Contractor and PM must give early warning of any matter which could increase the total of the Prices, delay Completion, delay meeting a Key Date, or impair performance. <strong>4-week Risk Reduction Meeting obligation.</strong>
+    </div>
+
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;">
+      <div style="padding:12px 18px;background:var(--s2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:12px;font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;">Early Warning Register</div>
+        <div id="ewnStats" style="font-size:11px;color:var(--muted);font-family:var(--mono);"></div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="ewn-table" style="min-width:900px;">
+          <thead><tr>
+            <th style="width:80px;">EWN Ref.</th>
+            <th>Matter / Risk</th>
+            <th style="width:80px;">Raised By</th>
+            <th style="width:100px;">Date Raised</th>
+            <th style="width:100px;">RRM Due</th>
+            <th style="width:100px;">RRM Held</th>
+            <th style="width:80px;">Impact</th>
+            <th style="width:90px;">Status</th>
+            <th style="width:50px;"></th>
+          </tr></thead>
+          <tbody id="ewnBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACCEPTED PROGRAMME -->
+  <div id="panel-programme" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-size:18px;font-weight:800;">Accepted <span style="color:var(--gold);">Programme</span></div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">NEC3 cl.31 / cl.32 · Submission and acceptance tracking</div>
+      </div>
+      <button class="btn primary" onclick="openProgModal()">+ Submit Programme</button>
+    </div>
+
+    <div class="alert blue" style="margin-bottom:16px;">
+      📋 <strong>NEC3 cl.31:</strong> Contractor to submit first programme for acceptance within period stated in Contract Data. <strong>cl.32:</strong> Updated programme to be submitted at intervals stated in Contract Data (typically 4-weekly). PM has 2 weeks to accept or reject with reasons.
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:20px;" id="progStats"></div>
+
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;">
+      <div style="padding:12px 18px;background:var(--s2);border-bottom:1px solid var(--border);font-size:12px;font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;">Programme Submissions</div>
+      <div style="overflow-x:auto;">
+        <table class="ewn-table" style="min-width:800px;">
+          <thead><tr>
+            <th style="width:80px;">Rev.</th>
+            <th>Description</th>
+            <th style="width:110px;">Submitted</th>
+            <th style="width:110px;">PM Response Due</th>
+            <th style="width:110px;">Response Date</th>
+            <th style="width:110px;">Completion Date</th>
+            <th style="width:90px;">Status</th>
+            <th style="width:50px;"></th>
+          </tr></thead>
+          <tbody id="progBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEFINED COST -->
+  <div id="panel-defined" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div>
+        <div style="font-size:18px;font-weight:800;">Defined Cost <span style="color:var(--gold);">Tracker</span></div>
+        <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">NEC3 Option C · Schedule of Cost Components · Pain/Gain share</div>
+      </div>
+      <button class="btn primary" onclick="addDefinedCostRow()">+ Add Cost Entry</button>
+    </div>
+
+    <div class="alert blue" style="margin-bottom:16px;">
+      📋 <strong>NEC3 Option C (Target):</strong> Contractor paid Defined Cost + Fee. If final cost &lt; target → Contractor shares gain. If final cost &gt; target → Contractor shares pain. Track all Defined Cost components per Schedule of Cost Components.
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-bottom:20px;" id="dcStats"></div>
+
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:16px;">
+      <div style="padding:12px 18px;background:var(--s2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:12px;font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;">Defined Cost Components</div>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="ewn-table" style="min-width:900px;">
+          <thead><tr>
+            <th>Component (Schedule of Cost Components)</th>
+            <th style="text-align:right;width:130px;">This Period £</th>
+            <th style="text-align:right;width:130px;">Cumulative £</th>
+            <th style="text-align:right;width:130px;">Forecast £</th>
+            <th style="width:100px;">Evidence</th>
+            <th style="width:50px;"></th>
+          </tr></thead>
+          <tbody id="dcBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- PAIN/GAIN CALCULATOR -->
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;">
+      <div style="padding:12px 18px;background:var(--s2);border-bottom:1px solid var(--border);font-size:12px;font-weight:700;font-family:var(--mono);text-transform:uppercase;letter-spacing:.04em;">Pain / Gain Share Calculator</div>
+      <div style="padding:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;" id="painGainCalc"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- CE MODAL -->
+<div class="modal-bg" id="ceModal" style="display:none;">
+  <div class="modal">
+    <div class="modal-title">+ New Compensation Event</div>
+    <div class="form-grid">
+      <div class="form-field"><div class="form-label">CE Reference</div><input class="form-input" id="ce-ref" placeholder="CE-001"></div>
+      <div class="form-field"><div class="form-label">cl.60.1 Event Type</div>
+        <select class="form-input" id="ce-clause">
+          <option value="60.1(1)">cl.60.1(1) — PM instruction changing WIS</option>
+          <option value="60.1(2)">cl.60.1(2) — ML not provided by Access Date</option>
+          <option value="60.1(3)">cl.60.1(3) — PM instruction stopping work</option>
+          <option value="60.1(4)">cl.60.1(4) — PM not responding to submission</option>
+          <option value="60.1(5)">cl.60.1(5) — Works prevented by physical condition</option>
+          <option value="60.1(6)">cl.60.1(6) — Weather measurement</option>
+          <option value="60.1(7)">cl.60.1(7) — Client event causing delay</option>
+          <option value="60.1(8)">cl.60.1(8) — Client risk event</option>
+          <option value="60.1(9)">cl.60.1(9) — PM certifies take over</option>
+          <option value="60.1(10)">cl.60.1(10) — Client fails to provide</option>
+          <option value="60.1(11)">cl.60.1(11) — PM instruction to search</option>
+          <option value="60.1(12)">cl.60.1(12) — Test/inspection causes delay</option>
+          <option value="60.1(13)">cl.60.1(13) — PM instruction correcting assumption</option>
+          <option value="60.1(14)">cl.60.1(14) — Client breach of contract</option>
+          <option value="60.1(15)">cl.60.1(15) — Prevention event</option>
+          <option value="60.1(16)">cl.60.1(16) — Breach of obligation (Z clauses)</option>
+          <option value="other">Other / Z Clause</option>
+        </select>
+      </div>
+      <div class="form-field full"><div class="form-label">Description</div><textarea class="form-input" id="ce-desc" rows="3" placeholder="Brief description of the compensation event..."></textarea></div>
+      <div class="form-field"><div class="form-label">Notified By</div>
+        <select class="form-input" id="ce-notified-by">
+          <option>Contractor (cl.61.3)</option><option>PM (cl.61.1)</option>
+        </select>
+      </div>
+      <div class="form-field"><div class="form-label">Date Notified</div><input class="form-input" id="ce-date-notified" type="date"></div>
+      <div class="form-field"><div class="form-label">Quotation Submitted</div><input class="form-input" id="ce-date-quoted" type="date"></div>
+      <div class="form-field"><div class="form-label">Quoted Value £</div><input class="form-input" id="ce-value-quoted" type="number" placeholder="0"></div>
+      <div class="form-field"><div class="form-label">Time Impact (days)</div><input class="form-input" id="ce-time" type="number" placeholder="0"></div>
+      <div class="form-field"><div class="form-label">Status</div>
+        <select class="form-input" id="ce-status">
+          <option>Notified — awaiting PM instruction (cl.61.1)</option>
+          <option>Quotation submitted — awaiting PM response (cl.62)</option>
+          <option>PM assessing (cl.64)</option>
+          <option>Agreed — implementing</option>
+          <option>Implemented</option>
+          <option>Disputed — adjudication</option>
+          <option>Withdrawn</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-btns"><button class="btn" onclick="closeModals()">Cancel</button><button class="btn primary" onclick="saveCE()">Add CE</button></div>
+  </div>
+</div>
+
+<!-- EWN MODAL -->
+<div class="modal-bg" id="ewnModal" style="display:none;">
+  <div class="modal">
+    <div class="modal-title">+ New Early Warning Notice</div>
+    <div class="form-grid">
+      <div class="form-field"><div class="form-label">EWN Reference</div><input class="form-input" id="ewn-ref" placeholder="EWN-001"></div>
+      <div class="form-field"><div class="form-label">Raised By</div>
+        <select class="form-input" id="ewn-raised-by">
+          <option>Contractor</option><option>PM</option><option>Subcontractor</option>
+        </select>
+      </div>
+      <div class="form-field full"><div class="form-label">Matter / Risk Description (cl.16.1)</div><textarea class="form-input" id="ewn-desc" rows="3" placeholder="Describe the matter that could increase Prices, delay Completion, delay a Key Date, or impair performance..."></textarea></div>
+      <div class="form-field"><div class="form-label">Date Raised</div><input class="form-input" id="ewn-date" type="date"></div>
+      <div class="form-field"><div class="form-label">RRM Required By</div><input class="form-input" id="ewn-rrm-due" type="date"></div>
+      <div class="form-field"><div class="form-label">Impact on Prices £</div><input class="form-input" id="ewn-impact-cost" type="number" placeholder="0"></div>
+      <div class="form-field"><div class="form-label">Impact on Programme (days)</div><input class="form-input" id="ewn-impact-time" type="number" placeholder="0"></div>
+      <div class="form-field"><div class="form-label">Status</div>
+        <select class="form-input" id="ewn-status">
+          <option>Open — RRM to be arranged</option>
+          <option>RRM scheduled</option>
+          <option>RRM held — actions agreed</option>
+          <option>Closed — risk reduced</option>
+          <option>Converted to CE</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-btns"><button class="btn" onclick="closeModals()">Cancel</button><button class="btn primary" onclick="saveEWN()">Add EWN</button></div>
+  </div>
+</div>
+
+<!-- PROGRAMME MODAL -->
+<div class="modal-bg" id="progModal" style="display:none;">
+  <div class="modal">
+    <div class="modal-title">+ Programme Submission</div>
+    <div class="form-grid">
+      <div class="form-field"><div class="form-label">Revision</div><input class="form-input" id="prog-rev" placeholder="Rev A"></div>
+      <div class="form-field"><div class="form-label">Date Submitted</div><input class="form-input" id="prog-submitted" type="date"></div>
+      <div class="form-field full"><div class="form-label">Description / Changes from Previous</div><input class="form-input" id="prog-desc" placeholder="First programme submission / Revised following CE-003..."></div>
+      <div class="form-field"><div class="form-label">Completion Date Shown</div><input class="form-input" id="prog-completion" type="date"></div>
+      <div class="form-field"><div class="form-label">Float (weeks)</div><input class="form-input" id="prog-float" type="number" placeholder="0"></div>
+      <div class="form-field"><div class="form-label">Status</div>
+        <select class="form-input" id="prog-status">
+          <option>Submitted — awaiting acceptance</option>
+          <option>Accepted by PM</option>
+          <option>Rejected — reasons given</option>
+          <option>Superseded by later revision</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-btns"><button class="btn" onclick="closeModals()">Cancel</button><button class="btn primary" onclick="saveProg()">Add Submission</button></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+let ceRows = [], ewnRows = [], progRows = [], dcRows = [];
+let activeFilter = 'all';
+
+// ── INIT ────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('ce-date-notified').valueAsDate = new Date();
+  document.getElementById('ewn-date').valueAsDate = new Date();
+  document.getElementById('prog-submitted').valueAsDate = new Date();
+  // Set RRM due 4 weeks from today
+  const rrm = new Date(); rrm.setDate(rrm.getDate()+28);
+  document.getElementById('ewn-rrm-due').valueAsDate = rrm;
+  loadState();
+  seedDefaultDC();
+  renderAll();
+});
+
+function uid(){ return Math.random().toString(36).slice(2,9); }
+function fGBP(n){ n=+n||0; if(!n)return'—'; const neg=n<0; n=Math.abs(n); let s=n>=1e6?'£'+(n/1e6).toFixed(2)+'M':n>=1000?'£'+Math.round(n).toLocaleString('en-GB'):'£'+Math.round(n); return neg?'('+s+')':s; }
+function fDate(s){ if(!s)return'—'; return new Date(s).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+function daysUntil(dateStr){ if(!dateStr)return null; return Math.ceil((new Date(dateStr)-new Date())/(1000*60*60*24)); }
+
+// ── TABS ────────────────────────────────────────────────
+function showTab(t) {
+  ['ce','ewn','programme','defined'].forEach(x => {
+    document.getElementById('panel-'+x).style.display = x===t?'block':'none';
+    document.getElementById('tab-'+x).classList.toggle('active', x===t);
+  });
+}
+
+// ── NEC3 DEADLINE CALC ───────────────────────────────────
+// cl.62.3: PM must respond to quotation within 2 weeks (or extended period)
+// cl.61.3: Contractor must notify CE within 8 weeks of becoming aware
+// cl.64.3: PM must assess within 2 weeks of quotation period expiry
+function getCEDeadlines(ce) {
+  const notified = ce.dateNotified ? new Date(ce.dateNotified) : null;
+  const quoted = ce.dateQuoted ? new Date(ce.dateQuoted) : null;
+  const dl = {};
+  if(notified) {
+    // cl.62.3 — PM must respond to quotation within 2 weeks
+    const pmReply = new Date(notified); pmReply.setDate(pmReply.getDate()+14);
+    dl.pmReply = pmReply;
+    // cl.64.3 — if PM assessing, must do so within 2 weeks of quotation reply period
+    const pmAssess = new Date(pmReply); pmAssess.setDate(pmAssess.getDate()+14);
+    dl.pmAssess = pmAssess;
+  }
+  if(quoted) {
+    const pmReplyFromQuote = new Date(quoted); pmReplyFromQuote.setDate(pmReplyFromQuote.getDate()+14);
+    dl.pmReplyFromQuote = pmReplyFromQuote;
+  }
+  return dl;
+}
+
+// ── FILTER ───────────────────────────────────────────────
+function setFilter(f) {
+  activeFilter = f;
+  ['all','open','overdue','agreed'].forEach(x => {
+    const btn = document.getElementById('filter-'+x);
+    if(btn) btn.style.background = x===f ? 'var(--ink)' : '';
+    if(btn) btn.style.color = x===f ? '#f5f3ee' : '';
+    if(btn) btn.style.borderColor = x===f ? 'var(--ink)' : '';
+  });
+  renderCEList();
+}
+
+// ── RENDER ALL ───────────────────────────────────────────
+function renderAll() { renderPipeline(); renderCEStats(); renderCEAlerts(); renderCEList(); renderEWN(); renderProgTab(); renderDC(); }
+
+// ── PIPELINE ─────────────────────────────────────────────
+function renderPipeline() {
+  const stages = [
+    {name:'Notified', clause:'cl.61', filter:r=>r.status?.includes('Notified')},
+    {name:'Quoted', clause:'cl.62', filter:r=>r.status?.includes('Quotation')},
+    {name:'PM Assessing', clause:'cl.64', filter:r=>r.status?.includes('assessing')},
+    {name:'Agreed', clause:'cl.63', filter:r=>r.status?.includes('Agreed')},
+    {name:'Implemented', clause:'—', filter:r=>r.status?.includes('Implemented')},
+  ];
+  document.getElementById('cePipeline').innerHTML = stages.map((s,i) => {
+    const count = ceRows.filter(s.filter).length;
+    return `<div class="pipe-stage ${count>0?'active':''}">
+      <div class="pipe-num">Stage ${i+1}</div>
+      <div class="pipe-count" style="color:${count>0?'var(--gold)':'var(--dim)'};">${count}</div>
+      <div class="pipe-name">${s.name}</div>
+      <div class="pipe-clause">${s.clause}</div>
+      ${i<4?`<div class="pipe-arrow">→</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+// ── CE STATS ─────────────────────────────────────────────
+function renderCEStats() {
+  const total = ceRows.length;
+  const agreed = ceRows.filter(c=>c.status?.includes('Agreed')||c.status?.includes('Implemented'));
+  const disputed = ceRows.filter(c=>c.status?.includes('Disputed'));
+  const overdue = ceRows.filter(c => {
+    const d = getCEDeadlines(c);
+    return d.pmReplyFromQuote && daysUntil(d.pmReplyFromQuote.toISOString().slice(0,10)) < 0 && !c.status?.includes('Agreed') && !c.status?.includes('Implemented');
+  });
+  const totalAgreed = agreed.reduce((s,c)=>s+(+c.valueQuoted||0),0);
+  const totalPending = ceRows.filter(c=>!c.status?.includes('Agreed')&&!c.status?.includes('Implemented')&&!c.status?.includes('Disputed')).reduce((s,c)=>s+(+c.valueQuoted||0),0);
+  const totalTime = agreed.reduce((s,c)=>s+(+c.timeImpact||0),0);
+
+  document.getElementById('ceStats').innerHTML = [
+    {v:total, l:'Total CEs', sub:'All events', c:'var(--ink)', bl:'var(--border2)'},
+    {v:agreed.length, l:'Agreed / Implemented', sub:fGBP(totalAgreed), c:'var(--green)', bl:'var(--green)'},
+    {v:ceRows.filter(c=>!c.status?.includes('Agreed')&&!c.status?.includes('Implemented')).length, l:'Open / Pending', sub:fGBP(totalPending), c:'var(--amber)', bl:'var(--amber-border)'},
+    {v:overdue.length, l:'Overdue Responses', sub:'PM past deadline', c:'var(--red)', bl:'var(--red)'},
+    {v:disputed.length, l:'Disputed', sub:'Adjudication risk', c:'var(--red)', bl:'var(--red-border)'},
+    {v:totalTime+'d', l:'Time Granted', sub:'Calendar days EOT', c:'var(--blue)', bl:'var(--blue-border)'},
+  ].map(s=>`<div class="stat-card" style="border-left-color:${s.bl}">
+    <div class="stat-val" style="color:${s.c};">${s.v}</div>
+    <div class="stat-lbl">${s.l}</div>
+    <div class="stat-sub">${s.sub}</div>
+  </div>`).join('');
+}
+
+// ── CE ALERTS ────────────────────────────────────────────
+function renderCEAlerts() {
+  const alerts = [];
+  ceRows.forEach(ce => {
+    const d = getCEDeadlines(ce);
+    if(ce.dateQuoted && d.pmReplyFromQuote) {
+      const days = daysUntil(d.pmReplyFromQuote.toISOString().slice(0,10));
+      if(days < 0 && !ce.status?.includes('Agreed') && !ce.status?.includes('Implemented')) {
+        alerts.push({type:'red', msg:`⏰ ${ce.ref} — PM response OVERDUE by ${Math.abs(days)} days (cl.62.3 deadline was ${fDate(d.pmReplyFromQuote.toISOString().slice(0,10))}). Consider issuing reminder notice.`});
+      } else if(days >= 0 && days <= 3 && !ce.status?.includes('Agreed')) {
+        alerts.push({type:'amber', msg:`⚠️ ${ce.ref} — PM response due in ${days} day${days===1?'':'s'} (${fDate(d.pmReplyFromQuote.toISOString().slice(0,10))}). Chase if not received.`});
+      }
+    }
+  });
+  ewnRows.forEach(ewn => {
+    if(ewn.rrmDue) {
+      const days = daysUntil(ewn.rrmDue);
+      if(days < 0 && !ewn.status?.includes('Closed') && !ewn.status?.includes('Converted')) {
+        alerts.push({type:'red', msg:`⏰ ${ewn.ref} — Risk Reduction Meeting OVERDUE (cl.16 deadline: ${fDate(ewn.rrmDue)}). Arrange immediately.`});
+      } else if(days >= 0 && days <= 5) {
+        alerts.push({type:'amber', msg:`⚠️ ${ewn.ref} — RRM due in ${days} days (${fDate(ewn.rrmDue)}). Confirm with PM.`});
+      }
+    }
+  });
+  document.getElementById('ceAlerts').innerHTML = alerts.map(a =>
+    `<div class="alert ${a.type}" style="margin-bottom:8px;">${a.msg}</div>`
+  ).join('');
+}
+
+// ── CE LIST ──────────────────────────────────────────────
+function renderCEList() {
+  let filtered = ceRows;
+  if(activeFilter==='open') filtered = ceRows.filter(c=>!c.status?.includes('Agreed')&&!c.status?.includes('Implemented')&&!c.status?.includes('Disputed'));
+  if(activeFilter==='agreed') filtered = ceRows.filter(c=>c.status?.includes('Agreed')||c.status?.includes('Implemented'));
+  if(activeFilter==='overdue') {
+    filtered = ceRows.filter(c => {
+      const d = getCEDeadlines(c);
+      return d.pmReplyFromQuote && daysUntil(d.pmReplyFromQuote.toISOString().slice(0,10)) < 0 && !c.status?.includes('Agreed') && !c.status?.includes('Implemented');
+    });
+  }
+
+  if(!filtered.length) {
+    document.getElementById('ceList').innerHTML = `<div style="text-align:center;padding:32px;color:var(--muted);font-family:var(--mono);font-size:12px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);">${activeFilter==='all'?'No compensation events yet. Click "+ New CE" to add one.':'No CEs match this filter.'}</div>`;
+    return;
+  }
+
+  document.getElementById('ceList').innerHTML = filtered.map((ce,i) => {
+    const dl = getCEDeadlines(ce);
+    const pmDays = dl.pmReplyFromQuote ? daysUntil(dl.pmReplyFromQuote.toISOString().slice(0,10)) : null;
+    const isOverdue = pmDays !== null && pmDays < 0 && !ce.status?.includes('Agreed') && !ce.status?.includes('Implemented');
+    const isWarning = pmDays !== null && pmDays >= 0 && pmDays <= 3 && !ce.status?.includes('Agreed');
+    const isAgreed = ce.status?.includes('Agreed') || ce.status?.includes('Implemented');
+    const isDisputed = ce.status?.includes('Disputed');
+
+    const statusCol = isAgreed?'var(--green)':isDisputed?'var(--red)':isOverdue?'var(--red)':'var(--amber)';
+    const cardClass = isOverdue?'overdue':isWarning?'warning':'';
+
+    const wfStages = [
+      {name:'Notified', done:!!ce.dateNotified, current:!!ce.dateNotified&&!ce.dateQuoted},
+      {name:'Quoted', done:!!ce.dateQuoted, current:!!ce.dateQuoted&&!isAgreed&&!isDisputed},
+      {name:'PM Review', done:isAgreed||isDisputed, current:!!(ce.dateQuoted&&!isAgreed&&!isDisputed)},
+      {name:'Agreed', done:isAgreed, current:false},
+      {name:'Implemented', done:ce.status?.includes('Implemented'), current:false},
+    ];
+
+    const realIdx = ceRows.indexOf(ce);
+
+    return `<div class="ce-card ${cardClass}">
+      <div class="ce-header" onclick="toggleCE('ce-body-${realIdx}')">
+        <span class="ce-ref">${ce.ref}</span>
+        <div style="flex:1;">
+          <div class="ce-desc">${ce.desc}</div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;">${ce.clause} · Notified ${fDate(ce.dateNotified)} · ${ce.notifiedBy}</div>
+        </div>
+        <span class="ce-type-badge" style="background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);">${ce.clause?.split('(')[0]||'CE'}</span>
+        ${ce.valueQuoted?`<span class="ce-value">${fGBP(ce.valueQuoted)}</span>`:''}
+        ${ce.timeImpact?`<span style="font-size:11px;font-weight:700;color:var(--blue);font-family:var(--mono);">+${ce.timeImpact}d</span>`:''}
+        <span style="font-size:10px;font-weight:700;color:${statusCol};font-family:var(--mono);background:${isAgreed?'var(--green-bg)':isOverdue?'var(--red-bg)':'var(--amber-bg)'};padding:2px 8px;border-radius:4px;">${isOverdue?'OVERDUE':isAgreed?'AGREED':isDisputed?'DISPUTED':'OPEN'}</span>
+        <span style="color:var(--muted);font-size:12px;">▾</span>
+      </div>
+      <div class="ce-body" id="ce-body-${realIdx}">
+        <!-- WORKFLOW STEPS -->
+        <div class="wf-steps">
+          ${wfStages.map((s,si)=>`<div class="wf-step ${s.done?'done':s.current?'current':''}" title="${s.name}">
+            <div class="wf-step-num">${s.done?'✓':'Step '+(si+1)}</div>
+            <div class="wf-step-name">${s.name}</div>
+          </div>`).join('')}
+        </div>
+
+        <!-- DATES & DEADLINES -->
+        <div class="dates-row">
+          <div class="date-item"><div class="date-label">cl.61 Notified</div><div class="date-val ok">${fDate(ce.dateNotified)}</div></div>
+          <div class="date-item"><div class="date-label">cl.62 Quotation</div><div class="date-val ${ce.dateQuoted?'ok':'overdue'}">${ce.dateQuoted?fDate(ce.dateQuoted):'Not yet submitted'}</div></div>
+          <div class="date-item"><div class="date-label">PM Reply Deadline (cl.62.3)</div><div class="date-val ${pmDays!==null&&pmDays<0?'overdue':pmDays!==null&&pmDays<=3?'due-soon':'ok'}">${dl.pmReplyFromQuote?fDate(dl.pmReplyFromQuote.toISOString().slice(0,10)):ce.dateNotified?fDate(dl.pmReply?.toISOString().slice(0,10)):'—'}</div></div>
+          <div class="date-item"><div class="date-label">Days to PM Deadline</div><div class="date-val ${pmDays!==null&&pmDays<0?'overdue':pmDays!==null&&pmDays<=3?'due-soon':'ok'}">${pmDays!==null?pmDays<0?Math.abs(pmDays)+' days OVERDUE':pmDays+'d remaining':'—'}</div></div>
+          <div class="date-item"><div class="date-label">Time Impact</div><div class="date-val" style="color:var(--blue);">${ce.timeImpact?ce.timeImpact+' calendar days':'—'}</div></div>
+          <div class="date-item"><div class="date-label">Value Quoted</div><div class="date-val" style="color:var(--green);">${fGBP(ce.valueQuoted)}</div></div>
+        </div>
+
+        <!-- QUOTATION BREAKDOWN -->
+        <div style="margin-bottom:14px;">
+          <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-family:var(--mono);margin-bottom:8px;">Quotation Breakdown (cl.63 — Defined Cost + Fee)</div>
+          <table class="quot-table">
+            <thead><tr><th>Cost Component</th><th class="r">Amount £</th><th class="r">Notes</th></tr></thead>
+            <tbody id="quot-${realIdx}">
+              ${(ce.quotItems||[{desc:'People — Labour',val:0},{desc:'Equipment',val:0},{desc:'Plant and Materials',val:0},{desc:'Subcontracted work',val:0},{desc:'Fee (% of above)',val:0},{desc:'Delay damages / risk',val:0}]).map((q,qi)=>`
+              <tr>
+                <td><input class="editable" value="${q.desc}" style="width:220px;" oninput="updateQuotItem(${realIdx},${qi},'desc',this.value)"></td>
+                <td class="r"><input class="editable" type="number" value="${q.val||''}" placeholder="0" style="width:110px;text-align:right;" oninput="updateQuotItem(${realIdx},${qi},'val',+this.value)"></td>
+                <td><input class="editable" value="${q.notes||''}" placeholder="Notes..." oninput="updateQuotItem(${realIdx},${qi},'notes',this.value)"></td>
+              </tr>`).join('')}
+              <tr style="background:var(--s2);border-top:2px solid var(--border2);">
+                <td style="font-weight:700;padding:8px 12px;">TOTAL QUOTATION</td>
+                <td class="r" style="font-weight:700;color:var(--green);">${fGBP((ce.quotItems||[]).reduce((s,q)=>s+(+q.val||0),0))}</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ACTIONS -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-top:1px solid var(--border);padding-top:12px;">
+          <select style="font-family:var(--font);font-size:11px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--s2);color:var(--ink);outline:none;" onchange="updateCEStatus(${realIdx},this.value)">
+            <option value="">Update status...</option>
+            <option>Notified — awaiting PM instruction (cl.61.1)</option>
+            <option>Quotation submitted — awaiting PM response (cl.62)</option>
+            <option>PM assessing (cl.64)</option>
+            <option>Agreed — implementing</option>
+            <option>Implemented</option>
+            <option>Disputed — adjudication</option>
+            <option>Withdrawn</option>
+          </select>
+          <input type="date" style="font-family:var(--mono);font-size:11px;padding:6px 10px;border:1px solid var(--border);border-radius:var(--r);background:var(--s2);color:var(--ink);outline:none;" placeholder="Quote date" oninput="ceRows[${realIdx}].dateQuoted=this.value;renderAll()" title="Quotation submitted date">
+          <button class="btn danger" onclick="ceRows.splice(${realIdx},1);renderAll();" style="font-size:11px;padding:5px 10px;">Delete</button>
+          <button class="btn" onclick="printCE(${realIdx})" style="font-size:11px;padding:5px 10px;">🖨 Print CE</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCE(id) {
+  const el = document.getElementById(id);
+  if(el) el.classList.toggle('open');
+}
+
+function updateCEStatus(idx, val) {
+  if(!val) return;
+  ceRows[idx].status = val;
+  saveState(); renderAll();
+}
+
+function updateQuotItem(ceIdx, itemIdx, field, val) {
+  if(!ceRows[ceIdx].quotItems) ceRows[ceIdx].quotItems = [{desc:'Labour',val:0},{desc:'Equipment',val:0},{desc:'Materials',val:0},{desc:'Subcontracted work',val:0},{desc:'Fee',val:0},{desc:'Risk',val:0}];
+  ceRows[ceIdx].quotItems[itemIdx][field] = val;
+  saveState();
+}
+
+// ── CE SAVE ──────────────────────────────────────────────
+function openCEModal() {
+  document.getElementById('ceModal').style.display='flex';
+  document.getElementById('ce-ref').value = 'CE-'+String(ceRows.length+1).padStart(3,'0');
+  document.getElementById('ce-date-notified').valueAsDate = new Date();
+}
+
+function saveCE() {
+  ceRows.push({
+    id:uid(),
+    ref: document.getElementById('ce-ref').value,
+    clause: document.getElementById('ce-clause').value,
+    desc: document.getElementById('ce-desc').value,
+    notifiedBy: document.getElementById('ce-notified-by').value,
+    dateNotified: document.getElementById('ce-date-notified').value,
+    dateQuoted: document.getElementById('ce-date-quoted').value,
+    valueQuoted: +document.getElementById('ce-value-quoted').value||0,
+    timeImpact: +document.getElementById('ce-time').value||0,
+    status: document.getElementById('ce-status').value,
+    quotItems: [{desc:'People — Labour',val:0},{desc:'Equipment',val:0},{desc:'Plant and Materials',val:0},{desc:'Subcontracted work',val:0},{desc:'Fee',val:0},{desc:'Risk allowance',val:0}],
+  });
+  closeModals(); saveState(); renderAll();
+}
+
+// ── EWN ──────────────────────────────────────────────────
+function renderEWN() {
+  const tbody = document.getElementById('ewnBody');
+  if(!tbody) return;
+  document.getElementById('ewnStats').textContent = `${ewnRows.length} notices · ${ewnRows.filter(e=>e.status?.includes('Open')).length} open · ${ewnRows.filter(e=>e.status?.includes('Closed')||e.status?.includes('Converted')).length} closed`;
+
+  tbody.innerHTML = ewnRows.length ? ewnRows.map((e,i) => {
+    const days = e.rrmDue ? daysUntil(e.rrmDue) : null;
+    const overdue = days !== null && days < 0 && !e.status?.includes('Closed') && !e.status?.includes('Converted');
+    return `<tr style="${overdue?'background:var(--red-bg);':''}">
+      <td style="font-weight:700;font-family:var(--mono);color:var(--amber);">${e.ref}</td>
+      <td style="font-size:12px;max-width:280px;">${e.desc}</td>
+      <td style="font-size:11px;">${e.raisedBy}</td>
+      <td style="font-size:11px;font-family:var(--mono);">${fDate(e.dateRaised)}</td>
+      <td style="font-size:11px;font-family:var(--mono);color:${overdue?'var(--red)':'var(--ink)'};">${fDate(e.rrmDue)}${overdue?' ⚠️':''}</td>
+      <td style="font-size:11px;font-family:var(--mono);">${e.rrmHeld?fDate(e.rrmHeld):'—'}</td>
+      <td style="font-size:11px;font-family:var(--mono);">${e.impactCost?fGBP(e.impactCost):''} ${e.impactTime?'+'+e.impactTime+'d':''}</td>
+      <td><span style="font-size:9px;padding:2px 7px;border-radius:4px;font-family:var(--mono);background:${e.status?.includes('Closed')||e.status?.includes('Converted')?'var(--green-bg)':e.status?.includes('RRM held')?'var(--blue-bg)':'var(--amber-bg)'};color:${e.status?.includes('Closed')||e.status?.includes('Converted')?'var(--green)':e.status?.includes('RRM held')?'var(--blue)':'var(--amber)'};">${e.status?.split('—')[0]?.trim()||'Open'}</span></td>
+      <td><button onclick="ewnRows.splice(${i},1);renderEWN();saveState();" style="background:none;border:none;cursor:pointer;color:var(--dim);" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--dim)'">✕</button></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">No early warnings recorded. Click "+ New Early Warning" to add one.</td></tr>`;
+}
+
+function openEWNModal() {
+  document.getElementById('ewnModal').style.display='flex';
+  document.getElementById('ewn-ref').value='EWN-'+String(ewnRows.length+1).padStart(3,'0');
+  document.getElementById('ewn-date').valueAsDate=new Date();
+  const rrm=new Date();rrm.setDate(rrm.getDate()+28);
+  document.getElementById('ewn-rrm-due').valueAsDate=rrm;
+}
+
+function saveEWN() {
+  ewnRows.push({
+    id:uid(),
+    ref:document.getElementById('ewn-ref').value,
+    raisedBy:document.getElementById('ewn-raised-by').value,
+    desc:document.getElementById('ewn-desc').value,
+    dateRaised:document.getElementById('ewn-date').value,
+    rrmDue:document.getElementById('ewn-rrm-due').value,
+    impactCost:+document.getElementById('ewn-impact-cost').value||0,
+    impactTime:+document.getElementById('ewn-impact-time').value||0,
+    status:document.getElementById('ewn-status').value,
+  });
+  closeModals(); saveState(); renderEWN(); renderCEAlerts();
+}
+
+// ── PROGRAMME ────────────────────────────────────────────
+function renderProgTab() {
+  const tbody = document.getElementById('progBody');
+  if(!tbody) return;
+  const accepted = progRows.filter(p=>p.status?.includes('Accepted')).length;
+  const latest = progRows.find(p=>p.status?.includes('Accepted'));
+  document.getElementById('progStats').innerHTML = [
+    {v:progRows.length, l:'Submissions', c:'var(--ink)'},
+    {v:accepted, l:'Accepted', c:'var(--green)'},
+    {v:progRows.filter(p=>p.status?.includes('Rejected')).length, l:'Rejected', c:'var(--red)'},
+    {v:latest?fDate(latest.completion):'—', l:'Current Completion', c:'var(--gold)'},
+    {v:latest?latest.float+'w':' —', l:'Float (weeks)', c:'var(--blue)'},
+  ].map(s=>`<div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:12px 16px;"><div style="font-size:18px;font-weight:700;color:${s.c};font-family:var(--mono);">${s.v}</div><div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;">${s.l}</div></div>`).join('');
+
+  tbody.innerHTML = progRows.length ? progRows.map((p,i) => {
+    const respDue = p.submitted ? (() => { const d=new Date(p.submitted); d.setDate(d.getDate()+14); return d.toISOString().slice(0,10); })() : null;
+    const days = respDue ? daysUntil(respDue) : null;
+    return `<tr>
+      <td style="font-weight:700;font-family:var(--mono);color:var(--gold);">${p.rev}</td>
+      <td style="font-size:12px;">${p.desc}</td>
+      <td style="font-size:11px;font-family:var(--mono);">${fDate(p.submitted)}</td>
+      <td style="font-size:11px;font-family:var(--mono);color:${days!==null&&days<0?'var(--red)':'var(--ink)'};">${respDue?fDate(respDue):'—'}</td>
+      <td style="font-size:11px;font-family:var(--mono);">${p.responseDate?fDate(p.responseDate):'—'}</td>
+      <td style="font-size:11px;font-family:var(--mono);color:var(--gold);">${fDate(p.completion)}</td>
+      <td><span style="font-size:9px;padding:2px 7px;border-radius:4px;font-family:var(--mono);background:${p.status?.includes('Accepted')?'var(--green-bg)':p.status?.includes('Rejected')?'var(--red-bg)':'var(--amber-bg)'};color:${p.status?.includes('Accepted')?'var(--green)':p.status?.includes('Rejected')?'var(--red)':'var(--amber)'};">${p.status?.split('—')[0]?.trim()}</span></td>
+      <td><button onclick="progRows.splice(${i},1);renderProgTab();saveState();" style="background:none;border:none;cursor:pointer;color:var(--dim);" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--dim)'">✕</button></td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted);font-size:12px;">No programme submissions. Click "+ Submit Programme" to add one.</td></tr>`;
+}
+
+function openProgModal() {
+  document.getElementById('progModal').style.display='flex';
+  document.getElementById('prog-rev').value='Rev '+String.fromCharCode(65+progRows.length);
+  document.getElementById('prog-submitted').valueAsDate=new Date();
+}
+
+function saveProg() {
+  progRows.push({
+    id:uid(),
+    rev:document.getElementById('prog-rev').value,
+    desc:document.getElementById('prog-desc').value,
+    submitted:document.getElementById('prog-submitted').value,
+    completion:document.getElementById('prog-completion').value,
+    float:+document.getElementById('prog-float').value||0,
+    status:document.getElementById('prog-status').value,
+  });
+  closeModals(); saveState(); renderProgTab();
+}
+
+// ── DEFINED COST ─────────────────────────────────────────
+function seedDefaultDC() {
+  if(dcRows.length) return;
+  const components = ['People (Schedule 1)','Equipment — Time Related (Sch 2)','Equipment — Fixed (Sch 2)','Plant and Materials (Sch 4)','Subcontracted Work (Sch 5)','Works done by Client (Sch 6)','Contractor\'s share of insurance (Sch 7)','Fee (% × Defined Cost)'];
+  dcRows = components.map(d => ({id:uid(), desc:d, thisPeriod:0, cumulative:0, forecast:0, evidence:''}));
+}
+
+function renderDC() {
+  const tbody = document.getElementById('dcBody');
+  if(!tbody) return;
+  const totalCum = dcRows.reduce((s,r)=>s+(+r.cumulative||0),0);
+  const totalFor = dcRows.reduce((s,r)=>s+(+r.forecast||0),0);
+  const totalTP = dcRows.reduce((s,r)=>s+(+r.thisPeriod||0),0);
+
+  tbody.innerHTML = dcRows.map((r,i) => `<tr>
+    <td style="font-size:12px;font-weight:500;padding:9px 12px;">${r.desc}</td>
+    <td style="text-align:right;padding:9px 12px;"><input class="editable" type="number" value="${r.thisPeriod||''}" placeholder="0" style="width:110px;text-align:right;" oninput="dcRows[${i}].thisPeriod=+this.value;renderDCStats();saveState()"></td>
+    <td style="text-align:right;padding:9px 12px;"><input class="editable" type="number" value="${r.cumulative||''}" placeholder="0" style="width:110px;text-align:right;" oninput="dcRows[${i}].cumulative=+this.value;renderDCStats();saveState()"></td>
+    <td style="text-align:right;padding:9px 12px;"><input class="editable" type="number" value="${r.forecast||''}" placeholder="0" style="width:110px;text-align:right;" oninput="dcRows[${i}].forecast=+this.value;renderDCStats();saveState()"></td>
+    <td style="padding:9px 12px;"><input class="editable" value="${r.evidence||''}" placeholder="Invoice ref / daywork sheet..." style="width:140px;" oninput="dcRows[${i}].evidence=this.value;saveState()"></td>
+    <td style="padding:9px 12px;"><button onclick="dcRows.splice(${i},1);renderDC();" style="background:none;border:none;cursor:pointer;color:var(--dim);">✕</button></td>
+  </tr>`).join('') + `<tr style="background:var(--s2);border-top:2px solid var(--border2);">
+    <td style="font-weight:700;padding:9px 12px;">TOTAL DEFINED COST</td>
+    <td style="text-align:right;font-weight:700;font-family:var(--mono);padding:9px 12px;">${fGBP(totalTP)}</td>
+    <td style="text-align:right;font-weight:700;font-family:var(--mono);padding:9px 12px;">${fGBP(totalCum)}</td>
+    <td style="text-align:right;font-weight:700;font-family:var(--mono);padding:9px 12px;">${fGBP(totalFor)}</td>
+    <td colspan="2"></td>
+  </tr>`;
+  renderDCStats();
+}
+
+function renderDCStats() {
+  const totalCum = dcRows.reduce((s,r)=>s+(+r.cumulative||0),0);
+  const totalFor = dcRows.reduce((s,r)=>s+(+r.forecast||0),0);
+  document.getElementById('dcStats').innerHTML = [
+    {v:fGBP(dcRows.reduce((s,r)=>s+(+r.thisPeriod||0),0)), l:'This Period', c:'var(--ink)'},
+    {v:fGBP(totalCum), l:'Cumulative Defined Cost', c:'var(--amber)'},
+    {v:fGBP(totalFor), l:'EAC (Forecast)', c:'var(--red)'},
+  ].map(s=>`<div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:12px 16px;"><div style="font-size:18px;font-weight:700;color:${s.c};font-family:var(--mono);">${s.v}</div><div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:3px;">${s.l}</div></div>`).join('');
+
+  // Pain/gain
+  const pgEl = document.getElementById('painGainCalc');
+  if(pgEl) {
+    pgEl.innerHTML = `
+      <div><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;font-family:var(--mono);margin-bottom:6px;">Target Price £</div><input style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:8px 11px;font-family:var(--mono);font-size:14px;font-weight:700;outline:none;width:100%;" type="number" id="pgTarget" placeholder="0" oninput="calcPainGain()"></div>
+      <div><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;font-family:var(--mono);margin-bottom:6px;">Pain/Gain Share (%)</div><input style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:8px 11px;font-family:var(--mono);font-size:14px;font-weight:700;outline:none;width:100%;" type="number" id="pgShare" value="50" oninput="calcPainGain()"></div>
+      <div><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;font-family:var(--mono);margin-bottom:6px;">Forecast Defined Cost £</div><div style="font-size:20px;font-weight:800;color:var(--amber);font-family:var(--mono);padding:8px 0;">${fGBP(totalFor)}</div></div>
+      <div id="pgResult"><div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;font-family:var(--mono);margin-bottom:6px;">Contractor Share</div><div style="font-size:20px;font-weight:800;color:var(--muted);font-family:var(--mono);">Enter target →</div></div>`;
+  }
+}
+
+function calcPainGain() {
+  const target = +document.getElementById('pgTarget')?.value||0;
+  const share = +document.getElementById('pgShare')?.value||50;
+  const actual = dcRows.reduce((s,r)=>s+(+r.forecast||0),0);
+  const diff = target - actual;
+  const contractorShare = Math.round(diff * share / 100);
+  const el = document.getElementById('pgResult');
+  if(el && target) {
+    el.innerHTML = `<div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;font-family:var(--mono);margin-bottom:6px;">Contractor ${diff>=0?'GAIN':'PAIN'} Share</div>
+    <div style="font-size:22px;font-weight:800;color:${diff>=0?'var(--green)':'var(--red)'};font-family:var(--mono);">${diff>=0?'+':''}${fGBP(contractorShare)}</div>
+    <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:3px;">${diff>=0?'Gain':'Pain'}: ${fGBP(Math.abs(diff))} × ${share}%</div>`;
+  }
+}
+
+function addDefinedCostRow() {
+  dcRows.push({id:uid(), desc:'Additional cost component', thisPeriod:0, cumulative:0, forecast:0, evidence:''});
+  renderDC();
+}
+
+// ── PRINT CE ──────────────────────────────────────────────
+function printCE(idx) { window.print(); }
+
+// ── EXPORT ───────────────────────────────────────────────
+function exportExcel() {
+  if(typeof XLSX==='undefined'){alert('Loading...');return;}
+  const wb = XLSX.utils.book_new();
+  const proj = document.getElementById('projName').value||'Project';
+
+  const ceData = [['CE REGISTER'],['Ref.','Clause','Description','Notified By','Date Notified','Date Quoted','Value £','Time (days)','Status'],...ceRows.map(c=>[c.ref,c.clause,c.desc,c.notifiedBy,c.dateNotified,c.dateQuoted,c.valueQuoted||0,c.timeImpact||0,c.status])];
+  const ws1=XLSX.utils.aoa_to_sheet(ceData);ws1['!cols']=[{wch:10},{wch:16},{wch:40},{wch:20},{wch:14},{wch:14},{wch:14},{wch:12},{wch:30}];
+  XLSX.utils.book_append_sheet(wb,ws1,'CE Register');
+
+  if(ewnRows.length){
+    const ewnData=[['EARLY WARNING REGISTER'],['Ref.','Description','Raised By','Date Raised','RRM Due','Impact Cost £','Impact Time (days)','Status'],...ewnRows.map(e=>[e.ref,e.desc,e.raisedBy,e.dateRaised,e.rrmDue,e.impactCost||0,e.impactTime||0,e.status])];
+    const ws2=XLSX.utils.aoa_to_sheet(ewnData);ws2['!cols']=[{wch:10},{wch:40},{wch:14},{wch:14},{wch:14},{wch:14},{wch:16},{wch:25}];
+    XLSX.utils.book_append_sheet(wb,ws2,'EWN Register');
+  }
+
+  XLSX.writeFile(wb,`NEC3_${proj.replace(/\s/g,'_')}.xlsx`);
+}
+
+// ── SAVE/LOAD ─────────────────────────────────────────────
+function saveState(){
+  try{localStorage.setItem('aurum_nec3',JSON.stringify({ceRows,ewnRows,progRows,dcRows,proj:document.getElementById('projName')?.value,pm:document.getElementById('projPM')?.value}));}catch(e){}
+}
+function loadState(){
+  try{
+    const d=JSON.parse(localStorage.getItem('aurum_nec3')||'{}');
+    if(d.ceRows)ceRows=d.ceRows;
+    if(d.ewnRows)ewnRows=d.ewnRows;
+    if(d.progRows)progRows=d.progRows;
+    if(d.dcRows)dcRows=d.dcRows;
+    if(d.proj)document.getElementById('projName').value=d.proj;
+    if(d.pm)document.getElementById('projPM').value=d.pm;
+  }catch(e){}
+}
+
+function closeModals(){document.querySelectorAll('.modal-bg').forEach(m=>m.style.display='none');}
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModals();}));
+setInterval(saveState,30000);
+</script>
+</body>
+</html>
