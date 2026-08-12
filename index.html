@@ -57,7 +57,8 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 #app{display:none;flex-direction:column;min-height:100vh;}
 .topbar{height:56px;background:rgba(8,8,8,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;position:sticky;top:0;z-index:100;}
 .tbar-logo{font-size:20px;font-weight:800;color:var(--gold);letter-spacing:-.5px;cursor:pointer;}
-.tbar-nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;}
+.tbar-nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;}
+.tbar-nav::-webkit-scrollbar{display:none;}
 .tbar-nav::-webkit-scrollbar{display:none;}
 .tnav-btn{font-family:var(--font);font-size:12px;font-weight:600;padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;}
 .tnav-btn.on{background:var(--gold);color:#000;border-color:var(--gold);}
@@ -389,7 +390,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
   .tbl-wrap table{min-width:600px;}
 }
 @media(max-width:380px){
-  .tbar-nav .tnav-btn:nth-child(n+5){display:none;}
+  .tbar-nav .tnav-btn{font-size:10px;padding:4px 8px;}
 }
 </style>
 </head>
@@ -397,141 +398,205 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 
 <!-- LANDING PAGE -->
 <div id="landingWrap" style="display:flex">
-  <div style="min-height:100vh;width:100%;background:var(--bg);display:flex;flex-direction:column;">
+<div style="min-height:100vh;width:100%;background:var(--bg);display:flex;flex-direction:column;">
 
-    <!-- NAV -->
-    <nav style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;border-bottom:1px solid var(--border);background:rgba(8,8,8,.95);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;">
-      <div style="font-size:20px;font-weight:800;color:var(--gold);letter-spacing:-.5px;">AURUM</div>
-      <div style="display:flex;gap:10px;align-items:center;">
-        <button onclick="showAuth(true)" style="font-family:var(--font);font-size:12px;font-weight:600;padding:7px 18px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">Sign In</button>
-        <button onclick="showAuth(false)" style="font-family:var(--font);font-size:12px;font-weight:700;padding:7px 18px;border-radius:8px;border:none;background:var(--gold);color:#000;cursor:pointer;">Get Started Free</button>
+<!-- NAV -->
+<nav style="height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;border-bottom:1px solid var(--border);background:rgba(8,8,8,.97);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100;">
+  <div style="font-size:20px;font-weight:800;color:var(--gold);letter-spacing:-.5px;">AURUM</div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button onclick="showAuth(true)" style="font-family:var(--font);font-size:12px;font-weight:600;padding:7px 18px;border-radius:8px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;">Sign In</button>
+    <button onclick="showAuth(false)" style="font-family:var(--font);font-size:12px;font-weight:700;padding:7px 18px;border-radius:8px;border:none;background:var(--gold);color:#000;cursor:pointer;">Get Started Free</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;padding:64px 24px 48px;text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(240,192,64,.09) 0%,transparent 60%);">
+
+  <div style="display:inline-flex;align-items:center;gap:8px;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:20px;padding:5px 16px;font-size:11px;font-weight:700;color:var(--gold);font-family:var(--mono);margin-bottom:28px;letter-spacing:.05em;">
+    🇬🇧 Built for UK Construction Professionals · 2026
+  </div>
+
+  <h1 style="font-size:clamp(32px,5vw,66px);font-weight:800;letter-spacing:-2px;line-height:1.06;color:var(--text);margin-bottom:16px;max-width:820px;">
+    One platform.<br><span style="color:var(--gold);">Every tool you need.</span>
+  </h1>
+
+  <p style="font-size:clamp(14px,1.7vw,17px);color:var(--muted);max-width:560px;line-height:1.7;margin-bottom:36px;font-family:var(--mono);">
+    Commercial management, NEC3 contracts, BOQ, cost planning — and a full BRRR property investment platform built in.
+  </p>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:60px;">
+    <button onclick="showAuth(false)" style="font-family:var(--font);font-size:15px;font-weight:700;padding:15px 36px;border-radius:var(--r);border:none;background:var(--gold);color:#000;cursor:pointer;" onmouseover="this.style.background='var(--gold2)'" onmouseout="this.style.background='var(--gold)'">
+      Get Started Free →
+    </button>
+    <button onclick="showAuth(true)" style="font-family:var(--font);font-size:15px;font-weight:600;padding:15px 36px;border-radius:var(--r);border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
+      Sign In
+    </button>
+  </div>
+
+  <!-- TWO COLUMNS -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:980px;width:100%;margin-bottom:52px;text-align:left;">
+
+    <!-- LEFT: QS TOOLKIT -->
+    <div style="background:var(--s1);border:2px solid var(--gold-border);border-radius:var(--r2);overflow:hidden;">
+      <div style="background:var(--gold-dim);padding:16px 20px;border-bottom:1px solid var(--gold-border);display:flex;align-items:center;gap:10px;">
+        <span style="font-size:22px;">🏗</span>
+        <div>
+          <div style="font-size:15px;font-weight:800;color:var(--gold);">QS Toolkit</div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:1px;">Commercial management · JCT + NEC3/4</div>
+        </div>
+        <span style="margin-left:auto;font-size:10px;font-weight:700;background:var(--gold);color:#000;padding:3px 10px;border-radius:5px;font-family:var(--mono);">PRIMARY</span>
       </div>
-    </nav>
+      <div style="padding:14px 16px;display:flex;flex-direction:column;gap:8px;">
 
-    <!-- HERO -->
-    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px 40px;text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(240,192,64,.12) 0%,transparent 65%);">
-
-      <!-- Badge -->
-      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:600;color:var(--gold);font-family:var(--mono);margin-bottom:24px;letter-spacing:.05em;">
-        🇬🇧 Built for UK BRRR Investors · 2026
-      </div>
-
-      <!-- Headline -->
-      <h1 style="font-size:clamp(36px,6vw,72px);font-weight:800;letter-spacing:-2px;line-height:1.05;color:var(--text);margin-bottom:20px;max-width:900px;">
-        Know if a deal works<br><span style="color:var(--gold);">before you make an offer.</span>
-      </h1>
-
-      <!-- Sub -->
-      <p style="font-size:clamp(15px,2vw,20px);color:var(--muted);max-width:580px;line-height:1.6;margin-bottom:36px;font-family:var(--mono);">
-        AURUM gives UK property investors the tools to analyse BRRR deals, generate NRM2 Bills of Quantities, track portfolios and manage refurbs — all in one place.
-      </p>
-
-      <!-- CTA -->
-      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:48px;">
-        <button onclick="showAuth(false)" style="font-family:var(--font);font-size:15px;font-weight:700;padding:16px 36px;border-radius:var(--r);border:none;background:var(--gold);color:#000;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='var(--gold2)'" onmouseout="this.style.background='var(--gold)'">
-          Start Free — No Card Needed →
-        </button>
-        <button onclick="showAuth(true)" style="font-family:var(--font);font-size:15px;font-weight:600;padding:16px 36px;border-radius:var(--r);border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='var(--gold)';this.style.color='var(--gold)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">
-          Sign In
-        </button>
-      </div>
-
-      <!-- LIVE MINI CALCULATOR DEMO -->
-      <div style="width:100%;max-width:780px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;margin-bottom:48px;text-align:left;">
-        <div style="padding:12px 18px;background:var(--s2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:8px;">
-            <div style="width:10px;height:10px;border-radius:50%;background:#f04040;opacity:.7;"></div>
-            <div style="width:10px;height:10px;border-radius:50%;background:#f0c040;opacity:.7;"></div>
-            <div style="width:10px;height:10px;border-radius:50%;background:#40d080;opacity:.7;"></div>
-            <span style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-left:6px;">⚡ BRRR Live Calculator — try it now</span>
+        <a href="cvr.html" target="_blank" style="display:flex;align-items:flex-start;gap:10px;padding:11px 13px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);text-decoration:none;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:18px;">📊</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">CVR Engine</div>
+            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;">Monthly Cost Value Reconciliation · EAC · Margin · Subcontracts · Risk Register</div>
           </div>
-          <span style="font-size:10px;color:var(--dim);font-family:var(--mono);">no login required</span>
-        </div>
-        <div style="padding:20px;">
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:16px;">
-            <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;">
-              <div style="font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:6px;">Purchase Price</div>
-              <div style="display:flex;align-items:center;gap:3px;"><span style="color:var(--muted);font-size:13px;">£</span><input id="dPurch" type="number" value="100000" oninput="demoCalc()" style="background:none;border:none;color:var(--text);font-family:var(--font);font-size:18px;font-weight:700;width:100%;outline:none;letter-spacing:-.5px;"></div>
-            </div>
-            <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;">
-              <div style="font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:6px;">Refurb Cost</div>
-              <div style="display:flex;align-items:center;gap:3px;"><span style="color:var(--muted);font-size:13px;">£</span><input id="dRefurb" type="number" value="30000" oninput="demoCalc()" style="background:none;border:none;color:var(--text);font-family:var(--font);font-size:18px;font-weight:700;width:100%;outline:none;letter-spacing:-.5px;"></div>
-            </div>
-            <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;">
-              <div style="font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:6px;">GDV After Refurb</div>
-              <div style="display:flex;align-items:center;gap:3px;"><span style="color:var(--gold);font-size:13px;">£</span><input id="dGdv" type="number" value="165000" oninput="demoCalc()" style="background:none;border:none;color:var(--gold);font-family:var(--font);font-size:18px;font-weight:700;width:100%;outline:none;letter-spacing:-.5px;"></div>
-            </div>
-            <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r2);padding:12px 14px;">
-              <div style="font-size:9px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);margin-bottom:6px;">Monthly Rent</div>
-              <div style="display:flex;align-items:center;gap:3px;"><span style="color:var(--muted);font-size:13px;">£</span><input id="dRent" type="number" value="750" oninput="demoCalc()" style="background:none;border:none;color:var(--text);font-family:var(--font);font-size:18px;font-weight:700;width:100%;outline:none;letter-spacing:-.5px;"></div>
-            </div>
+          <span style="margin-left:auto;color:var(--gold);font-size:12px;flex-shrink:0;">→</span>
+        </a>
+
+        <a href="nec3.html" target="_blank" style="display:flex;align-items:flex-start;gap:10px;padding:11px 13px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);text-decoration:none;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:18px;">⚡</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">NEC3 CE Manager</div>
+            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;">cl.60–64 workflow · Early Warning Register · Accepted Programme · Defined Cost</div>
           </div>
-          <!-- Results -->
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:14px;" id="demoResults"></div>
-          <!-- Verdict -->
-          <div id="demoVerdict" style="border-radius:var(--r);padding:12px 16px;display:flex;align-items:center;gap:12px;"></div>
-        </div>
-      </div>
+          <span style="margin-left:auto;color:var(--gold);font-size:12px;flex-shrink:0;">→</span>
+        </a>
 
-      <!-- STATS STRIP -->
-      <div style="display:flex;gap:32px;flex-wrap:wrap;justify-content:center;margin-bottom:48px;">
-        <div style="text-align:center;"><div style="font-size:28px;font-weight:800;color:var(--gold);">50+</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">UK Postcodes Tracked</div></div>
-        <div style="text-align:center;"><div style="font-size:28px;font-weight:800;color:var(--gold);">NRM2</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">RICS Standard BOQ</div></div>
-        <div style="text-align:center;"><div style="font-size:28px;font-weight:800;color:var(--gold);">£0</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">To Start — Free Forever</div></div>
-        <div style="text-align:center;"><div style="font-size:28px;font-weight:800;color:var(--gold);">10s</div><div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;">To Score Any Deal</div></div>
-      </div>
+        <a href="projects.html" target="_blank" style="display:flex;align-items:flex-start;gap:10px;padding:11px 13px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);text-decoration:none;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:18px;">🗂</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Project Dashboard</div>
+            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;">All projects · Portfolio margin · RAG status · Action tracker · Upcoming deadlines</div>
+          </div>
+          <span style="margin-left:auto;color:var(--gold);font-size:12px;flex-shrink:0;">→</span>
+        </a>
 
-      <!-- FEATURES GRID -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;max-width:960px;width:100%;margin-bottom:48px;text-align:left;">
-        <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px 22px;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
-          <div style="font-size:24px;margin-bottom:10px;">⚡</div>
-          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">BRRR Live Calculator</div>
-          <div style="font-size:12px;color:var(--muted);font-family:var(--mono);line-height:1.6;">Equity created, capital recycled, monthly cash flow, gross yield — all live. Verdict tells you Buy, Negotiate or Walk Away.</div>
-        </div>
-        <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px 22px;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
-          <div style="font-size:24px;margin-bottom:10px;">📋</div>
-          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">NRM2 Bill of Quantities</div>
-          <div style="font-size:12px;color:var(--muted);font-family:var(--mono);line-height:1.6;">Enter room dimensions → AURUM generates a RICS NRM2 compliant BOQ with BCIS 2026 rates. Export to Excel or PDF instantly.</div>
-        </div>
-        <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px 22px;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
-          <div style="font-size:24px;margin-bottom:10px;">🔍</div>
-          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">Property Scout Engine</div>
-          <div style="font-size:12px;color:var(--muted);font-family:var(--mono);line-height:1.6;">Score any UK deal. Area rankings, rental yield data for 50+ postcodes, auction frequency, regeneration zones.</div>
-        </div>
-        <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px 22px;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
-          <div style="font-size:24px;margin-bottom:10px;">🏦</div>
-          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">Finance & Risk Hub</div>
-          <div style="font-size:12px;color:var(--muted);font-family:var(--mono);line-height:1.6;">Full deal P&L, SDLT calculator, CGT, cash flow timeline with warnings, risk assessment, legal due diligence checklist.</div>
-        </div>
-        <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px 22px;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
-          <div style="font-size:24px;margin-bottom:10px;">📊</div>
-          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">Portfolio Tracker</div>
-          <div style="font-size:12px;color:var(--muted);font-family:var(--mono);line-height:1.6;">Track every property — total equity, monthly cash flow, yield, annual rent roll. Your big picture at a glance.</div>
-        </div>
-        <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px 22px;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
-          <div style="font-size:24px;margin-bottom:10px;">👷</div>
-          <div style="font-size:14px;font-weight:700;margin-bottom:6px;">Contractor Manager</div>
-          <div style="font-size:12px;color:var(--muted);font-family:var(--mono);line-height:1.6;">Store your trades team. One tap to call or WhatsApp any contractor directly from the platform.</div>
-        </div>
-      </div>
+        <a href="boq.html" target="_blank" style="display:flex;align-items:flex-start;gap:10px;padding:11px 13px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);text-decoration:none;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:18px;">📋</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">BOQ Engine</div>
+            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;">NRM2 compliant · BCIS 2026 rates · Provisional Sums · Export Excel + PDF</div>
+          </div>
+          <span style="margin-left:auto;color:var(--gold);font-size:12px;flex-shrink:0;">→</span>
+        </a>
 
-      <!-- FINAL CTA -->
-      <div style="background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r2);padding:40px 32px;text-align:center;max-width:600px;width:100%;margin-bottom:48px;">
-        <div style="font-size:26px;font-weight:800;color:var(--gold);margin-bottom:8px;">Ready to analyse your first deal?</div>
-        <div style="font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:24px;line-height:1.6;">Free to use. No credit card. No fluff.<br>Just the numbers you need to invest with confidence.</div>
-        <button onclick="showAuth(false)" style="font-family:var(--font);font-size:15px;font-weight:700;padding:16px 40px;border-radius:var(--r);border:none;background:var(--gold);color:#000;cursor:pointer;transition:all .2s;" onmouseover="this.style.background='var(--gold2)'" onmouseout="this.style.background='var(--gold)'">
-          Create Free Account →
-        </button>
-      </div>
+        <a href="rooms-engine.html" target="_blank" style="display:flex;align-items:flex-start;gap:10px;padding:11px 13px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);text-decoration:none;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:18px;">🏠</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Room Cost Engine</div>
+            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;">Enter m² → Materials + Labour by trade + Build Programme · Export Excel</div>
+          </div>
+          <span style="margin-left:auto;color:var(--gold);font-size:12px;flex-shrink:0;">→</span>
+        </a>
 
-      <!-- FOOTER -->
-      <div style="font-size:11px;color:var(--dim);font-family:var(--mono);text-align:center;padding-bottom:24px;">
-        AURUM · Built for UK BRRR investors · RICS NRM2 · BCIS 2026 · Not financial advice
+      </div>
+    </div>
+
+    <!-- RIGHT: BRRR -->
+    <div style="background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;">
+      <div style="background:var(--s2);padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+        <span style="font-size:22px;">🏘</span>
+        <div>
+          <div style="font-size:15px;font-weight:800;color:var(--text);">BRRR Platform</div>
+          <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:1px;">UK property investment · Buy · Refurb · Rent · Refinance</div>
+        </div>
+        <span style="margin-left:auto;font-size:10px;font-weight:600;background:var(--s3);color:var(--muted);padding:3px 10px;border-radius:5px;font-family:var(--mono);border:1px solid var(--border);">INCLUDED</span>
+      </div>
+      <div style="padding:14px 16px;display:flex;flex-direction:column;gap:8px;">
+
+        <a href="deal.html" target="_blank" style="display:flex;align-items:flex-start;gap:10px;padding:11px 13px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);text-decoration:none;transition:border-color .15s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">
+          <span style="font-size:18px;">🔍</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Deal Analyser</div>
+            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;">Real sold prices from Land Registry · Live Rightmove rentals · BRRR verdict</div>
+          </div>
+          <span style="margin-left:auto;color:var(--gold);font-size:12px;flex-shrink:0;">→</span>
+        </a>
+
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:11px 13px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);opacity:.7;">
+          <span style="font-size:18px;">⚡</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">BRRR Calculator</div>
+            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;">Equity, cash flow, capital recycled, yield — live verdict in seconds</div>
+          </div>
+          <span style="margin-left:auto;font-size:9px;color:var(--dim);font-family:var(--mono);flex-shrink:0;">Login</span>
+        </div>
+
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:11px 13px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);opacity:.7;">
+          <span style="font-size:18px;">📍</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Property Scout</div>
+            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;">Score any UK deal · Yield data for 50+ postcodes · Area rankings</div>
+          </div>
+          <span style="margin-left:auto;font-size:9px;color:var(--dim);font-family:var(--mono);flex-shrink:0;">Login</span>
+        </div>
+
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:11px 13px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);opacity:.7;">
+          <span style="font-size:18px;">📊</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Portfolio Tracker</div>
+            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;">Total equity, monthly cash flow, yield across your entire portfolio</div>
+          </div>
+          <span style="margin-left:auto;font-size:9px;color:var(--dim);font-family:var(--mono);flex-shrink:0;">Login</span>
+        </div>
+
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:11px 13px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);opacity:.7;">
+          <span style="font-size:18px;">👷</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text);">Contractor Manager</div>
+            <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;">Your trades team · One tap to call or WhatsApp any contractor</div>
+          </div>
+          <span style="margin-left:auto;font-size:9px;color:var(--dim);font-family:var(--mono);flex-shrink:0;">Login</span>
+        </div>
+
       </div>
     </div>
   </div>
-</div>
 
+  <!-- STATS -->
+  <div style="display:flex;gap:0;background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);overflow:hidden;max-width:800px;width:100%;margin-bottom:48px;">
+    <div style="flex:1;padding:18px 12px;text-align:center;border-right:1px solid var(--border);">
+      <div style="font-size:20px;font-weight:800;color:var(--gold);font-family:var(--mono);">NRM2</div>
+      <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:3px;text-transform:uppercase;letter-spacing:.05em;">RICS Standard</div>
+    </div>
+    <div style="flex:1;padding:18px 12px;text-align:center;border-right:1px solid var(--border);">
+      <div style="font-size:20px;font-weight:800;color:var(--gold);font-family:var(--mono);">NEC3/4</div>
+      <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:3px;text-transform:uppercase;letter-spacing:.05em;">CE Workflow</div>
+    </div>
+    <div style="flex:1;padding:18px 12px;text-align:center;border-right:1px solid var(--border);">
+      <div style="font-size:20px;font-weight:800;color:var(--gold);font-family:var(--mono);">BCIS</div>
+      <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:3px;text-transform:uppercase;letter-spacing:.05em;">2026 Rates</div>
+    </div>
+    <div style="flex:1;padding:18px 12px;text-align:center;border-right:1px solid var(--border);">
+      <div style="font-size:20px;font-weight:800;color:var(--gold);font-family:var(--mono);">JCT</div>
+      <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:3px;text-transform:uppercase;letter-spacing:.05em;">+ NEC Contracts</div>
+    </div>
+    <div style="flex:1;padding:18px 12px;text-align:center;">
+      <div style="font-size:20px;font-weight:800;color:var(--gold);font-family:var(--mono);">£0</div>
+      <div style="font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:3px;text-transform:uppercase;letter-spacing:.05em;">Free to Start</div>
+    </div>
+  </div>
+
+  <!-- FINAL CTA -->
+  <div style="background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r2);padding:36px 32px;text-align:center;max-width:560px;width:100%;margin-bottom:48px;">
+    <div style="font-size:22px;font-weight:800;color:var(--gold);margin-bottom:10px;">Ready to get started?</div>
+    <div style="font-size:13px;color:var(--muted);font-family:var(--mono);margin-bottom:24px;line-height:1.8;">Free to use. No credit card. All tools available instantly.</div>
+    <button onclick="showAuth(false)" style="font-family:var(--font);font-size:15px;font-weight:700;padding:14px 40px;border-radius:var(--r);border:none;background:var(--gold);color:#000;cursor:pointer;" onmouseover="this.style.background='var(--gold2)'" onmouseout="this.style.background='var(--gold)'">
+      Create Free Account →
+    </button>
+  </div>
+
+  <div style="font-size:11px;color:var(--dim);font-family:var(--mono);text-align:center;padding-bottom:24px;">
+    AURUM · Commercial Management + BRRR Platform · RICS NRM2 · BCIS 2026 · NEC3/4 · JCT
+  </div>
+
+</div>
+</div>
+</div>
 <!-- AUTH PAGE -->
 <div id="authWrap" style="display:none">
   <div class="auth-wrap">
@@ -575,6 +640,10 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
       <button class="tnav-btn" id="tnav-property" onclick="navTo('property')" style="display:none">Property</button>
       <a class="tnav-btn" href="deal.html" target="_blank">🏠 Deal Analyser</a>
       <a class="tnav-btn" href="boq.html" target="_blank">📋 BOQ</a>
+      <a class="tnav-btn" href="projects.html" target="_blank">🗂 QS Projects</a>
+      <a class="tnav-btn" href="cvr.html" target="_blank">📊 CVR</a>
+      <a class="tnav-btn" href="nec3.html" target="_blank">⚡ NEC3</a>
+      <a class="tnav-btn" href="rooms-engine.html" target="_blank">🏗 Room Costs</a>
     </div>
     <div class="tbar-right">
       <div class="user-pill" id="userPill">—</div>
