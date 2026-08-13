@@ -1,0 +1,1241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAMS Generator — Risk Assessment & Method Statement</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── SCREEN STYLES ── */
+:root {
+  --ink:#111;--muted:#555;--dim:#888;--border:#ddd;--border2:#bbb;
+  --bg:#f7f6f2;--s1:#fff;--s2:#f2f1ed;--s3:#e8e6e0;
+  --red:#c00;--red-bg:#fff0f0;--red-b:#fcc;
+  --amber:#996600;--amber-bg:#fffbe6;--amber-b:#f0d060;
+  --green:#006600;--green-bg:#f0fff0;--green-b:#88cc88;
+  --blue:#003399;--blue-bg:#f0f4ff;--blue-b:#99aadd;
+  --gold:#7a5800;--gold-bg:#fffbf0;--gold-b:#ddbb60;
+  --font:'Inter',sans-serif;--mono:'DM Mono',monospace;
+  --r:4px;--r2:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);}
+
+/* TOPBAR */
+.topbar{height:52px;background:var(--ink);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:200;}
+.tbar-logo{font-size:13px;font-weight:800;color:#f5f3ee;letter-spacing:.1em;text-transform:uppercase;text-decoration:none;}
+.tbar-sub{font-size:11px;color:#888;font-family:var(--mono);}
+.btn{font-family:var(--font);font-size:12px;font-weight:600;padding:7px 14px;border-radius:var(--r2);border:1px solid var(--border);background:var(--s1);color:var(--muted);cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:6px;}
+.btn:hover{border-color:var(--border2);color:var(--ink);}
+.btn.primary{background:var(--ink);color:#fff;border-color:var(--ink);}
+.btn.primary:hover{background:#333;}
+.btn.danger{background:var(--red-bg);color:var(--red);border-color:var(--red-b);}
+
+/* CONFIGURATOR */
+.config-panel{max-width:900px;margin:0 auto;padding:28px 24px;}
+.config-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:22px 26px;margin-bottom:16px;}
+.config-title{font-size:16px;font-weight:700;margin-bottom:4px;}
+.config-sub{font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:18px;}
+.field-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field.full{grid-column:1/-1;}
+.field-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-family:var(--mono);}
+.field-input{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:8px 10px;color:var(--ink);font-family:var(--font);font-size:13px;font-weight:500;outline:none;width:100%;}
+.field-input:focus{border-color:var(--ink);}
+.type-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:4px;}
+.type-btn{padding:12px 10px;border:2px solid var(--border);border-radius:var(--r2);cursor:pointer;transition:all .15s;text-align:center;background:var(--s2);}
+.type-btn:hover{border-color:var(--border2);background:var(--s1);}
+.type-btn.active{border-color:var(--ink);background:var(--s1);}
+.type-icon{font-size:22px;margin-bottom:4px;}
+.type-name{font-size:12px;font-weight:700;}
+.type-desc{font-size:10px;color:var(--muted);margin-top:2px;font-family:var(--mono);}
+
+/* LOGO UPLOAD */
+.logo-upload{border:2px dashed var(--border);border-radius:var(--r2);padding:20px;text-align:center;cursor:pointer;transition:all .15s;}
+.logo-upload:hover{border-color:var(--border2);background:var(--s2);}
+.logo-preview{max-height:60px;max-width:200px;object-fit:contain;}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   PRINT DOCUMENT STYLES
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.doc-wrap{display:none;max-width:1100px;margin:0 auto;padding:20px 24px;}
+.doc-wrap.visible{display:block;}
+
+/* Doc header */
+.doc-header{border:2px solid var(--ink);margin-bottom:0;}
+.doc-header-top{display:grid;grid-template-columns:180px 1fr 220px;border-bottom:2px solid var(--ink);}
+.doc-logo-cell{padding:12px;border-right:2px solid var(--ink);display:flex;align-items:center;justify-content:center;min-height:80px;}
+.doc-logo-cell img{max-width:160px;max-height:60px;object-fit:contain;}
+.doc-logo-placeholder{font-size:18px;font-weight:800;letter-spacing:-.5px;}
+.doc-company-cell{padding:12px 16px;border-right:2px solid var(--ink);}
+.doc-company-name{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;}
+.doc-company-addr{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.5;font-family:var(--mono);}
+.doc-proj-cell{padding:10px 12px;}
+.doc-proj-row{display:flex;gap:6px;margin-bottom:5px;align-items:baseline;}
+.doc-proj-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--mono);flex-shrink:0;min-width:80px;}
+.doc-proj-val{font-size:11px;font-weight:600;}
+
+/* Title bar */
+.doc-title-bar{background:var(--ink);color:#fff;padding:10px 16px;text-align:center;}
+.doc-title-main{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:2px;}
+.doc-title-sub{font-size:15px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;}
+
+/* Meta table */
+.doc-meta{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--border2);}
+.doc-meta-row{display:flex;border-bottom:1px solid var(--border);padding:5px 14px;align-items:center;}
+.doc-meta-row:nth-child(odd){border-right:1px solid var(--border2);}
+.doc-meta-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono);min-width:130px;}
+.doc-meta-val{font-size:11px;font-weight:600;}
+
+/* CONTENTS TABLE */
+.doc-section{border:1px solid var(--border);margin-bottom:16px;}
+.doc-section-head{background:var(--s3);padding:7px 14px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;}
+.doc-section-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;}
+.contents-table{width:100%;border-collapse:collapse;}
+.contents-table th{padding:5px 12px;text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);background:var(--s2);border-bottom:1px solid var(--border);}
+.contents-table td{padding:5px 12px;font-size:11px;border-bottom:1px solid var(--border);}
+.contents-table tr:last-child td{border-bottom:none;}
+.contents-table td:last-child{text-align:center;font-weight:700;}
+.app-yes{color:var(--green);}
+.app-no{color:var(--red);}
+.app-na{color:var(--muted);}
+
+/* METHOD STATEMENT SECTIONS */
+.ms-table{width:100%;border-collapse:collapse;}
+.ms-table td{padding:8px 12px;font-size:11px;border-bottom:1px solid var(--border);vertical-align:top;}
+.ms-table td:first-child{font-weight:700;background:var(--s2);min-width:180px;max-width:200px;border-right:1px solid var(--border);}
+.ms-table td textarea{width:100%;border:none;background:transparent;font-family:var(--font);font-size:11px;line-height:1.6;outline:none;resize:vertical;min-height:40px;padding:0;}
+.ms-table .section-heading td{background:var(--ink);color:#fff;font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;padding:6px 12px;}
+.ms-table .section-heading td:first-child{background:var(--ink);border-right:1px solid #333;}
+
+/* RISK ASSESSMENT TABLE */
+.ra-wrap{overflow-x:auto;}
+.ra-table{width:100%;border-collapse:collapse;min-width:1000px;font-size:10px;}
+.ra-table th{padding:6px 8px;text-align:center;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:var(--ink);color:#fff;border:1px solid #333;}
+.ra-table th.left{text-align:left;}
+.ra-table td{padding:6px 8px;border:1px solid var(--border);vertical-align:top;font-size:10px;}
+.ra-table td.num{text-align:center;font-weight:700;font-family:var(--mono);}
+.ra-table td.bold{font-weight:700;}
+.ra-table td textarea{width:100%;border:none;background:transparent;font-size:10px;font-family:var(--font);line-height:1.5;outline:none;resize:vertical;min-height:50px;padding:0;}
+.risk-score{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:3px;font-weight:800;font-size:12px;font-family:var(--mono);}
+.rs-high{background:#c00;color:#fff;}
+.rs-above{background:#ff6600;color:#fff;}
+.rs-med{background:#ffc000;color:#000;}
+.rs-low{background:#92d050;color:#000;}
+.rs-ok{background:#00b050;color:#fff;}
+.ra-matrix{width:100%;border-collapse:collapse;font-size:8px;margin-bottom:6px;}
+.ra-matrix td{border:1px solid var(--border);padding:2px 4px;text-align:center;font-family:var(--mono);}
+.ra-legend{font-size:9px;line-height:1.7;}
+.ra-legend-row{display:flex;align-items:center;gap:6px;margin-bottom:2px;}
+.people-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:2px;background:var(--s2);border:1px solid var(--border);}
+
+/* SIGN OFF */
+.signoff-table{width:100%;border-collapse:collapse;}
+.signoff-table th{padding:7px 12px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;background:var(--ink);color:#fff;border:1px solid #333;}
+.signoff-table td{padding:10px 12px;border:1px solid var(--border);min-height:32px;}
+
+/* PRINT */
+@media print {
+  .topbar,.config-panel,.no-print,.btn{display:none!important;}
+  .doc-wrap{display:block!important;padding:8mm 10mm;}
+  body{background:#fff;}
+  .doc-section{break-inside:avoid;}
+  .ms-table td textarea{min-height:auto;}
+  .ra-table td textarea{min-height:auto;}
+  @page{margin:8mm;size:A4;}
+}
+@media(max-width:768px){.config-panel{padding:16px 14px;}.type-grid{grid-template-columns:1fr 1fr;}}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <a class="tbar-logo" href="#">AURUM</a>
+  <div class="tbar-sub">// RAMS Generator · Risk Assessment & Method Statement</div>
+  <div style="display:flex;gap:8px;" class="no-print">
+    <button class="btn" onclick="resetRAMS()">↺ New RAMS</button>
+    <button class="btn primary" onclick="window.print()">🖨 Print / Export PDF</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     CONFIGURATOR (screen only)
+═══════════════════════════════════════ -->
+<div class="config-panel no-print" id="configPanel">
+
+  <div style="margin-bottom:24px;">
+    <div style="font-size:22px;font-weight:800;margin-bottom:6px;">RAMS <span style="color:#555;">Generator</span></div>
+    <div style="font-size:12px;color:var(--muted);font-family:var(--mono);">Configure below → AURUM generates a complete Risk Assessment & Method Statement in JP Dunn format. Print directly or export to PDF.</div>
+  </div>
+
+  <!-- COMPANY DETAILS -->
+  <div class="config-card">
+    <div class="config-title">Company & Project Details</div>
+    <div class="config-sub">These appear in the document header on every page</div>
+    <div class="field-grid">
+      <div class="field full">
+        <div class="field-label">Company Logo</div>
+        <div class="logo-upload" onclick="document.getElementById('logoInput').click()" id="logoUploadArea">
+          <div id="logoPlaceholder" style="font-size:12px;color:var(--muted);">📁 Click to upload logo (PNG, JPG, SVG) — appears top-left of document</div>
+          <img id="logoPreviewImg" class="logo-preview" style="display:none;">
+        </div>
+        <input type="file" id="logoInput" accept="image/*" style="display:none;" onchange="loadLogo(this)">
+      </div>
+      <div class="field">
+        <div class="field-label">Company Name</div>
+        <input class="field-input" id="companyName" value="JP DUNN CONSTRUCTION LTD" oninput="updatePreview()">
+      </div>
+      <div class="field full">
+        <div class="field-label">Head Office Address</div>
+        <input class="field-input" id="companyAddr" value="1st Floor Harlequin House, 7 High Street, Teddington TW11 8EE" oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <div class="field-label">Head Office Tel.</div>
+        <input class="field-input" id="companyTel" value="0208 7555 720" oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <div class="field-label">Project Name</div>
+        <input class="field-input" id="projName" placeholder="A19 Junction, Hospital Phase 2..." oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <div class="field-label">Project Address / Site</div>
+        <input class="field-input" id="projAddr" placeholder="Site address" oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <div class="field-label">Site Tel.</div>
+        <input class="field-input" id="siteTel" placeholder="07..." oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <div class="field-label">Client Name</div>
+        <input class="field-input" id="clientName" placeholder="National Highways..." oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <div class="field-label">Contracts Director</div>
+        <input class="field-input" id="contractsDir" value="Kevin McSweeney" oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <div class="field-label">Site / Project Manager</div>
+        <input class="field-input" id="siteManager" placeholder="Name" oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <div class="field-label">Prepared By</div>
+        <input class="field-input" id="preparedBy" placeholder="Name" oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <div class="field-label">Audited By</div>
+        <input class="field-input" id="auditedBy" placeholder="Name" oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <div class="field-label">RAMS Reference</div>
+        <input class="field-input" id="ramsRef" placeholder="JPD-RAMS-007" oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <div class="field-label">Revision</div>
+        <input class="field-input" id="ramsRev" placeholder="Rev 1, 01/08/2026" oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <div class="field-label">Date Prepared</div>
+        <input class="field-input" id="datePrepared" type="date" oninput="updatePreview()">
+      </div>
+    </div>
+  </div>
+
+  <!-- RAMS TYPE -->
+  <div class="config-card">
+    <div class="config-title">Select Work Activity</div>
+    <div class="config-sub">AURUM generates the Method Statement and Risk Assessment based on this selection. All content is fully editable after generation.</div>
+    <div class="type-grid" id="typeGrid"></div>
+  </div>
+
+  <!-- PERSONNEL -->
+  <div class="config-card">
+    <div class="config-title">Personnel & Resources</div>
+    <div class="field-grid">
+      <div class="field full">
+        <div class="field-label">Supervision (Site Manager / Foreman)</div>
+        <input class="field-input" id="supervision" placeholder="Name — Role — Tel." oninput="updatePreview()">
+      </div>
+      <div class="field full">
+        <div class="field-label">Operatives (names)</div>
+        <textarea class="field-input" id="operatives" rows="2" placeholder="John Smith, Ahmed Khan, ..." oninput="updatePreview()" style="resize:vertical;"></textarea>
+      </div>
+      <div class="field full">
+        <div class="field-label">Plant & Equipment on site</div>
+        <textarea class="field-input" id="plantEquip" rows="2" placeholder="Excavator CAT 320, Telehandler JCB 540-170, ..." oninput="updatePreview()" style="resize:vertical;"></textarea>
+      </div>
+      <div class="field">
+        <div class="field-label">First Aiders on site</div>
+        <input class="field-input" id="firstAiders" placeholder="Name, Name" oninput="updatePreview()">
+      </div>
+      <div class="field">
+        <div class="field-label">SHEQ / H&S Advisor</div>
+        <input class="field-input" id="sheqAdvisor" placeholder="Name" oninput="updatePreview()">
+      </div>
+    </div>
+  </div>
+
+  <!-- PROJECT-SPECIFIC VARIABLES -->
+  <div class="config-card">
+    <div class="config-title">Project-Specific Details</div>
+    <div class="config-sub">These vary per project — fill in what applies. Leave blank to use generic wording.</div>
+    <div class="field-grid">
+
+      <div class="field">
+        <div class="field-label">Excavator Size / Type</div>
+        <select class="field-input" id="var-excavator">
+          <option value="">— Select or type below —</option>
+          <option>5T 360 Mini-Excavator</option>
+          <option>8T 360 Excavator</option>
+          <option>13T 360 Excavator</option>
+          <option>20T 360 Excavator</option>
+          <option>30T 360 Excavator</option>
+          <option>CAT 308 (8T)</option>
+          <option>CAT 320 (20T)</option>
+          <option>Hitachi ZX85 (8T)</option>
+          <option>Volvo ECR88D (9T)</option>
+          <option>Kubota KX080 (8T)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Excavator (if not in list above)</div>
+        <input class="field-input" id="var-excavator-custom" placeholder="e.g. 6T Kubota U60">
+      </div>
+
+      <div class="field">
+        <div class="field-label">Primary Lifting Method</div>
+        <select class="field-input" id="var-lifting">
+          <option value="">— Select —</option>
+          <option>Tower Crane (Principal Contractor)</option>
+          <option>HIAB Lorry-Mounted Crane</option>
+          <option>Telehandler / Forklift</option>
+          <option>360 Excavator with lifting hook</option>
+          <option>Mobile Crane</option>
+          <option>Crawler Crane</option>
+          <option>Gantry / Overhead Crane</option>
+          <option>Chain Block / Chain Hoist</option>
+          <option>Manual — no mechanical lifting</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Crane / Lifting Plant SWL or Capacity</div>
+        <input class="field-input" id="var-swl" placeholder="e.g. 25T at 18m radius, SWL 2T">
+      </div>
+
+      <div class="field">
+        <div class="field-label">MEWP Type (if applicable)</div>
+        <select class="field-input" id="var-mewp">
+          <option value="">— N/A or Select —</option>
+          <option>Scissor Lift — Skyjack 3219</option>
+          <option>Scissor Lift — Genie GS-1932</option>
+          <option>Scissor Lift — JLG 2030ES</option>
+          <option>Boom Lift — Genie Z-45</option>
+          <option>Boom Lift — JLG 450AJ</option>
+          <option>Spider Lift — Teupen Leo 50T</option>
+          <option>Aluminium Podium Tower</option>
+          <option>Push-around MEWP</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Trench Box / Shoring System</div>
+        <select class="field-input" id="var-trenchbox">
+          <option value="">— N/A or Select —</option>
+          <option>Aluminium Trench Box (Mabey / similar)</option>
+          <option>Steel Trench Box</option>
+          <option>Trench Sheets + Steel Walers + Crossprops</option>
+          <option>RMD Kwikform Waler System</option>
+          <option>Timber Shoring</option>
+          <option>Sheet Piles</option>
+          <option>Battered / Stepped Sides (no shoring)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Concrete Mix Design</div>
+        <select class="field-input" id="var-concrete">
+          <option value="">— Select if applicable —</option>
+          <option>FND2 — Foundations (sulphate resistant)</option>
+          <option>RC32/40 — Reinforced Concrete</option>
+          <option>RC35/45 — Reinforced Concrete</option>
+          <option>C30/37 — General structural</option>
+          <option>C25/30 — Blinding / non-structural</option>
+          <option>Hydrocrete — Waterproof concrete</option>
+          <option>Self-compacting concrete (SCC)</option>
+          <option>1:3 Dry Pack — cement:aggregate</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Dewatering Pump Size</div>
+        <select class="field-input" id="var-pump">
+          <option value="">— N/A or Select —</option>
+          <option>50mm Submersible Pump</option>
+          <option>100mm Submersible Pump</option>
+          <option>150mm Submersible Pump</option>
+          <option>50mm + 100mm (primary + standby)</option>
+          <option>Wellpoint Dewatering System</option>
+          <option>Vacuum Wellpoint System</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Settlement Tank Capacity</div>
+        <select class="field-input" id="var-tank">
+          <option value="">— N/A or Select —</option>
+          <option>1000 litre settlement tank</option>
+          <option>2000 litre settlement tank</option>
+          <option>4000 litre settlement tank (X Maris or similar)</option>
+          <option>6000 litre settlement tank</option>
+          <option>10,000 litre settlement tank</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Falsework System</div>
+        <select class="field-input" id="var-falsework">
+          <option value="">— N/A or Select —</option>
+          <option>PERI Skydeck</option>
+          <option>PERI Multiflex</option>
+          <option>Doka Dokaflex</option>
+          <option>RMD Kwikform Megashore</option>
+          <option>Acrow Props + Soldiers</option>
+          <option>Timber Falsework (bespoke)</option>
+          <option>Cuplok / Kwikstage Falsework</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Noise Working Hours (Section 60)</div>
+        <select class="field-input" id="var-hours">
+          <option>08:00 – 18:00 Mon–Fri, 08:00 – 13:00 Sat</option>
+          <option>07:30 – 18:00 Mon–Fri, 08:00 – 13:00 Sat</option>
+          <option>08:00 – 17:30 Mon–Fri only</option>
+          <option>08:00 – 18:00 Mon–Sat</option>
+          <option>07:00 – 19:00 Mon–Fri (Section 60 consent)</option>
+          <option>As per Section 60 Consent — [insert hours]</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Temporary Works Designer (TWD)</div>
+        <input class="field-input" id="var-twd" placeholder="e.g. CGL Consulting, Alan Baxter">
+      </div>
+
+      <div class="field">
+        <div class="field-label">Principal Contractor</div>
+        <input class="field-input" id="var-pc" placeholder="e.g. Kingerlee, Skanska, Laing O'Rourke">
+      </div>
+
+      <div class="field">
+        <div class="field-label">Nearest A&E Hospital</div>
+        <input class="field-input" id="var-hospital" placeholder="e.g. John Radcliffe, Oxford OX3 9DU — 0300 304 7777">
+      </div>
+
+      <div class="field">
+        <div class="field-label">Emergency Muster Point</div>
+        <input class="field-input" id="var-muster" placeholder="e.g. Site entrance gate, main car park">
+      </div>
+
+    </div>
+  </div>
+
+  <!-- GENERATE BUTTON -->
+  <div style="text-align:center;margin-top:8px;">
+    <button class="btn primary" onclick="generateRAMS()" style="padding:14px 48px;font-size:15px;">⚡ Generate RAMS Document</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     DOCUMENT (print + screen)
+═══════════════════════════════════════ -->
+<div class="doc-wrap" id="docWrap">
+
+  <!-- EDIT BUTTON (screen only) -->
+  <div class="no-print" style="display:flex;gap:8px;margin-bottom:16px;">
+    <button class="btn" onclick="document.getElementById('configPanel').style.display='block';document.getElementById('docWrap').classList.remove('visible');">← Edit Details</button>
+    <button class="btn primary" onclick="window.print()">🖨 Print / Export PDF</button>
+    <span style="font-size:11px;color:var(--muted);font-family:var(--mono);align-self:center;">Click any text field in the document to edit directly</span>
+  </div>
+
+  <!-- DOCUMENT HEADER -->
+  <div class="doc-header">
+    <div class="doc-header-top">
+      <div class="doc-logo-cell">
+        <img id="docLogoImg" style="display:none;max-width:155px;max-height:58px;object-fit:contain;">
+        <div id="docLogoText" class="doc-logo-placeholder">AURUM</div>
+      </div>
+      <div class="doc-company-cell">
+        <div class="doc-company-name" id="docCompanyName">JP DUNN CONSTRUCTION LTD</div>
+        <div class="doc-company-addr" id="docCompanyAddr">1st Floor Harlequin House, 7 High Street, Teddington TW11 8EE</div>
+        <div class="doc-company-addr" style="margin-top:4px;">Tel: <span id="docCompanyTel">0208 7555 720</span></div>
+      </div>
+      <div class="doc-proj-cell">
+        <div class="doc-proj-row"><span class="doc-proj-label">Project Name</span><span class="doc-proj-val" id="docProjName">—</span></div>
+        <div class="doc-proj-row"><span class="doc-proj-label">Project Address</span><span class="doc-proj-val" id="docProjAddr">—</span></div>
+        <div class="doc-proj-row"><span class="doc-proj-label">Client</span><span class="doc-proj-val" id="docClientName">—</span></div>
+        <div class="doc-proj-row"><span class="doc-proj-label">Site Tel.</span><span class="doc-proj-val" id="docSiteTel">—</span></div>
+      </div>
+    </div>
+
+    <div class="doc-title-bar">
+      <div class="doc-title-main">Method Statement & Risk Assessment</div>
+      <div class="doc-title-sub" id="docRamsTitle">—</div>
+    </div>
+
+    <div class="doc-meta">
+      <div class="doc-meta-row"><span class="doc-meta-label">Contracts Director</span><span class="doc-meta-val" id="docContractsDir">—</span></div>
+      <div class="doc-meta-row"><span class="doc-meta-label">RAMS Reference</span><span class="doc-meta-val" id="docRamsRef">—</span></div>
+      <div class="doc-meta-row"><span class="doc-meta-label">Site / Project Manager</span><span class="doc-meta-val" id="docSiteManager">—</span></div>
+      <div class="doc-meta-row"><span class="doc-meta-label">Revision</span><span class="doc-meta-val" id="docRamsRev">—</span></div>
+      <div class="doc-meta-row"><span class="doc-meta-label">Prepared By</span><span class="doc-meta-val" id="docPreparedBy">—</span></div>
+      <div class="doc-meta-row"><span class="doc-meta-label">Date Prepared</span><span class="doc-meta-val" id="docDatePrepared">—</span></div>
+      <div class="doc-meta-row"><span class="doc-meta-label">Audited By</span><span class="doc-meta-val" id="docAuditedBy">—</span></div>
+      <div class="doc-meta-row"><span class="doc-meta-label">SHEQ Advisor</span><span class="doc-meta-val" id="docSHEQ">—</span></div>
+    </div>
+  </div>
+
+  <!-- CONTENTS TABLE -->
+  <div class="doc-section" style="margin-top:16px;">
+    <div class="doc-section-head">
+      <div class="doc-section-title">Contents</div>
+    </div>
+    <table class="contents-table">
+      <thead><tr><th style="width:200px;">Section Title</th><th>Section Sub Headings</th><th style="width:100px;">Applicable</th></tr></thead>
+      <tbody id="contentsBody"></tbody>
+    </table>
+  </div>
+
+  <!-- METHOD STATEMENT -->
+  <div class="doc-section">
+    <div class="doc-section-head"><div class="doc-section-title">Method Statement</div></div>
+    <table class="ms-table" id="msTable"></table>
+  </div>
+
+  <!-- RISK ASSESSMENT -->
+  <div class="doc-section">
+    <div class="doc-section-head">
+      <div class="doc-section-title">Risk Assessment</div>
+      <button class="btn no-print" onclick="addRARow()" style="font-size:11px;padding:4px 10px;">+ Add Risk</button>
+    </div>
+    <div style="padding:10px 14px;background:var(--s2);border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div>
+        <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;font-family:var(--mono);">Risk Matrix (Severity × Likelihood)</div>
+        <table class="ra-matrix">
+          <tr><td style="background:var(--s3);font-weight:700;">S\L</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td></tr>
+          <tr><td style="background:var(--s3);font-weight:700;">1</td><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td></tr>
+          <tr><td style="background:var(--s3);font-weight:700;">2</td><td>2</td><td>4</td><td>6</td><td>8</td><td>10</td></tr>
+          <tr><td style="background:var(--s3);font-weight:700;">3</td><td>3</td><td>6</td><td>9</td><td>12</td><td>15</td></tr>
+          <tr><td style="background:var(--s3);font-weight:700;">4</td><td>4</td><td>8</td><td>12</td><td>16</td><td>20</td></tr>
+          <tr><td style="background:var(--s3);font-weight:700;">5</td><td>5</td><td>10</td><td>15</td><td>20</td><td>25</td></tr>
+        </table>
+      </div>
+      <div class="ra-legend">
+        <div class="ra-legend-row"><span class="risk-score rs-high" style="width:60px;font-size:10px;">20–25</span><strong>HIGH</strong> — Stop operation, consider another method</div>
+        <div class="ra-legend-row"><span class="risk-score rs-above" style="width:60px;font-size:10px;">15–19</span><strong>ABOVE MEDIUM</strong> — Unacceptable, consider further controls</div>
+        <div class="ra-legend-row"><span class="risk-score rs-med" style="width:60px;font-size:10px;">10–14</span><strong>MEDIUM</strong> — Consider level of supervision / documentation</div>
+        <div class="ra-legend-row"><span class="risk-score rs-low" style="width:60px;font-size:10px;">6–9</span><strong>LOW LEVEL</strong> — Low priority action</div>
+        <div class="ra-legend-row"><span class="risk-score rs-ok" style="width:60px;font-size:10px;">0–5</span><strong>ACCEPTABLE</strong> — No further action required</div>
+        <div style="margin-top:8px;font-size:9px;color:var(--muted);"><strong>People at Risk:</strong> JPD = JP Dunn operatives · C = Other Contractors · P = Public · O = Others · E = Environment</div>
+      </div>
+    </div>
+    <div class="ra-wrap">
+      <table class="ra-table">
+        <thead>
+          <tr>
+            <th style="width:30px;">No.</th>
+            <th class="left" style="width:220px;">Significant Hazard / Risk</th>
+            <th style="width:40px;">Sev.</th>
+            <th style="width:40px;">Like.</th>
+            <th style="width:50px;">Score</th>
+            <th style="width:60px;">People at Risk</th>
+            <th class="left">Control Measures</th>
+            <th style="width:40px;">Sev.</th>
+            <th style="width:40px;">Like.</th>
+            <th style="width:50px;">Residual</th>
+            <th class="no-print" style="width:30px;"></th>
+          </tr>
+        </thead>
+        <tbody id="raBody"></tbody>
+      </table>
+    </div>
+    <div style="padding:8px 14px;background:var(--s2);border-top:1px solid var(--border);font-size:10px;font-weight:700;">
+      NOTE: All persons undertaking activities / operations indicated on this Risk Assessment must be made fully aware of its contents.
+    </div>
+  </div>
+
+  <!-- SIGN OFF -->
+  <div class="doc-section">
+    <div class="doc-section-head"><div class="doc-section-title">Method Statement Sign Off Sheet</div></div>
+    <div style="padding:10px 14px;font-size:11px;background:var(--s2);border-bottom:1px solid var(--border);">
+      <strong id="signoffTitle">—</strong> &nbsp;·&nbsp; Ref: <span id="signoffRef">—</span>
+    </div>
+    <div style="padding:8px 14px;font-size:10px;border-bottom:1px solid var(--border);font-style:italic;">
+      I have been briefed on and I understand the contents of this Risk Assessment & Method Statement
+    </div>
+    <table class="signoff-table">
+      <thead><tr>
+        <th style="width:25%;">Print Name</th>
+        <th style="width:30%;">Signature</th>
+        <th style="width:15%;">Date</th>
+        <th style="width:30%;">Briefed By</th>
+      </tr></thead>
+      <tbody id="signoffBody"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+// WORK TYPES — templates based on JP Dunn RAMS
+// ══════════════════════════════════════════════════
+const WORK_TYPES = [
+  {
+    id:'logistics', icon:'🚛', name:'Logistics & Loading/Unloading', desc:'Vehicle movements, HIAB, telehandler',
+    title:'LOGISTICS, LOADING AND UNLOADING',
+    contents:[
+      ['Scope of Works','Description of Works','Y'],['Scope of Works','Location','Y'],['Scope of Works','Time Start','Y'],['Scope of Works','Duration','Y'],
+      ['Sequence & Method','Sequence','Y'],['Sequence & Method','Method','Y'],['Sequence & Method','Temporary Works','N/A'],['Sequence & Method','Risk Assessment','Y'],['Sequence & Method','Manual Handling','Y'],
+      ['Personnel','Supervision','Y'],['Personnel','Operatives','Y'],
+      ['Resources','Plant & Equipment','Y'],['Resources','Materials','Y'],['Resources','COSHH Assessments','Y'],['Resources','Power Supply','Y'],['Resources','Lifting Operations','Y'],
+      ['PPE','Mandatory PPE Required','Y'],['PPE','Work Specific PPE','Y'],
+      ['Access & Egress','Deliveries','Y'],['Access & Egress','Traffic Management','Y'],['Access & Egress','Pedestrian Management','Y'],['Access & Egress','Work Access Arrangements','Y'],
+      ['Environment','Housekeeping','Y'],['Environment','Material Storage','Y'],['Environment','Material Disposal','Y'],['Environment','Lighting','Y'],['Environment','Noise','Y'],['Environment','Dust','Y'],['Environment','Welfare','Y'],
+      ['Working at Height','Collective Fall Protection','Y'],['Working at Height','Personal Fall Protection','Y'],
+      ['Monitoring','Plant & Equipment Inspection','Y'],['Monitoring','PPE Inspection','Y'],['Monitoring','Safety Inspection','Y'],
+      ['Emergency Procedures','First Aid Arrangements','Y'],['Emergency Procedures','Fire Safety Arrangements','Y'],['Emergency Procedures','Rescue Arrangements','Y'],
+    ],
+    ms:[
+      ['1.1','Description of Works','Logistics around site including loading and unloading lorries, skip deliveries, concrete deliveries, and movement of plant and materials.'],
+      ['1.2','Location','Site wide — as directed by Site Manager.'],
+      ['1.3','Time Start','As per site programme.'],
+      ['1.4','Duration','Ongoing throughout the project.'],
+      ['2.1','Sequence','1. Booking of deliveries by Site Manager / Senior Buyer\n2. Traffic management arrangements put in place\n3. Vehicle banked onto site by trained Vehicle Marshal\n4. Exclusion zone established around loading/unloading area\n5. Load assessed and lifting plan confirmed\n6. Unloading by HIAB / Telehandler / manual as appropriate\n7. Materials stored in agreed location\n8. Vehicle banked off site'],
+      ['2.2','Method','All operatives to have been inducted to site and briefed on this RAMS prior to commencement. Only CPCS / equivalent certificated operatives to operate plant. All lifting operations to be assessed and approved by the Lifting Operations Appointed Person. Traffic Marshals to be deployed during all vehicle movements to ensure complete segregation between operatives and vehicles. Exclusion zones to be established and maintained. All loads to be assessed for weight and stability prior to lifting. Telehandler / HIAB to be inspected prior to use and current Thorough Examination certificates to be on file.'],
+      ['2.3','Temporary Works','N/A'],
+      ['2.4','Risk Assessment','Refer to the Risk Assessment appended.'],
+      ['2.5','Manual Handling','Manual handling assessments to be carried out for all manual tasks. Operatives to use good lifting technique and never carry a load that obscures vision. Toolbox talk to be communicated to team.'],
+      ['3.1','Supervision','[SUPERVISION DETAILS]'],
+      ['3.2','Operatives','[OPERATIVES LIST]'],
+      ['4.1','Plant & Equipment','Telescopic Handler, Excavator, HIAB, Vehicle — as required for task.'],
+      ['4.2','Materials','Various — as per delivery.'],
+      ['4.3','COSHH Assessments','Diesel, Hydraulic Oil, Engine Oil — refer to COSHH file.'],
+      ['4.4','Power Supply','110V from generator / transformer as required.'],
+      ['4.5','Lifting Operations','All lifts to be carried out using appropriate mechanical means. Lifting Operations Appointed Person to approve all lifts. Refer to Lifting Plan.'],
+      ['5.1','Mandatory PPE','Safety helmet (EN397) · Hi-visibility vest/jacket (EN471 Class 2) · Safety boots (EN345 S3) · Gloves (EN420)'],
+      ['5.2','Work Specific PPE','Safety goggles (EN166B) · Ear protection (EN352) · Disposable masks (EN149) · Chemical resistant gloves (EN374-2) as required'],
+      ['6.1','Deliveries','All deliveries to be pre-booked with Site Manager / Senior Buyer. Delivery drivers to be inducted on arrival.'],
+      ['6.2','Traffic Management','Vehicle Marshal to be deployed for all vehicle movements on site. Complete segregation between pedestrians and vehicles to be maintained at all times.'],
+      ['6.3','Pedestrian Management','Via designated pedestrian routes only. Pedestrian routes to be clearly marked and maintained. Exclusion zones to be enforced during lifting operations.'],
+      ['6.4','Work Access','Site Manager to define work access routes. Routes to be kept clear and free of trip hazards at all times.'],
+      ['7.1','Housekeeping','High standard of housekeeping to be maintained. Waste to be stored in designated skips / bins. Toolbox talks on housekeeping at induction and at regular intervals.'],
+      ['7.2','Material Storage','Materials stored in locations agreed by Site Manager / Senior Buyer. Diesel and oils stored in bunded bowsers with spill kits and fire extinguishers.'],
+      ['7.3','Material Disposal','Segregated waste skips for recycling. All waste to approved disposal sites with duty of care documentation maintained.'],
+      ['7.4','Lighting','Access lighting and task lighting to be provided. Adequate lighting to be maintained in all work areas.'],
+      ['7.5','Noise','Noise assessments to be carried out. Where first action limit exceeded, hearing protection to be worn. Appropriate signage to be erected.'],
+      ['7.6','Dust','Dust suppression methods to be adopted. Suitable face masks to be worn where required.'],
+      ['7.7','Welfare','Welfare facilities provided — toilet, hand washing, drinking water, rest area, first aid kit.'],
+      ['8.1','Collective Fall Protection','Edge protection and barriers to be installed where working at height is required. Vehicles to be provided with edge protection.'],
+      ['8.2','Personal Fall Protection','Hierarchy of control to establish if working at height can be avoided. Fall restraint equipment to be used as last resort. Operatives to be trained and competent in use of harness.'],
+      ['9.1','Plant & Equipment Inspection','Pre-use inspection of all plant and lifting equipment daily. Current Thorough Examination certificates to be on file. Defective equipment to be taken out of service immediately.'],
+      ['9.2','PPE Inspection','Each operative to check PPE before start of shift. Damaged PPE to be replaced before operative enters site.'],
+      ['9.3','Safety Inspection','Daily safety observations. Weekly formal inspection. Regular H&S audits.'],
+      ['10.1','First Aid','First aid box in site office. First Aiders: [FIRST AIDERS]. Nearest hospital: [HOSPITAL NAME AND ADDRESS].'],
+      ['10.2','Fire Safety','Fire points located on site. Hot works permit required for any flame cutting / welding. Fire extinguishers to be readily available. Emergency muster point: [LOCATION].'],
+      ['10.3','Rescue Arrangements','In the event of an incident: Call 999. Shut down all plant. Cordon off area. Administer first aid if safe. Inform Site Manager, SHEQ Director, and Contracts Director immediately.'],
+    ],
+    hazards:[
+      {no:1, hazard:'Vehicle contact: contact with boom, chassis, moving load, trailer or cab — crushing injuries, fatalities', sev:5, lik:5, people:'JPD, C, P, O', controls:'Establish effective exclusion zone around loading/unloading area. Appropriate warning signs erected. Traffic Management Plan in place. Traffic Marshals deployed. All personnel to wear hi-visibility clothing. Banksmen/Signallers to wear contrasting colour (orange). Traffic routes adequately lit and kept clear of obstacles. Site speed limit imposed and clearly visible.', rsev:5, rlik:1},
+      {no:2, hazard:'Vehicle stability: overturning, overloading, ground conditions unable to support vehicle — crushing injuries, fatalities', sev:5, lik:5, people:'JPD, C, P, O', controls:'Only designated firm, level sites to be used. Vehicle switched off when stationary with handbrake applied. Ground conditions confirmed to accommodate loads. Outriggers set on spreader pads on sound surface. Weight of load to be known and accurate. Operator to have valid CPCS card. Plant to have current 12-month Thorough Examination.', rsev:5, rlik:1},
+      {no:3, hazard:'Vehicle reversing / turning — pedestrian struck, major injuries, fatalities', sev:5, lik:5, people:'JPD, C, P, O', controls:'Effective exclusion zone established. Reversing manoeuvres eliminated where practicable. Vehicles fitted with audible reversing alarms and cameras. Trained banksman to control all reversing manoeuvres. Communication system established between banksman and driver (BS7121).', rsev:5, rlik:1},
+      {no:4, hazard:'Access and egress onto/from vehicle or trailer — slips, trips, falls from height, fractures', sev:4, lik:5, people:'JPD, C', controls:'Only competent trained operatives to climb on/off trailers using secured ladder. Delivery vehicles to have edge protection. Steps and handrails to be kept clean and free from mud/oils. Operatives must never jump from trailer.', rsev:4, rlik:1},
+      {no:5, hazard:'Working at height — fall from vehicle/trailer, major injuries, fatality', sev:5, lik:5, people:'JPD', controls:'Need for operatives to access load bed to be avoided where practicable. Pre-attach slings to lifting points where possible. Suitable fall protection in place when working on trailer (guardrails or harness as last resort). Slinger to stand clear of load using guide ropes for large or awkward loads.', rsev:5, rlik:1},
+      {no:6, hazard:'Load movement — collision or close contact during movement, crushing injuries', sev:4, lik:5, people:'JPD, C, P, O', controls:'Exclusion zone established. Slinger to inspect loads before lift for loose objects. Tag lines attached to control rotation. Never lift over people. Slinger to ensure no unauthorised person in lifting area. All accessories inspected before use and of correct SWL.', rsev:4, rlik:1},
+      {no:7, hazard:'Manual handling — musculoskeletal injuries, back injury', sev:3, lik:5, people:'JPD', controls:'Avoid manual handling wherever possible — use mechanical means. Reduce unit sizes of loads. Manual handling training and toolbox talk delivered to all operatives. Operatives to use correct lifting technique. Two-person lift if load exceeds 25kg or is awkward.', rsev:3, rlik:1},
+      {no:8, hazard:'Environmental conditions — wind, rain, poor visibility affecting stability or visibility', sev:5, lik:4, people:'JPD, C', controls:'Monitor weather conditions. Lifting operations to cease if wind speed exceeds manufacturer\'s limits. Anemometer to be used during crane/HIAB operations. Halt works if conditions adversely affect safety. Wet weather gear to be provided.', rsev:5, rlik:1},
+    ]
+  },
+  {
+    id:'excavation', icon:'⛏', name:'Excavation & Groundworks', desc:'Trenching, bulk dig, shoring',
+    title:'EXCAVATION AND GROUNDWORKS',
+    contents:[
+      ['Scope of Works','Description of Works','Y'],['Scope of Works','Location','Y'],['Scope of Works','Time Start','Y'],['Scope of Works','Duration','Y'],
+      ['Sequence & Method','Sequence','Y'],['Sequence & Method','Method','Y'],['Sequence & Method','Temporary Works','Y'],['Sequence & Method','Risk Assessment','Y'],['Sequence & Method','Manual Handling','Y'],
+      ['Personnel','Supervision','Y'],['Personnel','Operatives','Y'],
+      ['Resources','Plant & Equipment','Y'],['Resources','Materials','Y'],['Resources','COSHH Assessments','Y'],['Resources','Power Supply','Y'],['Resources','Lifting Operations','N/A'],
+      ['PPE','Mandatory PPE Required','Y'],['PPE','Work Specific PPE','Y'],
+      ['Access & Egress','Vehicle Access','Y'],['Access & Egress','Traffic Management','Y'],['Access & Egress','Pedestrian Management','Y'],['Access & Egress','Excavation Access','Y'],
+      ['Environment','Housekeeping','Y'],['Environment','Material Storage','Y'],['Environment','Material Disposal','Y'],['Environment','Lighting','Y'],['Environment','Noise','Y'],['Environment','Dust','Y'],['Environment','Welfare','Y'],
+      ['Working at Height','Collective Fall Protection','Y'],['Working at Height','Personal Fall Protection','Y'],
+      ['Monitoring','Plant & Equipment Inspection','Y'],['Monitoring','PPE Inspection','Y'],['Monitoring','Safety Inspection','Y'],
+      ['Emergency Procedures','First Aid Arrangements','Y'],['Emergency Procedures','Fire Safety Arrangements','Y'],['Emergency Procedures','Rescue Arrangements','Y'],
+    ],
+    ms:[
+      ['1.1','Description of Works','Excavation works including bulk dig, trench excavation, and associated groundworks.'],
+      ['1.2','Location','As shown on drawing — [DRAWING REFERENCE].'],
+      ['1.3','Time Start','As per site programme.'],
+      ['1.4','Duration','[DURATION]'],
+      ['2.1','Sequence','1. Check and confirm location of all underground services (CAT & Genny, service drawings)\n2. Establish exclusion zone around excavation area\n3. Set up ground support / shoring as required\n4. Commence excavation to design levels\n5. Inspect excavation sides for stability — daily and after adverse weather\n6. Backfill and compact in layers on completion'],
+      ['2.2','Method','Prior to any excavation, all services to be located using CAT scanner and Genny, and confirmed against service drawings. Trial holes to be dug by hand within 500mm of services. Excavation to be carried out by competent CPCS trained operator using JCB / CAT excavator. Excavation sides to be battered or shored as required by ground conditions. Appropriately designed trench boxes / Mabey shores to be used in accordance with designer\'s specification. Exclusion zone to be maintained around excavation at all times. Excavation to be inspected daily by competent person and results recorded on inspection form (SWMP).'],
+      ['2.3','Temporary Works','Temporary Works Designer to specify ground support requirements. All shoring/trench boxes to be installed by competent persons in accordance with TWD specification. Refer to Temporary Works Register.'],
+      ['2.4','Risk Assessment','Refer to the Risk Assessment appended.'],
+      ['2.5','Manual Handling','Manual handling assessments to be carried out. Mechanical means to be used wherever practicable.'],
+      ['3.1','Supervision','[SUPERVISION DETAILS]'],
+      ['3.2','Operatives','[OPERATIVES LIST]'],
+      ['4.1','Plant & Equipment','[PLANT — e.g. CAT 320 Excavator, Dumper, Trench Box, CAT Scanner]'],
+      ['4.2','Materials','Imported fill, granular bedding, concrete — as per specification.'],
+      ['4.3','COSHH Assessments','Diesel, hydraulic oil, potentially contaminated ground — refer to COSHH file. Ground investigation report to be reviewed.'],
+      ['4.4','Power Supply','110V from generator / transformer as required.'],
+      ['4.5','Lifting Operations','N/A — refer to separate Lifting Plan if lifting required.'],
+      ['5.1','Mandatory PPE','Safety helmet (EN397) · Hi-visibility vest/jacket (EN471) · Safety boots (EN345 S3) · Gloves (EN420)'],
+      ['5.2','Work Specific PPE','Safety goggles · Ear protection · Dust mask (FFP2/FFP3) · Chemical resistant gloves if contamination risk · Knee pads for manual work in trench'],
+      ['6.1','Vehicle Access','Vehicle access routes to be clearly defined and maintained. Traffic management plan to be implemented.'],
+      ['6.2','Traffic Management','Vehicle Marshal to control all vehicle movements. Complete segregation between pedestrians and plant.'],
+      ['6.3','Pedestrian Management','Exclusion zone around excavation with physical barriers and signage. No unauthorised access.'],
+      ['6.4','Excavation Access','Safe means of access/egress to be provided in all excavations deeper than 1.2m. Ladder to extend 1m above excavation top. Access positions to be designated and maintained.'],
+      ['7.1','Housekeeping','Excavated material to be stored away from excavation edge (minimum 0.5m). Stockpiles not to restrict access routes. Welfare facilities to be kept clean.'],
+      ['7.2','Material Storage','Excavated material in designated spoil area. Imported materials adjacent to excavation.'],
+      ['7.3','Material Disposal','All waste soil to be classified and disposed of at approved licensed sites. Waste transfer notes to be retained.'],
+      ['7.4','Lighting','Adequate lighting in all excavations and access routes. Task lighting to be provided.'],
+      ['7.5','Noise','Noise assessments to be carried out. Noisy operations to be planned to minimise impact on neighbours.'],
+      ['7.6','Dust','Water suppression to be used during excavation in dry conditions. Wheel wash to be provided if required.'],
+      ['7.7','Welfare','Welfare facilities provided — toilet, hand washing, drinking water, rest area, first aid kit.'],
+      ['8.1','Collective Fall Protection','Physical barriers (Heras fencing or excavation barriers) around all excavations. Excavation covers when not in active use. Barriers minimum 0.5m from excavation edge.'],
+      ['8.2','Personal Fall Protection','Harness and lanyard to be used where collective protection cannot be provided. Operatives to be trained in harness use.'],
+      ['9.1','Plant & Equipment Inspection','Daily pre-use inspection of all plant. Weekly formal inspection recorded. CAT scanner calibrated and certified.'],
+      ['9.2','PPE Inspection','Daily check by each operative. Defective PPE replaced immediately.'],
+      ['9.3','Safety Inspection','Daily inspection of excavation by competent person. Results recorded on SWMP form. Weekly formal H&S inspection.'],
+      ['10.1','First Aid','First aid box in site office. First Aiders: [FIRST AIDERS]. Emergency services contact: 999.'],
+      ['10.2','Fire Safety','Fire points on site. No smoking in vicinity of diesel storage. Emergency muster point: [LOCATION].'],
+      ['10.3','Rescue Arrangements','In the event of collapse or entrapment: Call 999. Do NOT enter excavation — further collapse risk. Shut down all plant. Cordon area. Inform Site Manager, SHEQ Director, and Contracts Director.'],
+    ],
+    hazards:[
+      {no:1, hazard:'Excavation collapse / trench failure — burial, crushing, fatality', sev:5, lik:5, people:'JPD', controls:'Temporary Works Designer to specify ground support. Trench boxes / shoring installed by competent persons as per specification. Daily inspection of excavation sides by competent person — results recorded. Excavation to be inspected after adverse weather. Spoil stored minimum 0.5m from edge. No surcharging of excavation edge.', rsev:5, rlik:1},
+      {no:2, hazard:'Striking underground services — electric shock, explosion, gas leak, fatality', sev:5, lik:5, people:'JPD, C', controls:'All services located using CAT scanner and Genny prior to excavation. Service drawings obtained and reviewed. Trial holes by hand within 500mm of services. Permit to Dig issued before any excavation. Service records to be held on site. All operatives briefed on service locations.', rsev:5, rlik:1},
+      {no:3, hazard:'Plant and vehicle contact with operatives — crushing injuries, fatality', sev:5, lik:5, people:'JPD, C', controls:'Exclusion zone established around all plant. Trained banksman to control plant movements. All operatives to wear hi-visibility clothing. Plant operators to be CPCS certificated. Spotters deployed where visibility restricted. Ground conditions assessed before positioning plant near excavation edges.', rsev:5, rlik:1},
+      {no:4, hazard:'Falls into excavation — fractures, major injuries, fatality', sev:5, lik:5, people:'JPD, C, P', controls:'Physical barriers (Heras fencing / proprietary excavation barriers) minimum 0.5m from excavation edge. Excavations to be covered when not in active use. Safe means of access/egress provided (ladder extending 1m above top). Access positions to be designated. Site lighting in hours of darkness.', rsev:5, rlik:1},
+      {no:5, hazard:'Inhalation of gases in confined spaces (hydrogen sulphide, carbon monoxide, methane) — incapacitation, fatality', sev:5, lik:4, people:'JPD', controls:'Confined space risk assessment to be carried out prior to entry to deep excavations. Atmospheric testing prior to entry and continuously during occupation. Forced ventilation to be provided. Rescue arrangements to be in place before entry. Operatives to be trained in confined space procedures.', rsev:5, rlik:1},
+      {no:6, hazard:'Ground water / flooding of excavation — drowning, instability', sev:4, lik:4, people:'JPD', controls:'Ground investigation report to be reviewed for water table level. Dewatering pump to be available on site. Excavation to be inspected after rainfall. Pumping system to be operational before entry into deep excavations.', rsev:4, rlik:1},
+      {no:7, hazard:'Manual handling in excavation — back injury, musculoskeletal disorder', sev:3, lik:5, people:'JPD', controls:'Mechanical excavation to be used wherever possible. Two-person lift for loads over 25kg. Manual handling training to be delivered. Short duration tasks with regular breaks.', rsev:3, rlik:1},
+      {no:8, hazard:'Dust inhalation — silicosis, respiratory disease', sev:4, lik:4, people:'JPD', controls:'Water suppression during cutting and excavation. FFP2/FFP3 dust masks to be worn. RPE face fit testing to be carried out. Exposure monitoring where required.', rsev:4, rlik:1},
+    ]
+  },
+  {
+    id:'welding', icon:'🔥', name:'Welding & Flame Cutting', desc:'Oxy-fuel, MIG, TIG, arc welding',
+    title:'WELDING AND FLAME CUTTING',
+    contents:[
+      ['Scope of Works','Description of Works','Y'],['Scope of Works','Location','Y'],['Scope of Works','Time Start','Y'],['Scope of Works','Duration','Y'],
+      ['Sequence & Method','Sequence','Y'],['Sequence & Method','Method','Y'],['Sequence & Method','Temporary Works','N/A'],['Sequence & Method','Risk Assessment','Y'],['Sequence & Method','Manual Handling','Y'],
+      ['Personnel','Supervision','Y'],['Personnel','Operatives','Y'],
+      ['Resources','Plant & Equipment','Y'],['Resources','Materials','Y'],['Resources','COSHH Assessments','Y'],['Resources','Power Supply','Y'],['Resources','Lifting Operations','N/A'],
+      ['PPE','Mandatory PPE Required','Y'],['PPE','Work Specific PPE','Y'],
+      ['Access & Egress','Work Access Arrangements','Y'],['Access & Egress','Traffic Management','N/A'],['Access & Egress','Pedestrian Management','Y'],['Access & Egress','Deliveries','Y'],
+      ['Environment','Housekeeping','Y'],['Environment','Material Storage','Y'],['Environment','Material Disposal','Y'],['Environment','Lighting','Y'],['Environment','Noise','Y'],['Environment','Dust','Y'],['Environment','Welfare','Y'],
+      ['Working at Height','Collective Fall Protection','N/A'],['Working at Height','Personal Fall Protection','N/A'],
+      ['Monitoring','Plant & Equipment Inspection','Y'],['Monitoring','PPE Inspection','Y'],['Monitoring','Safety Inspection','Y'],
+      ['Emergency Procedures','First Aid Arrangements','Y'],['Emergency Procedures','Fire Safety Arrangements','Y'],['Emergency Procedures','Rescue Arrangements','Y'],
+    ],
+    ms:[
+      ['1.1','Description of Works','Welding (MIG/TIG/arc) and flame cutting (oxy-fuel equipment) — plant repairs, fabrication, and maintenance activities.'],
+      ['1.2','Location','Designated hot works area — plant yard / site workshop.'],
+      ['1.3','Time Start','As per site programme.'],
+      ['1.4','Duration','Ongoing as required.'],
+      ['2.1','Sequence','1. Hot Works Permit to be issued and signed off\n2. Area inspection — remove/protect combustible materials within 5m\n3. Fire extinguisher positioned within 2m of works\n4. Gas cylinders secured upright with trolley/chain\n5. Welding screen erected if working in vicinity of others\n6. Carry out welding / cutting operation\n7. Post-work fire watch for minimum 60 minutes\n8. Permit to be closed out and signed off'],
+      ['2.2','Method','Hot Works Permit to be obtained from Site Manager before any welding or flame cutting commences. Working area to be inspected and all combustible materials removed or protected with fire-resistant blankets within 5m of works. Adequate ventilation to be established — MEWPs/forced ventilation where required. Only trained and competent welders/operatives to carry out welding and flame cutting. Oxy-fuel cylinders to be transported on purpose-built trolley and secured upright. Regulator and hoses to be inspected before each use. Flashback arrestors to be fitted to both fuel and oxygen lines. Welding screens to be erected to protect others from UV radiation. Fire watch to be maintained for minimum 60 minutes after completion of all hot works.'],
+      ['2.3','Temporary Works','N/A'],
+      ['2.4','Risk Assessment','Refer to the Risk Assessment appended.'],
+      ['2.5','Manual Handling','Gas cylinders to be moved using purpose-built trolley. Do not drag or roll cylinders on their sides.'],
+      ['3.1','Supervision','[SUPERVISION DETAILS]'],
+      ['3.2','Operatives','Competent trained welder — [NAME]'],
+      ['4.1','Plant & Equipment','MIG/TIG welder or oxy-fuel cutting equipment, welding screen, flashback arrestors, fire extinguisher, gas cylinder trolley.'],
+      ['4.2','Materials','Welding wire/rods, oxy-fuel gas cylinders (oxygen + acetylene/propane).'],
+      ['4.3','COSHH Assessments','Welding fumes — Mn, Cr, Ni — refer to COSHH file. LEV (Local Exhaust Ventilation) to be used where possible. Degreasing solvents if used.'],
+      ['4.4','Power Supply','240V / 110V mains or generator supply for electric welding equipment.'],
+      ['4.5','Lifting Operations','N/A'],
+      ['5.1','Mandatory PPE','Safety helmet · Hi-visibility jacket · Safety boots (S3) · Gloves'],
+      ['5.2','Work Specific PPE','Welding helmet (EN379 auto-darkening) · Welding gloves (EN12477) · Welding jacket / leather apron · RPE (minimum P2 filter) for welding fumes · Safety goggles under welding shield'],
+      ['6.1','Work Access','Hot works area to be clearly demarcated. Welding screens erected. Access restricted to authorised personnel only.'],
+      ['6.2','Traffic Management','N/A'],
+      ['6.3','Pedestrian Management','Area demarcated with welding screens and appropriate signage: "WELDING IN PROGRESS — DO NOT ENTER". Exclusion zone maintained.'],
+      ['6.4','Deliveries','Gas cylinder deliveries to be directed to secure storage area. COSHH data sheets to be held on file for all gases.'],
+      ['7.1','Housekeeping','Hot work area to be kept clean and free from combustibles. Waste welding rods/wire to be disposed of appropriately.'],
+      ['7.2','Material Storage','Gas cylinders to be stored upright, chained, segregated (oxygen separate from fuel gas by 3m or by fire-resistant partition). Storage area to be ventilated.'],
+      ['7.3','Material Disposal','Used rods/wire in designated metal waste bins. Empty cylinders to be returned to supplier.'],
+      ['7.4','Lighting','Adequate lighting in welding area.'],
+      ['7.5','Noise','Ear protection when grinding or using pneumatic tools.'],
+      ['7.6','Dust/Fume','LEV (local exhaust ventilation) to be used for all welding operations. General ventilation to supplement. RPE to be worn. Welding fume exposure monitoring to be considered.'],
+      ['7.7','Welfare','Welfare facilities provided — hand washing, rest area, first aid kit.'],
+      ['8.1','Collective Fall Protection','N/A for ground level welding.'],
+      ['8.2','Personal Fall Protection','N/A for ground level welding.'],
+      ['9.1','Plant & Equipment Inspection','Daily inspection of welding equipment and hoses. Flashback arrestors to be inspected. Gas hoses to be tested for leaks (soapy water — no naked flame). Thorough Examination of lifting equipment if used.'],
+      ['9.2','PPE Inspection','Welding helmet lens condition checked before each use. Gloves and jacket checked for damage.'],
+      ['9.3','Safety Inspection','Hot Works Permit to be reviewed at start of each day. Fire watch completed after works. Daily safety observations.'],
+      ['10.1','First Aid','First aid box in site office. First Aiders: [FIRST AIDERS]. Burns to be treated with cool running water for minimum 10 minutes.'],
+      ['10.2','Fire Safety','CO2 / dry powder extinguisher to be positioned within 2m of all hot works. Hot Works Permit in place at all times. Fire watch minimum 60 minutes post-works. Any fire: evacuate, call 999, raise alarm.'],
+      ['10.3','Rescue Arrangements','In the event of fire: Evacuate, call 999. Shut off gas cylinders if safe to do so. Emergency muster point: [LOCATION]. Inform Site Manager and Contracts Director.'],
+    ],
+    hazards:[
+      {no:1, hazard:'Fire from hot works — burns, explosion, fatality', sev:5, lik:5, people:'JPD, C, P', controls:'Hot Works Permit mandatory before commencement. All combustibles removed or protected within 5m. CO2/dry powder extinguisher positioned within 2m. No hot works adjacent to flammable materials/gases. Post-work fire watch minimum 60 minutes. Competent person to inspect area before work.', rsev:5, rlik:1},
+      {no:2, hazard:'Inhalation of welding fumes — respiratory disease, metal fume fever, cancer (Mn, Cr, Ni)', sev:5, lik:5, people:'JPD', controls:'Local exhaust ventilation (LEV) to be used at source. General ventilation to supplement LEV. RPE (minimum P2 respirator, fitted and face-fit tested) to be worn. No welding in confined spaces without specialist risk assessment. Fume monitoring to be considered for regular tasks. All operatives briefed on fume risks.', rsev:5, rlik:1},
+      {no:3, hazard:'UV radiation eye damage / arc eye / skin burns from welding arc', sev:4, lik:5, people:'JPD, C', controls:'Welding screens erected to protect others. Auto-darkening welding helmet with correct shade filter to be worn. Leather welding jacket and gloves to protect skin. Adjacent workers to turn away from arc or use appropriate eye protection.', rsev:4, rlik:1},
+      {no:4, hazard:'Gas cylinder leakage / explosion — fire, blast injury, fatality', sev:5, lik:4, people:'JPD, C, P', controls:'Cylinders stored upright, secured and chained. Stored separate from ignition sources. Valves closed when not in use. Hoses and connections inspected before use — soapy water check (no naked flame). Flashback arrestors fitted to both lines. Cylinders not stored in enclosed spaces.', rsev:5, rlik:1},
+      {no:5, hazard:'Electric shock from welding equipment — cardiac arrest, burns, fatality', sev:5, lik:4, people:'JPD', controls:'Welding equipment to be PAT tested and inspected. No welding in wet conditions. Welding return cable to be in good condition and correctly positioned. Do not touch electrode with bare hands. Equipment to be switched off when not in use. 110V equipment to be used where possible.', rsev:5, rlik:1},
+      {no:6, hazard:'Grinding sparks / flying debris — eye injury, burns, fire', sev:4, lik:5, people:'JPD, C', controls:'Safety goggles / face shield to be worn when grinding. Combustibles to be removed from grinding area. Disc guard to be in place. Correct disc for material to be used. Do not exceed disc\'s maximum RPM.', rsev:4, rlik:1},
+    ]
+  },
+  {
+    id:'working_height', icon:'🪜', name:'Working at Height', desc:'Scaffolding, MEWP, ladders, roofing',
+    title:'WORKING AT HEIGHT',
+    contents:[
+      ['Scope of Works','Description of Works','Y'],['Scope of Works','Location','Y'],['Scope of Works','Time Start','Y'],['Scope of Works','Duration','Y'],
+      ['Sequence & Method','Sequence','Y'],['Sequence & Method','Method','Y'],['Sequence & Method','Temporary Works','Y'],['Sequence & Method','Risk Assessment','Y'],['Sequence & Method','Manual Handling','Y'],
+      ['Personnel','Supervision','Y'],['Personnel','Operatives','Y'],
+      ['Resources','Plant & Equipment','Y'],['Resources','Materials','Y'],['Resources','COSHH Assessments','N/A'],['Resources','Power Supply','Y'],['Resources','Lifting Operations','Y'],
+      ['PPE','Mandatory PPE Required','Y'],['PPE','Work Specific PPE','Y'],
+      ['Access & Egress','Work Access Arrangements','Y'],['Access & Egress','Traffic Management','Y'],['Access & Egress','Pedestrian Management','Y'],['Access & Egress','Deliveries','Y'],
+      ['Environment','Housekeeping','Y'],['Environment','Material Storage','Y'],['Environment','Material Disposal','Y'],['Environment','Lighting','Y'],['Environment','Noise','Y'],['Environment','Dust','Y'],['Environment','Welfare','Y'],
+      ['Working at Height','Collective Fall Protection','Y'],['Working at Height','Personal Fall Protection','Y'],
+      ['Monitoring','Plant & Equipment Inspection','Y'],['Monitoring','PPE Inspection','Y'],['Monitoring','Safety Inspection','Y'],
+      ['Emergency Procedures','First Aid Arrangements','Y'],['Emergency Procedures','Fire Safety Arrangements','Y'],['Emergency Procedures','Rescue Arrangements','Y'],
+    ],
+    ms:[
+      ['1.1','Description of Works','Works at height including [describe specific task — roofing, cladding, edge protection installation, MEWP operations, scaffold access, etc.]'],
+      ['1.2','Location','[Specific location on site]'],
+      ['1.3','Time Start','As per site programme.'],
+      ['1.4','Duration','[DURATION]'],
+      ['2.1','Sequence','1. Hierarchy of control assessment — can works be carried out from ground level?\n2. Scaffold / MEWP / other access equipment erected/positioned by competent persons\n3. Pre-use inspection of access equipment carried out and recorded\n4. Edge protection / netting installed before works commence\n5. Operatives briefed on this RAMS and MEWP/scaffold safe use\n6. Works carried out — regular inspections during works\n7. Tools and materials controlled to prevent falling objects\n8. Access equipment inspected on completion'],
+      ['2.2','Method','Hierarchy of control to be applied: 1. Avoid working at height where possible. 2. Use collective fall prevention (scaffolding, working platforms). 3. Use work restraint. 4. Use fall arrest (harness) as last resort. All scaffolding to be designed, erected, inspected, and tagged by competent scaffolders in accordance with TG20 guidance and BS EN 12811. MEWP operators to hold valid IPAF certificate for category of MEWP in use. Pre-use check to be completed and recorded. No-one to work at height in adverse weather conditions (wind speed >12m/s, ice, lightning).'],
+      ['2.3','Temporary Works','Scaffold to be designed by competent Temporary Works Designer in accordance with TG20. Temporary Works Register to be maintained.'],
+      ['2.4','Risk Assessment','Refer to Risk Assessment appended.'],
+      ['2.5','Manual Handling','Materials to be hoisted mechanically where possible. Avoid carrying loads while on scaffold/MEWP.'],
+      ['3.1','Supervision','[SUPERVISION DETAILS]'],
+      ['3.2','Operatives','[OPERATIVES — all to hold relevant competency cards]'],
+      ['4.1','Plant & Equipment','MEWP (IPAF cat [X]), scaffold system, harness and lanyard, tool lanyards.'],
+      ['4.2','Materials','[Materials required]'],
+      ['4.3','COSHH Assessments','N/A unless specific chemicals used.'],
+      ['4.4','Power Supply','110V from generator / transformer as required.'],
+      ['4.5','Lifting Operations','Material hoisting — refer to Lifting Plan if crane used.'],
+      ['5.1','Mandatory PPE','Safety helmet (EN397) · Hi-visibility jacket · Safety boots (S3) · Gloves'],
+      ['5.2','Work Specific PPE','Full body harness (EN361) with double-action hooks and energy-absorbing lanyard · Tool lanyards for all tools at height'],
+      ['6.1','Work Access','Scaffold access via designated staircase / ladder access. MEWP to be positioned on firm level ground. Ground conditions to be confirmed suitable.'],
+      ['6.2','Traffic Management','Exclusion zone under all working at height areas. Traffic management to prevent vehicles under suspended loads.'],
+      ['6.3','Pedestrian Management','Exclusion zone around base of scaffold/MEWP. Debris nets and fans to be installed. Signage: "OVERHEAD WORK IN PROGRESS — HARD HAT AREA".'],
+      ['6.4','Deliveries','Materials to be delivered to a designated lay-down area. Mechanical hoist to be used for raising materials.'],
+      ['7.1','Housekeeping','No materials to be left on scaffold/working platform that could fall. Tools to be secured with lanyards. Platform to be kept tidy and clear.'],
+      ['7.2','Material Storage','Materials stored in bays on scaffold — not stacked to height that could affect stability.'],
+      ['7.3','Material Disposal','Chutes or hoists for lowering waste. No throwing materials from height.'],
+      ['7.4','Lighting','Adequate lighting on all working platforms. Work to cease in hours of darkness unless task lighting provided.'],
+      ['7.5','Noise','Ear protection when using power tools at height.'],
+      ['7.6','Dust','Dust suppression and RPE if cutting at height.'],
+      ['7.7','Welfare','Welfare facilities provided.'],
+      ['8.1','Collective Fall Protection','Scaffold with double guardrail (950mm and 475mm) and toe board (150mm) to be installed before work commences. MEWP cage to be used. Safety nets / debris nets to be installed. Edge protection to remain in place until confirmed safe to remove.'],
+      ['8.2','Personal Fall Protection','Full body harness and energy-absorbing lanyard to be worn where collective protection cannot be provided. Two lanyards (100% tie-off) to be used on MEWP. Harness to be inspected before each use and annually. Rescue plan to be in place before use.'],
+      ['9.1','Plant & Equipment Inspection','Scaffold — 7-day formal inspection by competent person (CISRS card). After adverse weather. MEWP — daily pre-use check, 6-monthly Thorough Examination. Harness — pre-use inspection, annual formal inspection.'],
+      ['9.2','PPE Inspection','Harness inspected daily by wearer. Annual thorough examination and tagging by competent person. Any harness subjected to arrest fall to be immediately withdrawn from service.'],
+      ['9.3','Safety Inspection','Daily walkround inspection of scaffold and MEWP. Weekly formal H&S inspection. Results recorded.'],
+      ['10.1','First Aid','First aid box in site office. First Aiders: [FIRST AIDERS]. Fall arrest — do not remove casualty without medical guidance (suspension trauma risk).'],
+      ['10.2','Fire Safety','Fire points on site. Emergency muster point: [LOCATION].'],
+      ['10.3','Rescue Arrangements','MEWP/scaffold rescue plan to be established before works commence. In the event of a fall arrest: Call 999. Raise alarm. Do not lower harness casualty until medically advised — suspension trauma risk. Provide reassurance until emergency services arrive. Inform Site Manager, SHEQ Director, Contracts Director.'],
+    ],
+    hazards:[
+      {no:1, hazard:'Fall from height — fractures, major injury, fatality', sev:5, lik:5, people:'JPD, C', controls:'Hierarchy of control applied — collective protection first. Scaffold with double handrail and toe board to be installed before works. MEWP cage to be used. Safety nets installed. Full body harness and energy-absorbing lanyard where collective protection cannot be provided. Work to cease in adverse weather. Regular inspection of access equipment.', rsev:5, rlik:1},
+      {no:2, hazard:'Falling objects — struck by tools or materials, fatality, fractures', sev:5, lik:5, people:'JPD, C, P', controls:'Tool lanyards to be attached to all tools used at height. Toe boards installed on all scaffold platforms. Debris net / fans to be installed. Exclusion zone under all working at height areas. "Hard Hat Zone" signage. No throwing materials from height. Materials to be lowered by mechanical hoist or crane.', rsev:5, rlik:1},
+      {no:3, hazard:'Scaffold collapse — major injuries, fatalities, property damage', sev:5, lik:4, people:'JPD, C, P', controls:'Scaffold designed by competent Temporary Works Designer. Erected by CISRS certificated scaffolders. Inspected every 7 days by competent person and after adverse weather. Green scaffold tag displayed. Alterations only by certificated scaffolders. Loading limits not to be exceeded.', rsev:5, rlik:1},
+      {no:4, hazard:'MEWP overturning / instability — major injuries, fatalities', sev:5, lik:4, people:'JPD, C', controls:'MEWP positioned on firm level ground. Ground bearing capacity confirmed. Outriggers extended as per manufacturer\'s requirements. Rated capacity not to be exceeded. Operator to hold valid IPAF certificate. Do not operate in wind speeds exceeding manufacturer\'s limit. Pre-use check completed and recorded.', rsev:5, rlik:1},
+      {no:5, hazard:'Suspension trauma after fall arrest — circulatory collapse', sev:5, lik:3, people:'JPD', controls:'Rescue plan in place before harness use commences. Response time to be less than 5 minutes. Emergency services to be called immediately on arrest. Casualty to be kept upright if possible. Trauma straps to be carried. Do not lower casualty flat until medically advised. All operatives briefed on suspension trauma risk.', rsev:5, rlik:1},
+      {no:6, hazard:'Adverse weather — wind, ice, lightning affecting stability', sev:5, lik:4, people:'JPD', controls:'Works to cease if wind speed exceeds 12m/s at height. Scaffold and MEWP to be inspected after adverse weather. Lightning forecast monitoring. MEWP to be lowered and secured in high winds. No work on ice-covered platforms.', rsev:5, rlik:1},
+    ]
+  },
+  {
+    id:'plant_maint', icon:'🔧', name:'Plant Maintenance', desc:'On-site service and repair of plant',
+    title:'MAINTENANCE OF PLANT AND EQUIPMENT ON SITE',
+    contents:[
+      ['Scope of Works','Description of Works','Y'],['Scope of Works','Location','Y'],['Scope of Works','Time Start','Y'],['Scope of Works','Duration','Y'],
+      ['Sequence & Method','Sequence','Y'],['Sequence & Method','Method','Y'],['Sequence & Method','Temporary Works','N/A'],['Sequence & Method','Risk Assessment','Y'],['Sequence & Method','Manual Handling','Y'],
+      ['Personnel','Supervision','Y'],['Personnel','Operatives','Y'],
+      ['Resources','Plant & Equipment','Y'],['Resources','Materials','Y'],['Resources','COSHH Assessments','Y'],['Resources','Power Supply','Y'],['Resources','Lifting Operations','Y'],
+      ['PPE','Mandatory PPE Required','Y'],['PPE','Work Specific PPE','Y'],
+      ['Access & Egress','Deliveries','Y'],['Access & Egress','Traffic Management','Y'],['Access & Egress','Pedestrian Management','Y'],['Access & Egress','Work Access Arrangements','Y'],
+      ['Environment','Housekeeping','Y'],['Environment','Material Storage','Y'],['Environment','Material Disposal','Y'],['Environment','Lighting','Y'],['Environment','Noise','Y'],['Environment','Dust','Y'],['Environment','Welfare','Y'],
+      ['Working at Height','Collective Fall Protection','Y'],['Working at Height','Personal Fall Protection','Y'],
+      ['Monitoring','Plant & Equipment Inspection','Y'],['Monitoring','PPE Inspection','Y'],['Monitoring','Safety Inspection','Y'],
+      ['Emergency Procedures','First Aid Arrangements','Y'],['Emergency Procedures','Fire Safety Arrangements','Y'],['Emergency Procedures','Rescue Arrangements','Y'],
+    ],
+    ms:[
+      ['1.1','Description of Works','Plant fitter visits for on-site maintenance, repair and service of plant and equipment including excavators, dumpers, telehandlers, and other mobile plant.'],
+      ['1.2','Location','Site wide — as directed by Plant Manager / Site Manager.'],
+      ['1.3','Time Start','As per plant maintenance schedule.'],
+      ['1.4','Duration','Ongoing as required.'],
+      ['2.1','Sequence','1. Plant fitter/engineer to report to Site Manager / Plant Manager on arrival\n2. Site induction completed and RAMS briefed\n3. Plant item isolated — engine off, handbrake applied, wheels chocked\n4. Safe working area established around plant item\n5. Maintenance / repair work carried out\n6. Plant tested and returned to service\n7. Area cleaned and all waste disposed of'],
+      ['2.2','Method','All visiting plant fitters to report to site office on arrival and complete site induction. RAMS to be briefed before commencement of any works. Plant item to be fully isolated before maintenance commences — engine switched off, key removed, handbrake applied, wheels chocked with wheel stops. Hydraulic pressure to be relieved before working on hydraulic systems. No working under a suspended load without mechanical support (Acro props / axle stands). Battery disconnected before electrical work. COSHH data sheets to be available for all oils, fluids and solvents used.'],
+      ['2.3','Temporary Works','N/A'],
+      ['2.4','Risk Assessment','Refer to Risk Assessment appended.'],
+      ['2.5','Manual Handling','Heavy components to be removed using appropriate lifting equipment. Refer to plant manufacturer\'s manual for component weights.'],
+      ['3.1','Supervision','[SUPERVISION DETAILS]'],
+      ['3.2','Operatives','Qualified Plant Fitter/Engineer — [NAME]'],
+      ['4.1','Plant & Equipment','Vehicle ramps / axle stands, hand tools, hydraulic jack, diagnostic equipment, engine crane if required.'],
+      ['4.2','Materials','Engine oil, hydraulic fluid, coolant, filters, brake fluid — as required.'],
+      ['4.3','COSHH Assessments','Engine oil, hydraulic oil, coolant, brake fluid, solvents/degreasers — refer to COSHH file. Used oil to be disposed of in accordance with waste regulations.'],
+      ['4.4','Power Supply','110V from generator for power tools where required.'],
+      ['4.5','Lifting Operations','Engine crane / Telehandler to be used for heavy component removal. Lifting equipment to have current Thorough Examination. Operator to be competent.'],
+      ['5.1','Mandatory PPE','Safety helmet · Hi-visibility jacket · Safety boots (S3) · Gloves'],
+      ['5.2','Work Specific PPE','Chemical resistant gloves (EN374) for oil/chemical handling · Safety goggles / face shield · Overalls / boiler suit · Knee pads for ground-level work · RPE if working in cab with engine running'],
+      ['6.1','Work Access','Plant to be brought to designated maintenance area where possible. Site Manager to confirm safe working area around plant.'],
+      ['6.2','Traffic Management','Maintenance area to be segregated from site traffic. Appropriate signage: "PLANT MAINTENANCE IN PROGRESS".'],
+      ['6.3','Pedestrian Management','Safety barrier around plant being maintained. Exclusion zone enforced.'],
+      ['6.4','Deliveries','Parts / fluids deliveries to designated area. COSHH data sheets to accompany all chemical deliveries.'],
+      ['7.1','Housekeeping','All spills to be cleaned up immediately with spill kit. Used oil/fluid in designated sealed containers for disposal. Area left clean on completion.'],
+      ['7.2','Material Storage','Oils and fluids in bunded storage area with spill kit. Waste oil in sealed labelled containers.'],
+      ['7.3','Material Disposal','Waste oil to be collected by licensed waste contractor. Waste consignment notes to be retained. No disposal of oils/fluids to drains or ground.'],
+      ['7.4','Lighting','Adequate lighting in maintenance area. Task lighting for cab interior work.'],
+      ['7.5','Noise','Ear protection if working with engine running or using impact tools.'],
+      ['7.6','Dust','Dust mask if working in dusty conditions or changing air filters.'],
+      ['7.7','Welfare','Welfare facilities provided including hand cleaning facilities for removing oil/grease.'],
+      ['8.1','Collective Fall Protection','Guard / prop must be used to support raised body/boom before working underneath. Never rely on hydraulics alone.'],
+      ['8.2','Personal Fall Protection','Harness to be worn if maintenance requires working at height on plant (e.g., engine cover access on large excavator).'],
+      ['9.1','Plant & Equipment Inspection','Pre-use inspection of all workshop tools and lifting equipment. Service records to be maintained. Thorough Examination certification to be checked.'],
+      ['9.2','PPE Inspection','Daily check of all PPE. Chemical gloves to be inspected for degradation.'],
+      ['9.3','Safety Inspection','Daily observation. Any near-miss or accident to be reported immediately to Site Manager and SHEQ.'],
+      ['10.1','First Aid','First aid box in site office. First Aiders: [FIRST AIDERS]. Oil/chemical skin contact — wash immediately with soap and water.'],
+      ['10.2','Fire Safety','Fire extinguisher (CO2 or dry powder) in maintenance area. Fuel ignition risk — no smoking during fuelling or near open fuel containers. Fire point location: [LOCATION].'],
+      ['10.3','Rescue Arrangements','In the event of an incident: Call 999. Raise alarm. Shut down all plant. Administer first aid if safe. Inform Site Manager, SHEQ Director, Contracts Director.'],
+    ],
+    hazards:[
+      {no:1, hazard:'Struck by moving plant during maintenance — crushing injuries, fatality', sev:5, lik:5, people:'JPD, C', controls:'Plant fully isolated before maintenance — engine off, key removed from ignition, handbrake applied, wheels chocked. "Plant Under Maintenance" notice displayed on controls. Exclusion zone established around plant. All other plant movements to cease in immediate vicinity.', rsev:5, rlik:1},
+      {no:2, hazard:'Crush under falling plant component / body / boom — major injury, fatality', sev:5, lik:5, people:'JPD', controls:'Plant body / boom to be supported by mechanical means (Acro props, axle stands) rated for load before working underneath. Never rely on hydraulics alone. Rated capacity of supports to be confirmed against component weight. Supports to be positioned on firm, level ground.', rsev:5, rlik:1},
+      {no:3, hazard:'Hydraulic injection injury from pressurised hydraulic system — serious injury, amputation', sev:5, lik:4, people:'JPD', controls:'Hydraulic pressure to be fully relieved before opening any hydraulic connections. Engine to be off and system cycled to relieve pressure. Gloves and goggles to be worn. Never use hands to check for hydraulic leaks — use card or paper. Any suspected injection injury — treat as emergency, go to A&E immediately.', rsev:5, rlik:1},
+      {no:4, hazard:'Contact with hazardous substances (oils, solvents, coolant) — dermatitis, respiratory effects', sev:3, lik:5, people:'JPD', controls:'COSHH assessment to be reviewed before use of any substance. Chemical resistant gloves (EN374) to be worn. Barrier cream to be applied. No eating, drinking or smoking until hands washed. Goggles when draining fluids. Adequate ventilation.', rsev:3, rlik:1},
+      {no:5, hazard:'Fire — ignition of fuel/oil during maintenance — burns, fatality', sev:5, lik:4, people:'JPD, C', controls:'No smoking in maintenance area. Fuel system to be depressurised before opening. Fire extinguisher (CO2) positioned within 2m. Spillages to be cleaned immediately. Hot work permit required if any welding/cutting near fuel system.', rsev:5, rlik:1},
+      {no:6, hazard:'Electrical hazard from vehicle electrical system — electric shock, burns', sev:4, lik:4, people:'JPD', controls:'Battery to be disconnected before working on electrical systems. Insulated tools to be used. Gloves to be worn. No working on live systems. Refer to manufacturer\'s manual for battery isolation procedure.', rsev:4, rlik:1},
+    ]
+  },
+  {
+    id:'manual_handling', icon:'💪', name:'Manual Handling', desc:'Lifting, carrying, team lifts',
+    title:'MANUAL HANDLING OPERATIONS',
+    contents:[
+      ['Scope of Works','Description of Works','Y'],['Scope of Works','Location','Y'],['Scope of Works','Time Start','Y'],['Scope of Works','Duration','Y'],
+      ['Sequence & Method','Sequence','Y'],['Sequence & Method','Method','Y'],['Sequence & Method','Temporary Works','N/A'],['Sequence & Method','Risk Assessment','Y'],['Sequence & Method','Manual Handling','Y'],
+      ['Personnel','Supervision','Y'],['Personnel','Operatives','Y'],
+      ['Resources','Plant & Equipment','Y'],['Resources','Materials','Y'],['Resources','COSHH Assessments','N/A'],['Resources','Power Supply','N/A'],['Resources','Lifting Operations','N/A'],
+      ['PPE','Mandatory PPE Required','Y'],['PPE','Work Specific PPE','Y'],
+      ['Access & Egress','Work Access Arrangements','Y'],['Access & Egress','Traffic Management','N/A'],['Access & Egress','Pedestrian Management','Y'],['Access & Egress','Deliveries','N/A'],
+      ['Environment','Housekeeping','Y'],['Environment','Material Storage','Y'],['Environment','Material Disposal','N/A'],['Environment','Lighting','Y'],['Environment','Noise','N/A'],['Environment','Dust','N/A'],['Environment','Welfare','Y'],
+      ['Working at Height','Collective Fall Protection','N/A'],['Working at Height','Personal Fall Protection','N/A'],
+      ['Monitoring','Plant & Equipment Inspection','N/A'],['Monitoring','PPE Inspection','Y'],['Monitoring','Safety Inspection','Y'],
+      ['Emergency Procedures','First Aid Arrangements','Y'],['Emergency Procedures','Fire Safety Arrangements','Y'],['Emergency Procedures','Rescue Arrangements','Y'],
+    ],
+    ms:[
+      ['1.1','Description of Works','Manual handling of materials, components and equipment including lifting, carrying, lowering, pushing and pulling operations.'],
+      ['1.2','Location','Site wide — as required.'],
+      ['1.3','Time Start','As per site programme.'],
+      ['1.4','Duration','Ongoing throughout the project.'],
+      ['2.1','Sequence','1. Assess the load — weight, size, shape, grip, stability\n2. Assess the environment — floor, route, space, lighting\n3. Plan the lift — route, resting points, team lift if needed\n4. Brief team on task\n5. Carry out lift using correct technique\n6. Monitor for signs of fatigue — rotate tasks and take breaks'],
+      ['2.2','Method','Mechanical handling to be used wherever possible. Manual handling to be a last resort. For any load over 25kg, two-person lift or mechanical assistance to be used. Assess the load before lifting — weight, grip, centre of gravity, stability. Assess the route — clear of obstructions, correct floor surface, adequate space. Brief all operatives on correct lifting technique: feet shoulder-width apart, bend knees, straight back, load close to body, smooth lift — no jerking. Team lifts to be coordinated by one person. Operatives to report any signs of back pain or discomfort.'],
+      ['2.3','Temporary Works','N/A'],
+      ['2.4','Risk Assessment','Refer to Risk Assessment appended.'],
+      ['2.5','Manual Handling','This entire document is a manual handling risk assessment and method statement.'],
+      ['3.1','Supervision','[SUPERVISION DETAILS]'],
+      ['3.2','Operatives','[OPERATIVES — all to have received manual handling training]'],
+      ['4.1','Plant & Equipment','Pallet truck, sack truck, trolley, telehandler, forklift — as available and appropriate.'],
+      ['4.2','Materials','[Materials to be handled]'],
+      ['4.3','COSHH Assessments','N/A'],
+      ['4.4','Power Supply','N/A'],
+      ['4.5','Lifting Operations','N/A — mechanical lifting covered by separate Lifting Plan.'],
+      ['5.1','Mandatory PPE','Safety helmet · Hi-visibility jacket · Safety boots (S3) · Gloves (EN420)'],
+      ['5.2','Work Specific PPE','Back support belt if required · Knee pads for ground-level work · Anti-vibration gloves for powered tools'],
+      ['6.1','Work Access','Access routes to be assessed and kept clear before lifting commences. No steps or obstacles on route. Level, stable surface.'],
+      ['6.2','Traffic Management','N/A'],
+      ['6.3','Pedestrian Management','Third parties to be excluded from area during manual handling operations.'],
+      ['6.4','Deliveries','N/A'],
+      ['7.1','Housekeeping','Work area to be clear of tripping hazards. Adequate space for the task. Good lighting throughout.'],
+      ['7.2','Material Storage','Materials to be stored at the correct height to minimise bending. Heaviest items between knee and shoulder height.'],
+      ['7.3','Material Disposal','N/A'],
+      ['7.4','Lighting','Adequate lighting in all work areas — minimum 200 lux. Additional task lighting if required.'],
+      ['7.5','Noise','N/A'],
+      ['7.6','Dust','N/A'],
+      ['7.7','Welfare','Regular rest breaks. Adequate drinking water. First aid facilities on site.'],
+      ['8.1','Collective Fall Protection','N/A'],
+      ['8.2','Personal Fall Protection','N/A'],
+      ['9.1','Plant & Equipment Inspection','Mechanical aids (pallet truck, sack truck) to be inspected before use.'],
+      ['9.2','PPE Inspection','Gloves to be inspected for damage. Safety boots to be checked.'],
+      ['9.3','Safety Inspection','Daily observation. Any reports of pain or discomfort to be actioned immediately.'],
+      ['10.1','First Aid','First aid box in site office. First Aiders: [FIRST AIDERS]. Suspected back injury — do not move person until medically assessed.'],
+      ['10.2','Fire Safety','Fire points on site. Emergency muster point: [LOCATION].'],
+      ['10.3','Rescue Arrangements','In the event of an injury: Call 999. Do not move person with suspected back/spinal injury. Keep warm and reassure. Inform Site Manager and SHEQ Director.'],
+    ],
+    hazards:[
+      {no:1, hazard:'Back injury / musculoskeletal disorder from lifting — acute injury, long-term disability', sev:4, lik:5, people:'JPD', controls:'Avoid manual handling — use mechanical means wherever possible. Two-person lift for loads over 25kg. Correct lifting technique briefed and monitored. Manual handling training delivered to all operatives. Loads to be reduced in weight/size where possible. Work rotation and rest breaks to prevent fatigue.', rsev:3, rlik:2},
+      {no:2, hazard:'Struck by dropped load — foot/hand crush, fractures', sev:4, lik:4, people:'JPD, C', controls:'Safety boots (S3 toe cap and midsole) to be worn. Gloves to be worn. Load to be gripped securely before lifting. Team lifts to be coordinated. Route to be clear before lift commences.', rsev:4, rlik:1},
+      {no:3, hazard:'Slips, trips and falls while carrying — fractures, soft tissue injury', sev:3, lik:5, people:'JPD', controls:'Route to be assessed and cleared before lift. No carrying loads that obstruct vision. Good housekeeping maintained. Anti-slip footwear. Highlight steps/level changes on route. Rest points to be established for long carries.', rsev:3, rlik:1},
+      {no:4, hazard:'Fatigue / cumulative strain from repetitive lifting — musculoskeletal disorder', sev:3, lik:5, people:'JPD', controls:'Task rotation to prevent repetitive strain. Regular rest breaks. Workload monitored by supervisors. Operatives to report discomfort early. Occupational health referral for those with symptoms.', rsev:3, rlik:2},
+      {no:5, hazard:'Manual handling in awkward posture — shoulder, knee, wrist injuries', sev:3, lik:5, people:'JPD', controls:'Reorganise workstation to reduce awkward postures. Avoid stooping or reaching. Adjustable work surfaces to be used where possible. Knee pads for ground-level work. Short duration tasks with rest.', rsev:3, rlik:2},
+    ]
+  },
+  {id:'underpinning',icon:'🏚',name:'Basement Underpinning Works',desc:'Sequential pin underpinning, existing structure support',title:'BASEMENT UNDERPINNING WORKS',contents:[['Scope of Works','Description of Works','Y'],['Scope of Works','Location','Y'],['Scope of Works','Time Start','Y'],['Scope of Works','Duration','Y'],['Sequence & Method','Sequence','Y'],['Sequence & Method','Method','Y'],['Sequence & Method','Temporary Works','Y'],['Sequence & Method','Risk Assessment','Y'],['Sequence & Method','Manual Handling','Y'],['Personnel','Supervision','Y'],['Personnel','Operatives','Y'],['Resources','Plant & Equipment','Y'],['Resources','Materials','Y'],['Resources','COSHH Assessments','Y'],['Resources','Power Supply','Y'],['Resources','Lifting Operations','Y'],['PPE','Mandatory PPE Required','Y'],['PPE','Work Specific PPE','Y'],['Access & Egress','Deliveries','Y'],['Access & Egress','Traffic Management','Y'],['Access & Egress','Pedestrian Management','Y'],['Access & Egress','Work Access Arrangements','Y'],['Environment','Housekeeping','Y'],['Environment','Material Storage','Y'],['Environment','Material Disposal','Y'],['Environment','Lighting','Y'],['Environment','Noise','Y'],['Environment','Dust','Y'],['Environment','Welfare','Y'],['Working at Height','Collective Fall Protection','Y'],['Working at Height','Personal Fall Protection','Y'],['Monitoring','Plant & Equipment Inspection','Y'],['Monitoring','PPE Inspection','Y'],['Monitoring','Safety Inspection','Y'],['Emergency Procedures','First Aid Arrangements','Y'],['Emergency Procedures','Fire Safety Arrangements','Y'],['Emergency Procedures','Rescue Arrangements','Y']],ms:[['1.1','Description of Works','Construction of RC basement underpinning works within the confines of the existing structure. Sequential pin underpinning to support existing foundations during basement construction.'],['1.2','Location','[PROJECT LOCATION — as shown on drawings]'],['1.3','Time Start','[START DATE]'],['1.4','Duration','[DURATION — weeks]'],['2.1','Sequence','1. Temporary Works Design approved by TWC before any works\n2. Raking props and gallows brackets installed for lateral wall support\n3. Acrow props, strongboy brackets, steel angles installed for vertical support\n4. Permit to Dig issued — CAT scan completed\n5. Excavation to first underpin in sequence (NOT adjacent pins)\n6. Trench box / trench sheets installed\n7. Hand excavation to formation\n8. Inspect and sign off by TWC before concreting\n9. Concrete poured (FND2 mix) to 75mm below existing foundation\n10. Dry pack (1:3 cement:aggregate, w/c max 0.35) placed within 48hrs\n11. Minimum 12 hrs before adjacent pin excavated\n12. Repeat sequence per approved CGL drawing'],['2.2','Method','PREFACE: All operatives to be site inducted and briefed on this RAMS. Daily Safe Start briefing before each shift. CSCS/CPCS cards required for all operatives and plant operators.\n\nPERMIT TO DIG: Must be issued before any excavation. CAT scan with Genny to be completed. Service drawings to be reviewed. Hand dig within 500mm of any known service — insulated tools to BS8020. Mechanical excavation MUST NOT take place within 500mm of a known service. Banksman present at all times when machine digging near services.\n\nWORKING AROUND PLANT: Always get THUMBS UP from operator before entering Zone 1. Never enter Zone 2 during excavator operation. Spotter to stand in designated yellow zone.\n\nTEMPORARY WORKS: No works to commence until Kingerlee TWC approval received and passed to JPD site team. Raking props and gallows brackets to provide lateral wall support. Acrow props with strongboy brackets, steel angles, shims and timber spreader plates for vertical support.\n\nEXCAVATION & TRENCH BOX: Lightweight aluminium trench box assembled per manufacturer instructions and inspected by JPD TWC. Tag lines to be used at all times when lifting boxes. Excavation in 300mm layers, pushing box down after each layer. Hand rail and ladder access installed when final section secured.\n\nCONCRETE: FND2 mix to BS8500-2. Test cubes cast per project specification. Dry pack minimum 24hrs after pour, maximum 48hrs. No adjacent pin excavation until minimum 12hrs after dry pack completion.\n\nMANAGING PERCHED WATER: 50mm submersible pumps with settlement tank. Discharge licence required before pumping to drainage network. Works to halt if water ingress exceeds pump capacity.'],['2.3','Temporary Works','Temporary Works Designer (TWD) to produce all temporary works designs. TWC to approve and manage all works. No works to progress without TWC sign-off at each hold point. Temporary Works Register maintained on site.'],['2.4','Risk Assessment','Refer to the Risk Assessment appended.'],['2.5','Manual Handling','Manual handling kept to minimum. Mechanical means used wherever practicable. Operatives to lift no more than 20kg. TILEO process applied.'],['3.1','Supervision','[SUPERVISION — Project Manager, Site Engineer, General Foreman]'],['3.2','Operatives','Groundworkers, Concreters, Shuttering Carpenters, Excavator Operatives, Traffic Marshals, Banksmen, Slinger/Signallers'],['4.1','Plant & Equipment','360 Mini-Excavator, Wacker Plate, Concrete Skip with drop chain, 2-leg and 4-leg chains, High Frequency Pokers, Circular Saws, Petrol Cut-Off Saws, Hand-held drills, Aluminium Trench Box'],['4.2','Materials','Aluminium trench boxes, Timber ply formwork, Reinforcement dowel bars 16mm x 600mm, Concrete FND2 mix, Sand and cement for dry pack, Acrow props, RMD Kwikform components, Steel angles/plates, Shims'],['4.3','COSHH Assessments','Cement/Concrete, GGBS, Diesel, Petrol, Oils, Marker Paint, Curing Agent, Release Agent — refer to COSHH file on site.'],['4.4','Power Supply','110V supplied by Principal Contractor / site generator.'],['4.5','Lifting Operations','All lifting operations by trained operatives and competent Slinger/Signallers per JPD/Principal Contractor Lifting Plan. All lifting equipment checked prior to use — certificates on file. Weekly checks recorded. All equipment tagged.'],['5.1','Mandatory PPE','Safety helmet (EN397) · Hi-visibility clothing (BSEN471) · Safety footwear (EN345 S3) · Gloves min. Cut 3 (EN420) · Safety glasses (EN166 Optical Class 1)'],['5.2','Work Specific PPE','Safety goggles (EN166B) · Ear plugs (EN352-2) for works >85dB · Chemical/concreting gloves (EN374-2) · Disposable overalls for concrete works · PVC wellington boots during pours · RPE half mask P3 filter for cutting/drilling'],['6.1','Deliveries','All deliveries pre-booked with Site Manager. 5mph on site. All vehicles marshalled to drop-off point. Concrete washout skip in place.'],['6.2','Traffic Management','All JPD supply chain issued with site map and contact details. Traffic Management Plan to be followed.'],['6.3','Pedestrian Management','Segregation barriers between pedestrians and plant. Basement access via Tammet folding staircase. THUMBS UP system when pedestrians near plant.'],['6.4','Work Access Arrangements','Segregated pedestrian walkways. Gated crossovers. Ladder access to trench box — minimum 4 rungs above exit point, secured top and bottom. Not to be removed while operative inside box.'],['7.1','Housekeeping','High standard of housekeeping maintained at all times. Waste to bins/skips only. Foreman to check daily.'],['7.2','Material Storage','Stockpiles battered and shaped to manage run-off. Diesel/oils in bunded bowsers with spill kits.'],['7.3','Material Disposal','Surplus material disposed into correct waste streams. Waste transfer notes to Principal Contractor. Concrete washout skip provided.'],['7.4','Lighting','Task lighting provided in all excavations and work areas. Adequate lighting at all times.'],['7.5','Noise','Noise assessments carried out. Ear defenders worn where >85dB. Signage erected. No noisy works before 08:00 or after 18:00. Section 60 consent.'],['7.6','Dust','Loads covered when leaving site. Dust suppression in place. Half masks with P3 filters — face fit tested. No disposable masks.'],['7.7','Welfare','Welfare facilities provided by Principal Contractor — toilet, hand washing, drinking water, rest area, first aid kit.'],['8.1','Collective Fall Protection','Edge protection installed to top of trench boxes and all excavation edges. Scaffolding installed by competent trained scaffolder and tagged. Scaffold access systems inspected weekly and signed off.'],['8.2','Personal Fall Protection','Harness to be worn where working at height and collective protection cannot be provided. Operative to be clipped on above head height with means of rescue in place.'],['9.1','Plant & Equipment Inspection','Daily pre-use inspection by all operators. Weekly thorough inspection recorded on Form 22. Defects reported immediately. 12-month Thorough Examination certificates on file.'],['9.2','PPE Inspection','All operatives personally responsible for PPE. Damaged PPE replaced immediately and recorded in PPE Register.'],['9.3','Safety Inspection','Weekly site inspections by Site Manager. Fortnightly visit by JPD H&S Manager/Director.'],['10.1','First Aid','First aid box in site office. First Aiders identified by green sticker on helmet: [FIRST AIDERS]. Nearest A&E: [HOSPITAL NAME AND ADDRESS]. In emergency call 999.'],['10.2','Fire Safety','Fire points and muster point at agreed locations. Hot Works Permit required for any flame cutting/welding — signed off minimum 1hr before end of shift. Minimum 2 fire extinguishers at workstation.'],['10.3','Rescue Arrangements','In event of incident: Call 999. Raise alarm. Shut down all plant. Cordon off area. Administer first aid if safe. Inform Site Manager, SHEQ Director, Contracts Director immediately. For harness arrest: rescue from below via MEWP or from above via Tower Crane rescue plan.']],hazards:[{no:1,hazard:'Undermining existing structure during sequential underpinning — structural collapse, fatalities',sev:5,lik:4,people:'JPD, C, P',controls:'JPD TWC to manage all temporary works scope. Detailed sequencing, procedures and hold points agreed before works commence. No works to progress to next stage without Kingerlee TWC approval passed to JPD site team. Raking props and gallows brackets for lateral support. Acrow props with strongboy brackets, steel angles, plates, shims and timber spreader plates for vertical support. Site management to check each support arrangement before excavation progresses. Non-adjacent pin sequence strictly enforced per CGL drawing.',rsev:5,rlik:2},{no:2,hazard:'Excavation collapse within underpin — burial, crushing, fatality',sev:5,lik:4,people:'JPD',controls:'Site Manager to assess each underpin after mini-excavator completes initial dig before hand excavation commences. Competent banksman present at all times during excavator operation. Additional propping of exposed faces implemented as required. Sufficient standing room for operative with ability to move clear. No lone working on underpin excavations. Works halt immediately if collapse risk identified.',rsev:5,rlik:1},{no:3,hazard:'Striking underground services — electric shock, explosion, gas release, fatality',sev:5,lik:5,people:'JPD, C',controls:'Permit to Dig issued before any excavation. CAT scan and Genny completed. Service drawings reviewed. Hand dig within 500mm of services using insulated tools (BS8020, 1000V). Mechanical excavation not permitted within 500mm of known service. Banksman present at all times. All services treated as live until formally confirmed dead. Operatives briefed on warning signs — warning tape, sand, colour change, CAT every 300mm.',rsev:5,rlik:1},{no:4,hazard:'360 Excavator contact with operatives — crushing, major injuries, fatality',sev:5,lik:4,people:'JPD, C, P, O',controls:'Excavator checked on delivery — 12-month Thorough Examination valid. Daily checks recorded. CPCS trained operator. Green flashing beacon (seatbelt worn). Bucket lowered when leaving machine. No operative within 5m without clear THUMBS UP. Banksman in orange hi-vis at all times. Exclusion zone established. Blind spot mirrors fitted.',rsev:5,rlik:1},{no:5,hazard:'Perched water flooding excavation — destabilisation, drowning, collapse',sev:5,lik:4,people:'JPD',controls:'50mm submersible pumps positioned before excavation commences. Perforated pipe sumps with filtering shingle established. Settlement tank in place. Discharge licence obtained before pumping to drainage. Works halt if water ingress exceeds pump capacity. Inspections at start, during and end of every shift. Excavation backfilled if ground stability at risk.',rsev:5,rlik:1},{no:6,hazard:'Concrete burns — skin burns, eye injury from cement contact',sev:4,lik:3,people:'JPD',controls:'Mandatory PPE at all times. Task specific: concreting gloves (EN374-2), PVC wellington boots, safety glasses/goggles. Wash concrete off skin immediately. Seek medical assistance if cement contacts eyes.',rsev:4,rlik:1},{no:7,hazard:'Falls into excavation — major injuries, fatality',sev:5,lik:4,people:'JPD, C, P',controls:'Edge protection to all excavation edges. Hop-up bracket system at tops of wall shutters. Tammet staircase for basement access with edge protection and scafftag. Segregated pedestrian footways away from plant. Scaffold access inspected weekly.',rsev:5,rlik:1},{no:8,hazard:'Leptospirosis (Weils Disease) from groundwater contact',sev:5,lik:3,people:'JPD',controls:'Good basic hygiene — regular hand washing. No hand to mouth/eye contact. Rest breaks in canteen only. Waterproof gloves on site. Open cuts covered with waterproof dressing. Weils Disease card to be carried. Toolbox talk on symptoms delivered.',rsev:5,rlik:1}]},
+  {id:'rc_basement',icon:'🏗',name:'RC Basement Works',desc:'Finger beams, RC walls, ground floor slab',title:'RC BASEMENT WORKS',contents:[['Scope of Works','Description of Works','Y'],['Scope of Works','Location','Y'],['Scope of Works','Time Start','Y'],['Scope of Works','Duration','Y'],['Sequence & Method','Sequence','Y'],['Sequence & Method','Method','Y'],['Sequence & Method','Temporary Works','Y'],['Sequence & Method','Risk Assessment','Y'],['Sequence & Method','Manual Handling','Y'],['Personnel','Supervision','Y'],['Personnel','Operatives','Y'],['Resources','Plant & Equipment','Y'],['Resources','Materials','Y'],['Resources','COSHH Assessments','Y'],['Resources','Power Supply','Y'],['Resources','Lifting Operations','Y'],['PPE','Mandatory PPE Required','Y'],['PPE','Work Specific PPE','Y'],['Access & Egress','Deliveries','Y'],['Access & Egress','Traffic Management','Y'],['Access & Egress','Pedestrian Management','Y'],['Access & Egress','Work Access Arrangements','Y'],['Environment','Housekeeping','Y'],['Environment','Material Storage','Y'],['Environment','Material Disposal','Y'],['Environment','Lighting','Y'],['Environment','Noise','Y'],['Environment','Dust','Y'],['Environment','Welfare','Y'],['Working at Height','Collective Fall Protection','Y'],['Working at Height','Personal Fall Protection','Y'],['Monitoring','Plant & Equipment Inspection','Y'],['Monitoring','PPE Inspection','Y'],['Monitoring','Safety Inspection','Y'],['Emergency Procedures','First Aid Arrangements','Y'],['Emergency Procedures','Fire Safety Arrangements','Y'],['Emergency Procedures','Rescue Arrangements','Y']],ms:[['1.1','Description of Works','Construction of RC basement within confines of existing structure — including reduced level dig, finger beams (trench sheets), RC works, waterproofing, RC beams and ground floor slab.'],['1.2','Location','[PROJECT LOCATION]'],['1.3','Time Start','[START DATE]'],['1.4','Duration','[DURATION — weeks]'],['2.1','Sequence','PREFACE\nUNDERPIN BOUNDARY WALL AND LIFT PIT (separate RAMS)\nREDUCED LEVEL DIG\nFINGER BEAMS — TRENCH SHEETS\nFINGER BEAMS — RC WORKS AND WATERPROOFING\nRC WALLS AND COLUMNS\nDRAINAGE AND SERVICES\nRC BEAMS AND GROUND FLOOR SLAB'],['2.2','Method','PREFACE: All operatives site inducted. Daily Safe Start briefing. CSCS/CPCS cards required.\n\nREDUCED LEVEL DIG: Works to finger beams to commence once temporary raking props installed and signed off by TWC. Finger beams completed sequentially per CGL basement sequence drawing to maintain party wall support. Existing concrete slab removed in pockets using floor saw / petrol saw — pneumatic breakers NOT permitted. De-watering established before excavation commences.\n\nPERMIT TO DIG: Issued before any excavating works. CAT scan completed. Service drawings reviewed. Hand dig within 500mm of services. Mechanical excavation NOT within 500mm of known service. Banksman present when machine digging near services.\n\nRC FINGER BEAMS: Once formation cut to level — safe access route and edge protection installed. Blinding concrete laid to correct level. Waterproofing installed per design. Reinforcement per engineer drawings. Pre-slung reinforcement bundles unloaded by excavator/crane. All exposed bars capped with mushroom caps. Pre-pour inspection invitation issued to Principal Contractor.\n\nCONCRETE: Ready-mix via concrete skip (tower crane) or mobile concrete pump. Traffic marshal coordinates vehicle movements. Compaction by HF poker — live edge maintained. Slab finished with easy float. Curing compound applied. Cold weather: frost blankets if temperature below 5 degrees C.'],['2.3','Temporary Works','Temporary works designs to be submitted for approval before works commence. Permit to Load issued before loading materials on temporary works. Permit to Strike issued before striking formwork. Temporary Works Register maintained on site.'],['2.4','Risk Assessment','Refer to the Risk Assessment appended.'],['2.5','Manual Handling','Manual handling kept to minimum. Operatives to lift no more than 20kg. TILEO process applied.'],['3.1','Supervision','[SUPERVISION — Project Manager, Senior Site Engineer, Site Engineer, General Foreman]'],['3.2','Operatives','Shuttering Carpenters, Steel Fixers, Concreters, Pipe Layers, Groundworkers, Excavator and Dumper Operators, Traffic Marshals, Banksmen, Slinger/Signallers'],['4.1','Plant & Equipment','360 Excavator, 6T Dumper, Wacker Plate, Concrete Skip with drop chain, 2-leg and 4-leg chains, Webbing slings, High Frequency Pokers, Circular Saws, Petrol Cut-Off Saws, Tower Crane (Principal Contractor)'],['4.2','Materials','Timber ply, Falsework systems, Formwork systems, Reinforcement, Tying Wire, Spacer Blocks, Waterproof Concrete (Hydrocrete), Waterproofing membrane, Hydrophilic strip, Proprietary fixings'],['4.3','COSHH Assessments','Cement/Concrete, GGBS, Diesel, Petrol, Oils, Marker Paint, Curing Agent, Release Agent — refer to COSHH file.'],['4.4','Power Supply','110V supplied by Principal Contractor.'],['4.5','Lifting Operations','Tower Crane used for lifting materials into basement. All lifting by trained operatives and Slinger/Signallers per Lifting Plan. All equipment certified. Weekly checks recorded.'],['5.1','Mandatory PPE','Safety helmet (EN397) · Hi-visibility clothing (BSEN471) · Safety footwear (EN345) · Gloves min. Cut 3 (EN420) · Safety glasses (EN166 Optical Class 1)'],['5.2','Work Specific PPE','Safety goggles (EN166B) · Ear plugs (EN352-2) for >85dB · Concreting gloves (EN374-2) · RPE P3 half mask for cutting'],['6.1','Deliveries','All deliveries pre-booked. 5mph on site. Vehicles marshalled. Concrete washout skip in place.'],['6.2','Traffic Management','Traffic Management Plan followed. All supply chain issued with site map.'],['6.3','Pedestrian Management','Segregation barriers. Basement access via Tammet staircase. THUMBS UP system.'],['6.4','Work Access Arrangements','Segregated pedestrian walkways. Gated crossovers. THUMBS UP when pedestrians near plant.'],['7.1','Housekeeping','High standard maintained. Waste to bins/skips. Foreman to check daily.'],['7.2','Material Storage','Stockpiles battered. Reinforcement stored clear of ground. Materials in agreed locations.'],['7.3','Material Disposal','Surplus material to correct waste streams. Waste transfer notes to Principal Contractor. Concrete washout skip.'],['7.4','Lighting','Task lighting in all basement work areas.'],['7.5','Noise','Ear defenders >85dB. No noisy works before 08:00 or after 18:00. Section 60 consent.'],['7.6','Dust','Dust suppression. P3 half mask — face fit tested. No disposable masks.'],['7.7','Welfare','Provided by Principal Contractor.'],['8.1','Collective Fall Protection','Edge protection to tops of wall shutters (Hop-up Brackets), slab edges (Tammet System) and all excavation edges. Scaffold installed and tagged. Access inspected weekly.'],['8.2','Personal Fall Protection','MEWPs used with harness. Only IPAF certificated operatives to operate MEWPs. Certification on file. Rescue plan in place.'],['9.1','Plant & Equipment Inspection','Daily pre-use checks. Weekly thorough inspection on Form 22. 12-month Thorough Examination on file.'],['9.2','PPE Inspection','All operatives responsible for own PPE. Damaged PPE replaced immediately.'],['9.3','Safety Inspection','Weekly inspections by Site Manager. Fortnightly H&S Director visit.'],['10.1','First Aid','First aid box in site office. First Aiders: [FIRST AIDERS]. Nearest A&E: [HOSPITAL]. Call 999.'],['10.2','Fire Safety','Fire points and muster point at agreed locations. Hot Works Permit required. Minimum 2 fire extinguishers.'],['10.3','Rescue Arrangements','In event of incident: Call 999. Raise alarm. Shut down plant. Cordon area. Administer first aid if safe. Notify Site Manager, SHEQ, Contracts Director. Harness arrest: MEWP rescue from below or Tower Crane stretcher from above.']],hazards:[{no:1,hazard:'Undermining existing structure during basement construction — structural collapse, fatality',sev:5,lik:4,people:'JPD, C, P',controls:'JPD TWC employed to manage all temporary works. Detailed sequencing and hold points agreed before works. No works to progress without TWC approval at all hold points. Temporary Works Register maintained.',rsev:5,rlik:2},{no:2,hazard:'Working at height — falls from wall shutters, slab edges, into excavations',sev:5,lik:4,people:'JPD',controls:'MEWPs for formwork erection above standing height until hop-up access in place. Harness clipped above head height with rescue capability. Hop-up brackets at wall shutter tops. Tammet staircase with edge protection for basement access. Edge protection to all slab and excavation edges.',rsev:5,rlik:1},{no:3,hazard:'Suspended loads — overhead crane lifts, struck by falling load',sev:5,lik:3,people:'JPD, C, P, O',controls:'Competent Slinger/Signaller for all overhead lifts. Lifting Plan followed. All equipment inspected and certified. Lifting zone demarcated. Audible warning. Two-way radios. Correct lifting hooks inspected before use.',rsev:5,rlik:1},{no:4,hazard:'360 Excavator contact with operatives',sev:5,lik:4,people:'JPD, C, P, O',controls:'12-month Thorough Examination valid. CPCS trained operator. THUMBS UP — no entry within 5m without thumbs up. Orange hi-vis banksman. Exclusion zone. Reversing beepers. Blind spot mirrors.',rsev:5,rlik:1},{no:5,hazard:'Starter bars and reinforcement — impalement, cuts, lacerations',sev:4,lik:3,people:'JPD, C',controls:'All exposed starter bars capped with mushroom caps immediately. Tying wire ends cut off. No loose tying wire left on site. Gloves worn at all times. Slinger/signaller present when lifting reinforcement bundles.',rsev:4,rlik:1},{no:6,hazard:'Concrete burns — dermatitis, eye injury',sev:4,lik:3,people:'JPD',controls:'Task specific PPE: concreting gloves, PVC boots, safety goggles for HF poker. Wash concrete off immediately. Seek medical assistance if contacts eyes.',rsev:4,rlik:1},{no:7,hazard:'Dust — silicosis, respiratory disease from cutting/grinding',sev:5,lik:3,people:'JPD, C, P, O, E',controls:'Dust suppression. Half masks with P3 filters — face fit tested. No disposable masks. Dust extraction on machinery. Road sweepers if public areas contaminated.',rsev:5,rlik:1},{no:8,hazard:'Leptospirosis (Weils Disease) from groundwater contact',sev:5,lik:3,people:'JPD',controls:'Good hygiene — regular hand washing. No hand to mouth/eye contact. Waterproof gloves. Open cuts covered. Weils Disease card carried. Toolbox talk delivered.',rsev:5,rlik:1}]},
+  {id:'suspended_slab',icon:'🏢',name:'RC Suspended Slabs — PERI Skydeck',desc:'Falsework, reinforcement, concrete pours',title:'RC SUSPENDED SLABS — PERI SKYDECK FALSEWORK',contents:[['Scope of Works','Description of Works','Y'],['Scope of Works','Location','Y'],['Scope of Works','Time Start','Y'],['Scope of Works','Duration','Y'],['Sequence & Method','Sequence','Y'],['Sequence & Method','Method','Y'],['Sequence & Method','Temporary Works','Y'],['Sequence & Method','Risk Assessment','Y'],['Sequence & Method','Manual Handling','Y'],['Personnel','Supervision','Y'],['Personnel','Operatives','Y'],['Resources','Plant & Equipment','Y'],['Resources','Materials','Y'],['Resources','COSHH Assessments','Y'],['Resources','Power Supply','Y'],['Resources','Lifting Operations','Y'],['PPE','Mandatory PPE Required','Y'],['PPE','Work Specific PPE','Y'],['Access & Egress','Deliveries','Y'],['Access & Egress','Traffic Management','Y'],['Access & Egress','Pedestrian Management','Y'],['Access & Egress','Work Access Arrangements','Y'],['Environment','Housekeeping','Y'],['Environment','Material Storage','Y'],['Environment','Material Disposal','Y'],['Environment','Lighting','Y'],['Environment','Noise','Y'],['Environment','Dust','Y'],['Environment','Welfare','Y'],['Working at Height','Collective Fall Protection','Y'],['Working at Height','Personal Fall Protection','Y'],['Monitoring','Plant & Equipment Inspection','Y'],['Monitoring','PPE Inspection','Y'],['Monitoring','Safety Inspection','Y'],['Emergency Procedures','First Aid Arrangements','Y'],['Emergency Procedures','Fire Safety Arrangements','Y'],['Emergency Procedures','Rescue Arrangements','Y']],ms:[['1.1','Description of Works','Construction of RC suspended slabs using PERI Skydeck prop and panel falsework system. Works include falsework erection, fall arrest system installation, edge protection, reinforcement, concrete placement and striking.'],['1.2','Location','[PROJECT LOCATION]'],['1.3','Time Start','[START DATE]'],['1.4','Duration','[DURATION — weeks]'],['2.1','Sequence','1. Clear and prepare working area\n2. Set out base lines per PERI Skydeck drawing\n3. Lift Skydeck equipment to work area via Tower Crane\n4. Install Spanset running line or Alsipercha hangman fall arrest system\n5. Erect Skydeck falsework from stable structure outwards\n6. Install column and wall infills from below deck\n7. Access to top of deck — install edge protection (SG4 barriers/Peri handrail adaptors)\n8. Permit to Load — load materials on deck\n9. Fix reinforcement — bottom mat, deck chairs, top mat\n10. Install slab edge shutters and opening formwork\n11. Pre-pour inspection — invite Principal Contractor\n12. Place concrete — pump or skip\n13. Cure slab\n14. Strike — drop heads released, slab still supported by multiprop\n15. Backprop — 2 levels beneath each live deck'],['2.2','Method','PREFACE: All operatives inducted. Daily Safe Start briefing. CSCS/CPCS cards required.\n\nFALL ARREST: Two options — ALSIPERCHA HANGMAN: installed into top of column by Tower Crane or scissor lift. SPANSET RUNNING LINE: set up prior to Skydeck erection, tensioned between secure anchorage points around column/wall rebar. Only IPAF trained operators to use scissor lifts.\n\nSKYDECK ERECTION: Erected per PERI drawings and assembly instructions, starting close to stable structure. Cantilever beams secured with base plates and anchor chains. Exclusion zone minimum 2.5m from slab edge during cantilever installation. NO HEAVY MATERIALS ON CANTILEVERED SECTIONS.\n\nEDGE PROTECTION: SG4 barriers around ladder access. Peri handrail post adaptors pre-attached to beams before lifting. Tammet edge protection panels installed by carpenters in harness. Non-WAH operatives granted access via Tammet stairs only after full edge protection in place.\n\nREINFORCEMENT: Bottom mat laid on spacers. Wire deck chair spacers tied to bottom mat. Top mat installed progressively. All exposed bars capped. Pre-pour inspection invitation issued.\n\nCONCRETE: Mobile concrete pump (majority) or concrete skip for smaller pours. Compaction by electric HF poker. Curing compound sprayed. Cold weather: frost blankets if below 5 degrees C.\n\nSTRIKING: Permit to Strike from Principal Contractor. Drop heads released — SLAB STILL SUPPORTED BY MULTIPROP. Exclusion zone during striking. Multiprops released only when slab reaches agreed strength — backprops installed immediately (2 levels beneath each live deck).'],['2.3','Temporary Works','Falsework and formwork designed by PERI. Backpropping designed by structural engineer. Permit to Load before loading materials. Separate Permit to Load before concrete pour. Permit to Strike when specified concrete strength achieved.'],['2.4','Risk Assessment','Refer to the Risk Assessment appended.'],['2.5','Manual Handling','Manual handling kept to minimum. Operatives to lift no more than 20kg. TILEO process applied. Tower Crane used for lifting materials to deck.'],['3.1','Supervision','[SUPERVISION — Project Manager, Site Engineer, General Foreman, Falsework Supervisor]'],['3.2','Operatives','Shuttering Carpenters, Steel Fixers, Concreters, Groundworkers, Traffic Marshals, Banksmen, Slinger/Signallers'],['4.1','Plant & Equipment','Tower Crane (Principal Contractor), Skyjack 3219 or Genie 1932 Scissor Lift (IPAF 3a), Aluminium Podium Tower, Spanset Fall Restraint System, Alsipercha Hangman, PERI Skydeck components, Circular Saw, Jigsaw, Impact Wrench, Drill, Tool Tethers'],['4.2','Materials','Timber, Plywood 18mm, Nails, Concrete per approved mix design, Mould oil, Curing agent, Excalibur bolts, SG4 barriers, Peri handrail post adaptors, Doka Eurex 30 Top 400 or Peri Ergo d400 backprops'],['4.3','COSHH Assessments','Cement/Concrete, GGBS, Oils, Curing Agent, Release Agent/Mould Oil — refer to COSHH file.'],['4.4','Power Supply','110V supplied by Principal Contractor.'],['4.5','Lifting Operations','Tower Crane for all material lifts to deck. CPCS trained Slinger/Signallers. Lifting Plan followed. All equipment certified.'],['5.1','Mandatory PPE','Safety helmet (EN397) · Hi-visibility clothing (BSEN471) · Safety footwear (EN345) · Gloves min. Cut 3 (EN420) · Safety glasses (EN166 Optical Class 1)'],['5.2','Work Specific PPE','Full body harness (EN361) with energy-absorbing lanyard for WAH · Tool tethers for all tools used at height · Safety goggles · Ear plugs for >85dB · Concreting gloves (EN374-2) · RPE P3 half mask'],['6.1','Deliveries','All deliveries pre-booked. 5mph on site. Vehicles marshalled. Concrete washout skip in place.'],['6.2','Traffic Management','Traffic Management Plan followed. All supply chain issued with site map.'],['6.3','Pedestrian Management','Segregation barriers. Basement access via Tammet staircase. Exclusion zone minimum 2.5m from slab edge during cantilever installation.'],['6.4','Work Access Arrangements','Ladder access to deck initially — minimum 4 rungs above deck level, secured top and bottom. NO TOOLS OR MATERIALS TO BE CARRIED ON LADDERS. Tammet/Combisafe staircase installed as deck progresses.'],['7.1','Housekeeping','Deck kept clear. Tools tethered — cannot be left loose on deck. Concrete washout system used.'],['7.2','Material Storage','Slab rebar on timber bearers along line of main beams. NO heavy materials on cantilevered sections.'],['7.3','Material Disposal','Surplus material to correct waste streams. HEAVY MATERIALS NOT TO BE STORED ON CANTILEVERED SECTIONS.'],['7.4','Lighting','Adequate lighting on all working platforms. Task lighting as required.'],['7.5','Noise','Ear defenders >85dB. No noisy works before 08:00 or after 18:00.'],['7.6','Dust','P3 half mask — face fit tested. No disposable masks. Dust extraction on machinery.'],['7.7','Welfare','Provided by Principal Contractor.'],['8.1','Collective Fall Protection','SG4 barriers around ladder access opening. Peri handrail post adaptors pre-installed on beams. Tammet edge protection to leading edges. Access only granted to non-WAH operatives once full edge protection installed. Exclusion zone during cantilever installation.'],['8.2','Personal Fall Protection','Spanset running line or Alsipercha hangman installed BEFORE Skydeck erection. Full body harness with energy-absorbing lanyard worn when on deck before edge protection complete. Tool tethers for all tools. Rescue plan in place — MEWP from below or Tower Crane from above.'],['9.1','Plant & Equipment Inspection','Daily pre-use checks. MEWP: 6-monthly Thorough Examination on file. Spanset/Alsipercha: pre-use inspection and annual examination. Form 22 weekly checks recorded.'],['9.2','PPE Inspection','Harness inspected daily by wearer. Annual formal inspection. Any harness subjected to fall arrest to be withdrawn from service immediately.'],['9.3','Safety Inspection','Weekly inspections by Site Manager. Fortnightly H&S Director visit.'],['10.1','First Aid','First aid box in site office. First Aiders: [FIRST AIDERS]. Nearest A&E: [HOSPITAL]. Call 999. SUSPENSION TRAUMA: do not lower fallen operative flat until medically advised.'],['10.2','Fire Safety','Fire points and muster point at agreed locations. Hot Works Permit required. Minimum 2 fire extinguishers.'],['10.3','Rescue Arrangements','In event of fall arrest: Call 999. Do NOT lower operative flat — suspension trauma risk. Reassure and keep upright until emergency services arrive. Notify Site Manager, SHEQ, Contracts Director. MEWP rescue from below or Tower Crane stretcher from above.']],hazards:[{no:1,hazard:'Fall from deck edge or through incomplete deck — major injury, fatality',sev:5,lik:4,people:'JPD',controls:'Spanset running line or Alsipercha hangman installed BEFORE deck erection. Full body harness and energy absorbing lanyard worn on deck before edge protection complete. Clipped immediately on stepping off ladder. SG4 barriers around ladder access. Peri handrail post adaptors pre-attached to beams. Tammet edge protection to leading edges. Exclusion zone minimum 2.5m from slab edge. Access to non-WAH operatives only when full edge protection in place.',rsev:5,rlik:1},{no:2,hazard:'Suspension trauma following fall arrest — circulatory collapse, fatality',sev:5,lik:3,people:'JPD',controls:'Rescue plan agreed before harness use. Response time under 5 minutes. 999 called immediately. Keep operative upright. Trauma straps available. Do not lower flat until medically advised. All operatives briefed on suspension trauma risk.',rsev:5,rlik:1},{no:3,hazard:'Falsework collapse or overload — structural failure, multiple fatalities',sev:5,lik:4,people:'JPD, C',controls:'Falsework designed by PERI. Backpropping designed by structural engineer. Permit to Load from Principal Contractor. NO heavy materials on cantilevered sections or walkways. Backpropping installed at 2 levels before multiprops released. Permit to Strike — concrete strength verified.',rsev:5,rlik:1},{no:4,hazard:'Falling objects from deck — tools, concrete, reinforcement striking operatives below',sev:5,lik:4,people:'JPD, C, P',controls:'Tool tethers on ALL tools used at height. Exclusion zone below working deck. Deck edge protection prevents knockoff. No materials left loose on deck. Signage: Overhead work in progress, hard hat area.',rsev:5,rlik:1},{no:5,hazard:'MEWP overturning or instability during falsework installation',sev:5,lik:3,people:'JPD',controls:'MEWP on firm level ground. Ground bearing capacity confirmed. Outriggers extended per manufacturer requirements. Rated capacity not exceeded. IPAF certificate 3a required. Pre-use check completed. Key removed when unattended.',rsev:5,rlik:1},{no:6,hazard:'Concrete burns or skin contact with cement',sev:4,lik:3,people:'JPD',controls:'Concreting gloves (EN374-2), PVC boots, goggles for HF poker. Wash off immediately. Seek medical attention if contacts eyes.',rsev:4,rlik:1}]},
+  {id:'drainage',icon:'🔄',name:'Drainage Installation',desc:'Excavate trench, lay pipes, test, backfill',title:'DRAINAGE INSTALLATION',contents:[['Scope of Works','Description of Works','Y'],['Scope of Works','Location','Y'],['Scope of Works','Time Start','Y'],['Scope of Works','Duration','Y'],['Sequence & Method','Sequence','Y'],['Sequence & Method','Method','Y'],['Sequence & Method','Temporary Works','Y'],['Sequence & Method','Risk Assessment','Y'],['Sequence & Method','Manual Handling','Y'],['Personnel','Supervision','Y'],['Personnel','Operatives','Y'],['Resources','Plant & Equipment','Y'],['Resources','Materials','Y'],['Resources','COSHH Assessments','Y'],['Resources','Power Supply','Y'],['Resources','Lifting Operations','Y'],['PPE','Mandatory PPE Required','Y'],['PPE','Work Specific PPE','Y'],['Access & Egress','Deliveries','Y'],['Access & Egress','Traffic Management','Y'],['Access & Egress','Pedestrian Management','Y'],['Access & Egress','Work Access Arrangements','Y'],['Environment','Housekeeping','Y'],['Environment','Material Storage','Y'],['Environment','Material Disposal','Y'],['Environment','Lighting','Y'],['Environment','Noise','Y'],['Environment','Dust','Y'],['Environment','Welfare','Y'],['Working at Height','Collective Fall Protection','Y'],['Working at Height','Personal Fall Protection','N/A'],['Monitoring','Plant & Equipment Inspection','Y'],['Monitoring','PPE Inspection','Y'],['Monitoring','Safety Inspection','Y'],['Emergency Procedures','First Aid Arrangements','Y'],['Emergency Procedures','Fire Safety Arrangements','Y'],['Emergency Procedures','Rescue Arrangements','Y']],ms:[['1.1','Description of Works','Drainage installation including setting out, excavation of trenches, laying of pipes, jointing, air testing, and backfilling. Works within basement slab zone and site-wide.'],['1.2','Location','[PROJECT LOCATION — site-wide as per drainage drawings]'],['1.3','Time Start','[START DATE]'],['1.4','Duration','[DURATION — weeks]'],['2.1','Sequence','PREFACE\nPERMIT TO DIG — CAT scan, service drawings reviewed\nSETTING OUT drainage runs and manholes from EDM\nEXCAVATE TRENCH — fence off, step/batter or shore as required\nLAYING PIPES — bedding, jointing, inspection\nPIPE TESTING — air test per section\nINVITE PRINCIPAL CONTRACTOR INSPECTION before backfill\nBACKFILL — selected material or concrete encasement per specification'],['2.2','Method','PREFACE: All operatives inducted. Daily Safe Start briefing. CSCS/CPCS cards required.\n\nPERMIT TO DIG: Must be issued before any excavation. CAT scan with Genny completed. Service drawings reviewed. Hand dig within 500mm of any known service using insulated tools (BS8020). Mechanical excavation NOT within 500mm of known service. Banksman present when machine digging near services. All services treated as live until formally confirmed.\n\nSETTING OUT: Drainage runs and manholes set out using EDM from co-ordinates on drainage drawings. Line marking spray paint used to mark runs and chamber extents including depths.\n\nEXCAVATION: Trenches less than 1200mm deep — vertical, stepped or battered depending on ground conditions. Trenches over 1200mm deep — shoring required. All excavations fenced with Heras fencing before excavation commences — PLASTIC FENCING NOT ACCEPTABLE. Site Manager to assess each trench condition before operative enters.\n\nLAYING PIPES: Drain layer enters trench only when excavator is clear. Drainage bedding placed by excavator bucket — NO operatives in trench during this operation. Once bedding placed and levelled by hand, pipe laid and jointed using lubricant. Check position and fall by engineer before surround and backfill placed.\n\nPIPE TESTING: Air test used. Stopper inserted — connected to manometer. Air pumped by hand pump to 125-150mm on manometer. Allow 5-10 minutes temperature stabilisation. Reduce to exactly 100mm — monitor 5 minutes. PASS if level does not fall below 75mm. Principal Contractor invited to witness each test before backfill.'],['2.3','Temporary Works','No earthworks support expected for shallow trenches. If trenches exceed 1.2m — shoring design by Temporary Works Designer required. This document to be amended if earthworks support required.'],['2.4','Risk Assessment','Refer to the Risk Assessment appended.'],['2.5','Manual Handling','Manual handling kept to minimum. Operatives to lift no more than 20kg. TILEO process applied.'],['3.1','Supervision','[SUPERVISION — Project Manager, Site Engineer, General Foreman]'],['3.2','Operatives','Pipe Layers, Groundworkers, Excavator and Dumper Operators, Traffic Marshals, Banksmen, Slinger/Signallers'],['4.1','Plant & Equipment','360 Excavator, 6T Dumper, Wacker Plate, 2-leg and 4-leg chains, Webbing slings, Air test equipment (manometer, hand pump, pipe stoppers), Tower Crane where required'],['4.2','Materials','Pipes and bends per drainage drawing, Manhole chamber sections and covers, Shingle bedding, Pipe lubricant/grease, Concrete encasement mix'],['4.3','COSHH Assessments','Cement/Concrete, GGBS, Diesel, Petrol, Oils, Marker Paint — refer to COSHH file.'],['4.4','Power Supply','110V supplied by Principal Contractor.'],['4.5','Lifting Operations','Tower Crane where required. All lifting by trained operatives and Slinger/Signallers per Lifting Plan. All equipment certified.'],['5.1','Mandatory PPE','Safety helmet (EN397) · Hi-visibility clothing (BSEN471) · Safety footwear (EN345) · Gloves min. Cut 3 (EN420) · Safety glasses (EN166 Optical Class 1)'],['5.2','Work Specific PPE','Safety goggles (EN166B) · Ear plugs for >85dB · Concreting gloves (EN374-2) · RPE P3 half mask for cutting/drilling'],['6.1','Deliveries','All deliveries pre-booked. 5mph on site. Vehicles marshalled. Concrete washout skip in place.'],['6.2','Traffic Management','Traffic Management Plan followed. All supply chain issued with site map.'],['6.3','Pedestrian Management','Segregation barriers. All excavations fenced with Heras fencing — PLASTIC FENCING NOT ACCEPTABLE. THUMBS UP system.'],['6.4','Work Access Arrangements','Segregated pedestrian walkways. Gated crossovers. Safe means of access/egress to trenches over 1.2m deep.'],['7.1','Housekeeping','High standard maintained. Waste to bins/skips. Foreman to check daily.'],['7.2','Material Storage','Excavated material stockpiled away from trench edge. Materials in agreed locations.'],['7.3','Material Disposal','Surplus material to correct waste streams. Waste transfer notes to Principal Contractor. Concrete washout skip used.'],['7.4','Lighting','Task lighting provided in trench and work areas.'],['7.5','Noise','Ear defenders >85dB. No noisy works before 08:00 or after 18:00. Section 60 consent.'],['7.6','Dust','Dust suppression. P3 half mask — face fit tested. Road sweeper if required.'],['7.7','Welfare','Provided by Principal Contractor.'],['8.1','Collective Fall Protection','All excavations fenced with Heras fencing before excavation commences. Edge protection to slab edges (Tammet System) and tops of wall shutters (Hop-up Brackets). Scaffold installed and tagged.'],['8.2','Personal Fall Protection','N/A for trench works. Harness if any WAH works arise.'],['9.1','Plant & Equipment Inspection','Daily pre-use checks. Weekly thorough inspection on Form 22. 12-month Thorough Examination on file.'],['9.2','PPE Inspection','All operatives responsible for own PPE. Damaged PPE replaced immediately.'],['9.3','Safety Inspection','Weekly inspections by Site Manager. Fortnightly H&S Director visit.'],['10.1','First Aid','First aid box in site office. First Aiders: [FIRST AIDERS]. Nearest A&E: [HOSPITAL]. Call 999.'],['10.2','Fire Safety','Fire points and muster point at agreed locations. Hot Works Permit required. Minimum 2 fire extinguishers.'],['10.3','Rescue Arrangements','In event of incident: Call 999. Raise alarm. Shut down plant. Cordon area. DO NOT enter a trench collapse. Administer first aid if safe. Notify Site Manager, SHEQ, Contracts Director.']],hazards:[{no:1,hazard:'Trench collapse — burial, crushing, fatality',sev:5,lik:5,people:'JPD',controls:'Trenches under 1.2m — vertical, stepped or battered per ground conditions assessed by Site Manager before entry. Trenches over 1.2m — shoring per Temporary Works Designer. Site Manager to assess each trench before operative enters. No lone working in trenches. Excavated material minimum 0.5m from trench edge.',rsev:5,rlik:1},{no:2,hazard:'Striking underground services — electric shock, explosion, gas, fatality',sev:5,lik:5,people:'JPD, C',controls:'Permit to Dig issued before excavation. CAT scan and Genny completed. Service drawings reviewed. Hand dig within 500mm of services — insulated tools (BS8020). No mechanical excavation within 500mm. Banksman present. Services treated as live until formally confirmed.',rsev:5,rlik:1},{no:3,hazard:'Falls into open excavation — fractures, major injury',sev:5,lik:5,people:'JPD, C, P',controls:'ALL excavations fenced with Heras fencing before excavation commences — PLASTIC FENCING NOT ACCEPTABLE. Safe means of access/egress to trenches over 1.2m. Trench covers when not in active use. Site lighting in hours of darkness.',rsev:5,rlik:1},{no:4,hazard:'Drain layer in trench when excavator operating — crushing fatality',sev:5,lik:5,people:'JPD',controls:'Drain layer enters trench ONLY when excavator is completely clear of trench. Operatives NOT permitted in trench during bedding placement by excavator. Clear verbal communication before entry. Banksman to confirm excavator clear before operative enters.',rsev:5,rlik:1},{no:5,hazard:'Leptospirosis (Weils Disease) from sewage/groundwater contact',sev:5,lik:3,people:'JPD',controls:'Good hygiene — regular hand washing. Waterproof gloves. Open cuts covered. Weils Disease card carried. Toolbox talk delivered.',rsev:5,rlik:1},{no:6,hazard:'Environmental — concrete washout or silty water discharge to drainage',sev:5,lik:3,people:'E',controls:'Concrete washout skip in place. Settlement/segregation tank before any discharge. Discharge licence from water authority. Do not allow silty water into drains or watercourses. Spill kits on site. Daily inspection.',rsev:5,rlik:1}]},
+  {id:'perched_water',icon:'💧',name:'Perched Water Management',desc:'Dewatering, settlement tanks, submersible pumps',title:'PERCHED WATER MANAGEMENT',contents:[['Scope of Works','Description of Works','Y'],['Scope of Works','Location','Y'],['Scope of Works','Time Start','Y'],['Scope of Works','Duration','Y'],['Sequence & Method','Sequence','Y'],['Sequence & Method','Method','Y'],['Sequence & Method','Temporary Works','Y'],['Sequence & Method','Risk Assessment','Y'],['Sequence & Method','Manual Handling','Y'],['Personnel','Supervision','Y'],['Personnel','Operatives','Y'],['Resources','Plant & Equipment','Y'],['Resources','Materials','Y'],['Resources','COSHH Assessments','Y'],['Resources','Power Supply','Y'],['Resources','Lifting Operations','Y'],['PPE','Mandatory PPE Required','Y'],['PPE','Work Specific PPE','Y'],['Access & Egress','Deliveries','Y'],['Access & Egress','Traffic Management','Y'],['Access & Egress','Pedestrian Management','Y'],['Access & Egress','Work Access Arrangements','Y'],['Environment','Housekeeping','Y'],['Environment','Material Storage','Y'],['Environment','Material Disposal','Y'],['Environment','Lighting','Y'],['Environment','Noise','Y'],['Environment','Dust','Y'],['Environment','Welfare','Y'],['Working at Height','Collective Fall Protection','Y'],['Working at Height','Personal Fall Protection','Y'],['Monitoring','Plant & Equipment Inspection','Y'],['Monitoring','PPE Inspection','Y'],['Monitoring','Safety Inspection','Y'],['Emergency Procedures','First Aid Arrangements','Y'],['Emergency Procedures','Fire Safety Arrangements','Y'],['Emergency Procedures','Rescue Arrangements','Y']],ms:[['1.1','Description of Works','Management of perched water table above clay during basement excavation works. Dewatering using submersible pumps, settlement tanks, and sump systems to control water ingress during underpinning and basement excavation.'],['1.2','Location','[PROJECT LOCATION — basement excavation area]'],['1.3','Time Start','[START DATE — prior to commencement of any basement excavation]'],['1.4','Duration','[DURATION — ongoing throughout basement works]'],['2.1','Sequence','1. Ground investigation report reviewed for perched water table level\n2. Dewatering system designed and agreed before excavation commences\n3. Sumps established using perforated pipes and filtering shingle\n4. Settlement tank installed — minimum 4000 litre with internal baffles\n5. 50mm submersible pumps positioned in sumps\n6. Discharge licence obtained from water authority before pumping to drainage\n7. Excavation commences — pumps operational\n8. Water level monitored continuously during excavation\n9. Works halt if water ingress exceeds pump capacity\n10. Works halt if ground stability at risk from water\n11. Additional 100mm static pumps deployed if required'],['2.2','Method','PREFACE: All operatives inducted. Daily Safe Start briefing.\n\nPERMIT TO DIG: Issued before any excavation. CAT scan and Genny completed. Banksman present at all times.\n\nMANAGING PERCHED WATER: Dewatering measures in place BEFORE excavation commences. 50mm submersible pumps discharge to ground preferred, or to local foul drainage via 4000-litre settlement tank with internal baffle plates. Sumps established using perforated pipes and filtering shingle. Discharge licence from water authority required. Conditions of licence followed at all times.\n\nMONITORING: System monitored continuously. Works proceed ONLY if water under control and ingress below pump capacity. Works halt if system needs adaptation. Ground face stability monitored throughout each shift — start, during and end. Temporary support to face of excavation if required. If collapse risk to ground supporting existing structure: works cease immediately, Principal Contractor informed, excavation backfilled, revised methodology agreed.'],['2.3','Temporary Works','Detailed in Underpinning and RC Basement RAMS. Perched water management supports the temporary works scheme.'],['2.4','Risk Assessment','Refer to the Risk Assessment appended.'],['2.5','Manual Handling','Manual handling kept to minimum. Operatives to lift no more than 20kg. TILEO process applied.'],['3.1','Supervision','[SUPERVISION — Project Manager, Senior Site Engineer, Site Engineer, General Foreman]'],['3.2','Operatives','Groundworkers, Concreters, Shuttering Carpenters, Excavator Operatives, Traffic Marshals, Banksmen, Slinger/Signallers'],['4.1','Plant & Equipment','360 Excavator, Settlement Tank minimum 4000 litres with internal baffles, 50mm Submersible Pumps, 100mm Static Pumps (standby), Perforated Pipes, Filtering Shingle, 2-leg and 4-leg chains'],['4.2','Materials','Perforated pipes, filtering shingle, discharge hoses — as per dewatering design.'],['4.3','COSHH Assessments','As detailed in Underpinning and RC Basement RAMS.'],['4.4','Power Supply','110V supplied by Principal Contractor.'],['4.5','Lifting Operations','All lifting by trained operatives and Slinger/Signallers per Lifting Plan. All equipment certified.'],['5.1','Mandatory PPE','Safety helmet (EN397) · Hi-visibility clothing (BSEN471) · Safety footwear (EN345) · Gloves min. Cut 3 (EN420) · Safety glasses (EN166 Optical Class 1)'],['5.2','Work Specific PPE','Safety goggles · Ear plugs for >85dB · Concreting gloves (EN374-2) · Waterproof overalls if working in wet conditions · Wellington boots during dewatering works'],['6.1','Deliveries','All deliveries pre-booked. 5mph on site. Vehicles marshalled.'],['6.2','Traffic Management','Traffic Management Plan followed. All supply chain issued with site map.'],['6.3','Pedestrian Management','Segregation barriers. Basement access via Tammet staircase. THUMBS UP when pedestrians near plant.'],['6.4','Work Access Arrangements','Segregated pedestrian walkways. Gated crossovers. THUMBS UP system.'],['7.1','Housekeeping','High standard maintained. Pumps and hoses kept tidy. Spills cleaned immediately with spill kit.'],['7.2','Material Storage','Stockpiles battered. Pump and settlement tank on stable ground.'],['7.3','Material Disposal','Discharge via licensed route only. Settlement tank to remove silt before discharge. Licence conditions followed. Do not discharge silty water to drains.'],['7.4','Lighting','Adequate lighting at pump stations and within excavations.'],['7.5','Noise','Pump noise monitored. Ear defenders if >85dB. No noisy works before 08:00 or after 18:00.'],['7.6','Dust','Dust suppression in place. P3 half mask — face fit tested where required.'],['7.7','Welfare','Provided by Principal Contractor.'],['8.1','Collective Fall Protection','Detailed in Underpinning and RC Basement RAMS. Edge protection to all excavation edges.'],['8.2','Personal Fall Protection','Detailed in Underpinning and RC Basement RAMS.'],['9.1','Plant & Equipment Inspection','Daily pre-use checks on pumps and settlement tank. Pump discharge checked start, during and end of every shift. Weekly formal inspection.'],['9.2','PPE Inspection','All operatives responsible for own PPE. Damaged PPE replaced immediately.'],['9.3','Safety Inspection','Weekly inspections by Site Manager. Fortnightly H&S Director visit.'],['10.1','First Aid','First aid box in site office. First Aiders: [FIRST AIDERS]. Nearest A&E: [HOSPITAL]. Call 999.'],['10.2','Fire Safety','Fire points and muster point at agreed locations. Hot Works Permit required.'],['10.3','Rescue Arrangements','In event of flooding or collapse: Call 999. Evacuate. DO NOT re-enter. Notify Site Manager, SHEQ, Contracts Director.']],hazards:[{no:1,hazard:'Undermining existing structure — uncontrolled water ingress leading to collapse',sev:5,lik:4,people:'JPD, C, P',controls:'Dewatering system in place and operational BEFORE excavation commences. JPD TWC manages temporary works scope. No progress without Kingerlee TWC approval. Works to cease if water ingress exceeds pump capacity. Excavation backfilled if ground stability at risk. Principal Contractor informed immediately.',rsev:5,rlik:2},{no:2,hazard:'Water ingress destabilising excavation face — collapse, burial',sev:5,lik:3,people:'JPD, C, P',controls:'Regular inspections — start, during and end of every shift. Temporary support measures to face of excavation if required. Works to cease and remedial measures implemented immediately if collapse risk. Revised methodology agreed with Principal Contractor before recommencement.',rsev:5,rlik:1},{no:3,hazard:'Electric shock from submersible pump in flooded excavation',sev:5,lik:3,people:'JPD',controls:'110V RCD-protected supply. Pumps rated for submersible use. Electrical connections above water level. PAT tested equipment. Operatives not to enter flooded excavation with pump running unless essential — if essential, pump isolated first. Rubber wellington boots worn.',rsev:5,rlik:1},{no:4,hazard:'Environmental — uncontrolled discharge of silty or contaminated water',sev:5,lik:3,people:'E',controls:'Discharge licence obtained before pumping to drainage network. Settlement tank with internal baffles in place. Preferred option: discharge back into ground. Do NOT discharge silty water direct to drains or sewers. Daily inspection of settlement tank.',rsev:5,rlik:1},{no:5,hazard:'Leptospirosis (Weils Disease) from groundwater contact',sev:5,lik:4,people:'JPD',controls:'Good hygiene — regular hand washing. No hand to mouth/eye contact. Waterproof gloves. Open cuts covered. Weils Disease card carried at all times. Toolbox talk on symptoms delivered.',rsev:5,rlik:1},{no:6,hazard:'Falls into flooded excavation — drowning, major injury',sev:5,lik:4,people:'JPD, C, P',controls:'Edge protection to all excavation edges. Heras fencing around excavation perimeter. Adequate site lighting. Covers to excavations when not in active use. Access to flooded areas restricted.',rsev:5,rlik:1}]},
+  {id:'trench_sheet',icon:'🔩',name:'Trench Sheet & RMD Kwikform',desc:'Installation of temporary works — basement support',title:'BASEMENT — INSTALLATION OF TRENCH SHEET AND RMD KWIKFORM',contents:[['Scope of Works','Description of Works','Y'],['Scope of Works','Location','Y'],['Scope of Works','Time Start','Y'],['Scope of Works','Duration','Y'],['Sequence & Method','Sequence','Y'],['Sequence & Method','Method','Y'],['Sequence & Method','Temporary Works','Y'],['Sequence & Method','Risk Assessment','Y'],['Sequence & Method','Manual Handling','Y'],['Personnel','Supervision','Y'],['Personnel','Operatives','Y'],['Resources','Plant & Equipment','Y'],['Resources','Materials','Y'],['Resources','COSHH Assessments','Y'],['Resources','Power Supply','Y'],['Resources','Lifting Operations','Y'],['PPE','Mandatory PPE Required','Y'],['PPE','Work Specific PPE','Y'],['Access & Egress','Deliveries','Y'],['Access & Egress','Traffic Management','Y'],['Access & Egress','Pedestrian Management','Y'],['Access & Egress','Work Access Arrangements','Y'],['Environment','Housekeeping','Y'],['Environment','Material Storage','Y'],['Environment','Material Disposal','Y'],['Environment','Lighting','Y'],['Environment','Noise','Y'],['Environment','Dust','Y'],['Environment','Welfare','Y'],['Working at Height','Collective Fall Protection','Y'],['Working at Height','Personal Fall Protection','Y'],['Monitoring','Plant & Equipment Inspection','Y'],['Monitoring','PPE Inspection','Y'],['Monitoring','Safety Inspection','Y'],['Emergency Procedures','First Aid Arrangements','Y'],['Emergency Procedures','Fire Safety Arrangements','Y'],['Emergency Procedures','Rescue Arrangements','Y']],ms:[['1.1','Description of Works','Installation of basement temporary works including trench sheets and RMD Kwikform to support the west wall underpinning as per engineer (CGL) works sequence requirements.'],['1.2','Location','[PROJECT LOCATION — basement west wall area]'],['1.3','Time Start','[START DATE]'],['1.4','Duration','Approximately 3 weeks'],['2.1','Sequence','PREFACE\nPERMITS TO DIG\nSECURE EXCLUSION ZONE — divert site pedestrian routes\nREDUCE DIG LEVEL — remove obstructions from existing foundations\nINSTALL TRENCH SHEETS — one by one, lifted with 360 excavator\nINSTALL WALERS — per approved construction drawings\nEXCAVATE TRENCH AND INSTALL CROSSPROPS — per CGL stage sequence\nDISMANTLE SYSTEM — once basement slab cast, per CGL approved sequence'],['2.2','Method','PREFACE: All operatives inducted. Daily Safe Start briefing. CSCS/CPCS cards required.\n\nPERMIT TO DIG: Must be issued before any excavating works. CAT scan and Genny completed. Service drawings reviewed. Hand dig within 500mm of services using insulated tools (BS8020). Mechanical excavation NOT within 500mm. Banksman present at all times.\n\nEXCLUSION ZONE: Site pedestrian route through work area suspended for duration. Alternative route via Principal Contractor. Physical barriers and signage erected.\n\nREDUCE DIG LEVEL: 5-tonne 360 excavator to reduce dig level and form 300mm wide x approx 400mm deep trench. Obstructions broken using breaker attachment. Broken material loaded into 1-tonne boat skip by excavator — Tower Crane lifts to roll-on skip. Waste transfer ticket to Principal Contractor.\n\nINSTALL TRENCH SHEETS: Trench sheets placed one by one using dedicated lifting hook on 5-tonne 360 excavator. Pushed by hand by competent operative into correct location. Excavator pushes sheets 200-300mm into undisturbed ground. Once 2m section installed — top with 10-20mm pea shingle.\n\nINSTALL WALERS: Per approved construction drawings and Temporary Works Designer specification.\n\nEXCAVATE AND INSTALL CROSSPROPS: Per CGL works sequence (Stages 12 through 19). 5-tonne 360 excavator used. Each stage follows approved CGL drawing sequence strictly.\n\nDISMANTLE: Once basement slab cast — proceed to Stage 20 and 21 per CGL approved drawings.'],['2.3','Temporary Works','Approved construction drawings submitted and converted to construction issue before works commence. Works sequence to follow CGL approved drawings at all times. Temporary Works Register maintained. JPD TWC to coordinate all temporary works.'],['2.4','Risk Assessment','Refer to the Risk Assessment appended.'],['2.5','Manual Handling','Manual handling kept to minimum. Operatives to lift no more than 20kg. TILEO process applied. 360 excavator used for all heavy lifts.'],['3.1','Supervision','[SUPERVISION — Project Manager, Site Engineer, General Foreman]'],['3.2','Operatives','Groundworkers, Excavator and Dumper Operators, Traffic Marshals, Banksmen, Slinger/Signallers'],['4.1','Plant & Equipment','5-tonne 360 Excavator with breaker attachment, 6T Dumper, Wacker Plate, 1-tonne Boat Skip, 2-leg and 4-leg chains, Webbing slings, Circular Saws, Tower Crane (Principal Contractor)'],['4.2','Materials','Trench sheets (steel), RMD Kwikform walers and crossprops, Timber ply, Pea shingle 10-20mm, Reinforcement, Waterproof Concrete, Proprietary fixings'],['4.3','COSHH Assessments','Cement/Concrete, GGBS, Diesel, Petrol, Oils, Marker Paint, Curing Agent, Release Agent — refer to COSHH file.'],['4.4','Power Supply','110V supplied by Principal Contractor.'],['4.5','Lifting Operations','Tower Crane for lifting materials into basement. 360 excavator for trench sheet installation with dedicated lifting hook. All lifting by trained operatives and Slinger/Signallers per Lifting Plan. All equipment certified.'],['5.1','Mandatory PPE','Safety helmet (EN397) · Hi-visibility clothing (BSEN471) · Safety footwear (EN345) · Gloves min. Cut 3 (EN420) · Safety glasses (EN166 Optical Class 1)'],['5.2','Work Specific PPE','Safety goggles (EN166B) · Ear plugs for >85dB · Concreting gloves (EN374-2) · RPE P3 half mask for cutting/drilling · Protective clothing EN ISO 14116:2008'],['6.1','Deliveries','All deliveries pre-booked. 5mph on site. Vehicles marshalled. Waste transfer tickets to Principal Contractor.'],['6.2','Traffic Management','Traffic Management Plan followed. All supply chain issued with site map.'],['6.3','Pedestrian Management','Site pedestrian route suspended — alternative route arranged. Exclusion zone with physical barriers and signage. Tammet staircase for basement access. THUMBS UP system.'],['6.4','Work Access Arrangements','Segregated pedestrian walkways. Gated crossovers. THUMBS UP when pedestrians near plant.'],['7.1','Housekeeping','High standard maintained. Trench sheets and props stored safely. Spoil removed promptly. Foreman to check daily.'],['7.2','Material Storage','Stockpiles battered. Materials in agreed locations. Trench sheet stack stable and clearly marked.'],['7.3','Material Disposal','Broken concrete/brickwork in boat skip — tower crane to roll-on skip — grab lorry to collect. Waste transfer notes to Principal Contractor.'],['7.4','Lighting','Main site lighting by Principal Contractor. Task lighting provided for installation works.'],['7.5','Noise','Ear defenders >85dB. No noisy works before 08:00 or after 18:00. Breaker attachment use managed for noise and vibration.'],['7.6','Dust','Dust suppression. P3 half mask — face fit tested. No disposable masks. Road sweeper if required.'],['7.7','Welfare','Provided by Principal Contractor.'],['8.1','Collective Fall Protection','Edge protection to tops of wall shutters (Hop-up Brackets), slab edges (Tammet System) and all excavation edges. Scaffold installed and tagged. Access systems inspected weekly.'],['8.2','Personal Fall Protection','MEWPs used with harness where required. Only IPAF certificated operatives to operate MEWPs. Certification on file.'],['9.1','Plant & Equipment Inspection','Daily pre-use checks by all operators. Weekly thorough inspection on Form 22. Defects reported immediately. 12-month Thorough Examination on file.'],['9.2','PPE Inspection','All operatives responsible for own PPE. Damaged PPE replaced immediately and recorded in PPE Register.'],['9.3','Safety Inspection','Weekly inspections by Site Manager. Fortnightly H&S Director visit.'],['10.1','First Aid','First aid box in JPD and Principal Contractor site offices. First Aiders: [FIRST AIDERS]. Nearest A&E: [HOSPITAL]. Call 999.'],['10.2','Fire Safety','Fire points and muster point at agreed locations. Hot Works Permit required. Minimum 2 fire extinguishers.'],['10.3','Rescue Arrangements','In event of incident: Call 999. Raise alarm. Shut down plant. Cordon area. Administer first aid if safe. Notify Site Manager, SHEQ, Contracts Director. Harness arrest: MEWP rescue from below or Tower Crane stretcher from above.']],hazards:[{no:1,hazard:'Undermining existing structure during trench sheet installation — collapse, fatality',sev:5,lik:4,people:'JPD, C, P',controls:'JPD TWC employed to manage all temporary works. CGL-approved works sequence followed strictly — no deviation. No works to progress without Kingerlee TWC approval. Raking props and walers provide lateral support per TWD design. Trench sheets driven minimum 200-300mm into undisturbed ground. TWC sign-off at all hold points.',rsev:5,rlik:2},{no:2,hazard:'Trench sheet or waler falling during installation — struck by falling steelwork',sev:5,lik:4,people:'JPD',controls:'360 excavator with dedicated lifting hook for all trench sheet lifts. Competent banksman directing all lifts. Operatives clear of sheet during lifting and positioning. Sheets positioned one by one. No one in trench during sheet installation. Tag lines used. Exclusion zone maintained.',rsev:5,rlik:1},{no:3,hazard:'Striking underground services during reduce dig — electric shock, explosion, gas, fatality',sev:5,lik:5,people:'JPD, C',controls:'Permit to Dig before any excavation. CAT scan and Genny completed. Service drawings reviewed. Hand dig within 500mm of services — insulated tools (BS8020). No mechanical excavation within 500mm. Banksman present. Services treated as live.',rsev:5,rlik:1},{no:4,hazard:'360 Excavator contact with operatives',sev:5,lik:4,people:'JPD, C, P, O',controls:'CPCS trained operator. 12-month Thorough Examination valid. Daily checks. THUMBS UP — no entry within 5m without thumbs up. Banksman in orange hi-vis. Exclusion zone. Reversing beepers. Blind spot mirrors.',rsev:5,rlik:1},{no:5,hazard:'Perched water flooding trench installation area — instability, flooding',sev:5,lik:4,people:'JPD',controls:'Dewatering established before excavation commences — refer to Perched Water Management RAMS. 50mm submersible pumps operational. Settlement tank in place. Works halt if water ingress exceeds capacity.',rsev:5,rlik:1},{no:6,hazard:'HAVS from breaker attachment use',sev:5,lik:3,people:'JPD',controls:'HAVS assessment for breaker. Exposure time monitored and recorded. Breaker use minimised — only where necessary. Health surveillance for regular users.',rsev:5,rlik:1}]},
+];
+
+let selectedType = null;
+let logoDataURL = null;
+
+// Get project-specific variable — dropdown takes priority over text custom field
+function getVar(id) {
+  const el = document.getElementById(id);
+  if(!el) return '';
+  const val = el.value?.trim();
+  // For excavator, check custom field too
+  if(id === 'var-excavator') {
+    const custom = document.getElementById('var-excavator-custom')?.value?.trim();
+    return custom || (val !== '— Select or type below —' ? val : '') || '';
+  }
+  // Skip placeholder options
+  if(val && !val.startsWith('—')) return val;
+  return '';
+}
+
+// ── INIT ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('datePrepared').valueAsDate = new Date();
+  renderTypeGrid();
+  populateSignOff(20);
+});
+
+function renderTypeGrid() {
+  document.getElementById('typeGrid').innerHTML = WORK_TYPES.map(t => `
+    <div class="type-btn ${selectedType?.id===t.id?'active':''}" onclick="selectType('${t.id}')">
+      <div class="type-icon">${t.icon}</div>
+      <div class="type-name">${t.name}</div>
+      <div class="type-desc">${t.desc}</div>
+    </div>`).join('');
+}
+
+function selectType(id) {
+  selectedType = WORK_TYPES.find(t=>t.id===id);
+  renderTypeGrid();
+}
+
+function loadLogo(input) {
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    logoDataURL = e.target.result;
+    document.getElementById('logoPreviewImg').src = logoDataURL;
+    document.getElementById('logoPreviewImg').style.display = 'block';
+    document.getElementById('logoPlaceholder').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function updatePreview() {
+  ['docCompanyName','docCompanyAddr','docCompanyTel','docProjName','docProjAddr',
+   'docClientName','docSiteTel','docContractsDir','docSiteManager','docRamsRef',
+   'docRamsRev','docPreparedBy','docAuditedBy','docDatePrepared','docSHEQ'].forEach(id => {
+    const map = {
+      docCompanyName:'companyName', docCompanyAddr:'companyAddr', docCompanyTel:'companyTel',
+      docProjName:'projName', docProjAddr:'projAddr', docClientName:'clientName',
+      docSiteTel:'siteTel', docContractsDir:'contractsDir', docSiteManager:'siteManager',
+      docRamsRef:'ramsRef', docRamsRev:'ramsRev', docPreparedBy:'preparedBy',
+      docAuditedBy:'auditedBy', docSHEQ:'sheqAdvisor',
+    };
+    const srcId = map[id];
+    const srcEl = document.getElementById(srcId);
+    const dstEl = document.getElementById(id);
+    if(srcEl && dstEl) {
+      if(id==='docDatePrepared') {
+        dstEl.textContent = srcEl.value ? new Date(srcEl.value).toLocaleDateString('en-GB',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+      } else {
+        dstEl.textContent = srcEl.value || '—';
+      }
+    }
+  });
+}
+
+// ── GENERATE ─────────────────────────────────────────
+function generateRAMS() {
+  if(!selectedType) { alert('Please select a Work Activity first.'); return; }
+
+  updatePreview();
+
+  // Title
+  document.getElementById('docRamsTitle').textContent = selectedType.title;
+  document.getElementById('signoffTitle').textContent = selectedType.title;
+  document.getElementById('signoffRef').textContent = document.getElementById('ramsRef').value || '—';
+
+  // Logo
+  if(logoDataURL) {
+    document.getElementById('docLogoImg').src = logoDataURL;
+    document.getElementById('docLogoImg').style.display = 'block';
+    document.getElementById('docLogoText').style.display = 'none';
+  } else {
+    document.getElementById('docLogoText').textContent = document.getElementById('companyName').value || 'AURUM';
+  }
+
+  // Contents table
+  renderContents(selectedType.contents);
+
+  // Method Statement
+  renderMethodStatement(selectedType.ms);
+
+  // Risk Assessment
+  renderRiskAssessment(selectedType.hazards);
+
+  // Show doc
+  document.getElementById('configPanel').style.display = 'none';
+  document.getElementById('docWrap').classList.add('visible');
+  window.scrollTo(0,0);
+}
+
+function renderContents(contents) {
+  const tbody = document.getElementById('contentsBody');
+  let lastSection = '';
+  tbody.innerHTML = contents.map(([section, sub, app]) => {
+    const showSection = section !== lastSection;
+    lastSection = section;
+    const cls = app==='Y'?'app-yes':app==='No'?'app-no':'app-na';
+    return `<tr>
+      <td style="font-weight:${showSection?700:400};color:${showSection?'var(--ink)':'var(--muted)'};">${showSection?section:''}</td>
+      <td>${sub}</td>
+      <td class="${cls}">${app}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderMethodStatement(ms) {
+  const table = document.getElementById('msTable');
+  let lastSection = '';
+  const SECTION_HEADS = {
+    '1':'1.0 Scope of Works','2':'2.0 Sequence & Method of Works','3':'3.0 Personnel',
+    '4':'4.0 Resources','5':'5.0 Personal Protective Equipment','6':'6.0 Access & Egress',
+    '7':'7.0 Environment','8':'8.0 Working at Height','9':'9.0 Monitoring','10':'10.0 Emergency Procedures'
+  };
+  table.innerHTML = ms.map(([ref, label, content]) => {
+    const sectionNum = ref.split('.')[0];
+    let headRow = '';
+    if(sectionNum !== lastSection) {
+      lastSection = sectionNum;
+      headRow = `<tr class="section-heading"><td colspan="2">${SECTION_HEADS[sectionNum]||sectionNum}</td></tr>`;
+    }
+
+    // Replace tokens
+    let c = content
+      .replace('[SUPERVISION DETAILS]', document.getElementById('supervision').value || '[SUPERVISION DETAILS]')
+      .replace('[SUPERVISION — Project Manager, Site Engineer, General Foreman]', document.getElementById('supervision').value || '[SUPERVISION — Project Manager, Site Engineer, General Foreman]')
+      .replace('[SUPERVISION — Project Manager, Senior Site Engineer, Site Engineer, General Foreman]', document.getElementById('supervision').value || '[SUPERVISION — Project Manager, Senior Site Engineer, Site Engineer, General Foreman]')
+      .replace('[SUPERVISION — Project Manager, Site Engineer, General Foreman, Falsework Supervisor]', document.getElementById('supervision').value || '[SUPERVISION — Project Manager, Site Engineer, General Foreman, Falsework Supervisor]')
+      .replace('[OPERATIVES LIST]', document.getElementById('operatives').value || '[OPERATIVES LIST]')
+      .replace('[FIRST AIDERS]', document.getElementById('firstAiders').value || '[FIRST AIDERS]')
+      .replace('[FIRST AIDERS — Laurentiu Moraru + others TBC]', document.getElementById('firstAiders').value || '[FIRST AIDERS]')
+      .replace('[PLANT — e.g. CAT 320 Excavator, Dumper, Trench Box, CAT Scanner]', document.getElementById('plantEquip').value || '[PLANT & EQUIPMENT]')
+      // Project-specific variables
+      .replace(/\[HOSPITAL NAME AND ADDRESS\]/g, getVar('var-hospital') || '[HOSPITAL NAME AND ADDRESS]')
+      .replace(/\[HOSPITAL\]/g, getVar('var-hospital') || '[HOSPITAL NAME AND ADDRESS]')
+      .replace(/\[LOCATION\]/g, getVar('var-muster') || '[MUSTER POINT LOCATION]')
+      .replace(/08:00 or after 18:00\. Section 60 consent\./g, getVar('var-hours') ? 'the hours stated in the Section 60 Consent (' + getVar('var-hours') + ').' : '08:00 or after 18:00. Section 60 consent.')
+      .replace(/08:00 or after 18:00\. Works in accordance with Section 60 consent\./g, getVar('var-hours') ? 'the hours stated in the Section 60 Consent (' + getVar('var-hours') + ').' : '08:00 or after 18:00. Works in accordance with Section 60 consent.')
+      // Excavator
+      .replace(/5-tonne 360 [Ee]xcavator/g, getVar('var-excavator') || '5-tonne 360 Excavator')
+      .replace(/360 [Mm]ini-[Ee]xcavator/g, getVar('var-excavator') || '360 Mini-Excavator')
+      .replace(/360 [Ee]xcavator/g, getVar('var-excavator') || '360 Excavator')
+      // Lifting
+      .replace(/Tower Crane \(Principal Contractor\)/g, getVar('var-lifting') || 'Tower Crane (Principal Contractor)')
+      .replace(/Tower Crane used for lifting materials into basement\./g, (getVar('var-lifting') ? getVar('var-lifting') : 'Tower Crane') + ' used for lifting materials. ' + (getVar('var-swl') ? 'Capacity: ' + getVar('var-swl') + '.' : ''))
+      // MEWP
+      .replace(/Skyjack 3219 or Genie 1932 [Ss]cissor [Ll]ift/g, getVar('var-mewp') || 'Scissor Lift or MEWP of suitable height')
+      .replace(/Skyjack 3219 or Genie 1932/g, getVar('var-mewp') || 'Scissor Lift')
+      // Trench box
+      .replace(/[Ll]ightweight [Aa]luminium trench box/g, getVar('var-trenchbox') || 'Aluminium trench box')
+      .replace(/[Aa]luminium trench box/g, getVar('var-trenchbox') || 'Aluminium trench box')
+      // Concrete
+      .replace(/FND2 mix to BS8500-2/g, (getVar('var-concrete') || 'FND2') + ' mix to BS8500-2 / BS EN 206')
+      .replace(/FND2 mix/g, getVar('var-concrete') || 'FND2 mix')
+      // Dewatering
+      .replace(/50mm submersible pumps/g, getVar('var-pump') || '50mm submersible pumps')
+      .replace(/50mm [Ss]ubmersible [Pp]umps/g, getVar('var-pump') || '50mm submersible pumps')
+      .replace(/4000-litre settlement tank/g, getVar('var-tank') || '4000-litre settlement tank')
+      .replace(/4000 litre settlement tank/g, getVar('var-tank') || '4000 litre settlement tank')
+      // Falsework
+      .replace(/PERI Skydeck/g, getVar('var-falsework') || 'PERI Skydeck')
+      // TWD and PC
+      .replace(/Temporary Works Designer \(TWD\)/g, getVar('var-twd') ? getVar('var-twd') + ' (Temporary Works Designer)' : 'Temporary Works Designer (TWD)')
+      .replace(/Principal Contractor/g, getVar('var-pc') || 'Principal Contractor');
+
+    return headRow + `<tr>
+      <td>${ref}&nbsp;&nbsp;${label}</td>
+      <td><textarea rows="${Math.max(2, Math.ceil(c.length/120))}">${c}</textarea></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderRiskAssessment(hazards) {
+  const tbody = document.getElementById('raBody');
+  tbody.innerHTML = hazards.map((h,i) => buildRARow(h, i)).join('');
+}
+
+function buildRARow(h, i) {
+  const scoreBefore = h.sev * h.lik;
+  const scoreAfter = h.rsev * h.rlik;
+  const getClass = s => s>=20?'rs-high':s>=15?'rs-above':s>=10?'rs-med':s>=6?'rs-low':'rs-ok';
+  return `<tr>
+    <td class="num bold">${h.no}</td>
+    <td><textarea rows="3">${h.hazard}</textarea></td>
+    <td class="num"><input type="number" value="${h.sev}" min="1" max="5" style="width:35px;text-align:center;border:1px solid var(--border);border-radius:3px;padding:2px;font-family:var(--mono);font-size:11px;" oninput="recalcRA(this)"></td>
+    <td class="num"><input type="number" value="${h.lik}" min="1" max="5" style="width:35px;text-align:center;border:1px solid var(--border);border-radius:3px;padding:2px;font-family:var(--mono);font-size:11px;" oninput="recalcRA(this)"></td>
+    <td class="num"><span class="risk-score ${getClass(scoreBefore)}" data-score-before>${scoreBefore}</span></td>
+    <td><textarea rows="2">${h.people}</textarea></td>
+    <td><textarea rows="4">${h.controls}</textarea></td>
+    <td class="num"><input type="number" value="${h.rsev}" min="1" max="5" style="width:35px;text-align:center;border:1px solid var(--border);border-radius:3px;padding:2px;font-family:var(--mono);font-size:11px;" oninput="recalcRA(this)"></td>
+    <td class="num"><input type="number" value="${h.rlik}" min="1" max="5" style="width:35px;text-align:center;border:1px solid var(--border);border-radius:3px;padding:2px;font-family:var(--mono);font-size:11px;" oninput="recalcRA(this)"></td>
+    <td class="num"><span class="risk-score ${getClass(scoreAfter)}" data-score-after>${scoreAfter}</span></td>
+    <td class="no-print"><button onclick="this.closest('tr').remove()" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:13px;" onmouseover="this.style.color='red'" onmouseout="this.style.color='#ccc'">✕</button></td>
+  </tr>`;
+}
+
+function recalcRA(input) {
+  const row = input.closest('tr');
+  const nums = row.querySelectorAll('input[type=number]');
+  if(nums.length < 4) return;
+  const sev = +nums[0].value||1, lik = +nums[1].value||1;
+  const rsev = +nums[2].value||1, rlik = +nums[3].value||1;
+  const getClass = s => s>=20?'rs-high':s>=15?'rs-above':s>=10?'rs-med':s>=6?'rs-low':'rs-ok';
+  const before = row.querySelector('[data-score-before]');
+  const after = row.querySelector('[data-score-after]');
+  if(before) { const s=sev*lik; before.textContent=s; before.className='risk-score '+getClass(s); }
+  if(after)  { const s=rsev*rlik; after.textContent=s; after.className='risk-score '+getClass(s); }
+}
+
+function addRARow() {
+  const tbody = document.getElementById('raBody');
+  const rows = tbody.querySelectorAll('tr');
+  const nextNo = rows.length + 1;
+  const h = {no:nextNo, hazard:'New hazard — describe the risk', sev:3, lik:3, people:'JPD', controls:'Describe control measures', rsev:3, rlik:1};
+  tbody.insertAdjacentHTML('beforeend', buildRARow(h, nextNo-1));
+}
+
+function populateSignOff(rows) {
+  const tbody = document.getElementById('signoffBody');
+  tbody.innerHTML = Array.from({length:rows}, () =>
+    `<tr><td style="height:28px;border:1px solid var(--border);"></td><td style="border:1px solid var(--border);"></td><td style="border:1px solid var(--border);"></td><td style="border:1px solid var(--border);"></td></tr>`
+  ).join('');
+}
+
+function resetRAMS() {
+  selectedType = null;
+  logoDataURL = null;
+  document.getElementById('logoPreviewImg').style.display='none';
+  document.getElementById('logoPlaceholder').style.display='block';
+  document.getElementById('configPanel').style.display='block';
+  document.getElementById('docWrap').classList.remove('visible');
+  renderTypeGrid();
+  document.getElementById('datePrepared').valueAsDate = new Date();
+}
+</script>
+</body>
+</html>
