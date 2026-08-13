@@ -150,6 +150,7 @@ html,body{min-height:100%;background:var(--paper);color:var(--ink);font-family:v
   <a class="tbar-logo" href="#">QS Toolkit</a>
   <div class="tbar-title">// COST VALUE RECONCILIATION ENGINE</div>
   <div class="tbar-actions">
+    <button class="btn amber" onclick="document.getElementById('boqImportModal').style.display='flex'">📥 Import BOQ</button>
     <button class="btn" onclick="window.print()">🖨 Print / PDF</button>
     <button class="btn" onclick="exportExcel()">📊 Export Excel</button>
     <button class="btn primary" onclick="saveCVR()">💾 Save</button>
@@ -1316,6 +1317,356 @@ function exportExcel() {
 
   XLSX.writeFile(wb, `CVR_${proj.replace(/\s/g,'_')}_${period}.xlsx`);
 }
+<!-- BOQ IMPORT MODAL -->
+<div class="modal-bg" id="boqImportModal" style="display:none;">
+  <div class="modal" style="max-width:640px;">
+    <div class="modal-title" style="color:var(--gold);">📥 Import BOQ from Excel</div>
+
+    <!-- STEP 1: UPLOAD -->
+    <div id="import-step1">
+      <p style="font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:16px;line-height:1.7;">
+        Upload any BOQ Excel file — from Causeway, Buildsoft, CostX, or your own template. AURUM reads your columns and maps them to the CVR automatically.
+      </p>
+      <div id="dropZone" style="border:2px dashed var(--border);border-radius:var(--r2);padding:32px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px;"
+        onclick="document.getElementById('boqFileInput').click()"
+        ondragover="event.preventDefault();this.style.borderColor='var(--gold)';this.style.background='var(--gold-dim)'"
+        ondragleave="this.style.borderColor='var(--border)';this.style.background=''"
+        ondrop="handleDrop(event)">
+        <div style="font-size:32px;margin-bottom:8px;">📊</div>
+        <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:4px;">Drop Excel file here or click to browse</div>
+        <div style="font-size:11px;color:var(--dim);font-family:var(--mono);">.xlsx · .xls · .csv supported</div>
+      </div>
+      <input type="file" id="boqFileInput" accept=".xlsx,.xls,.csv" style="display:none;" onchange="readBOQFile(this.files[0])">
+      <div id="import-file-info" style="display:none;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--r);padding:10px 14px;font-size:12px;font-family:var(--mono);color:var(--green);margin-bottom:12px;"></div>
+    </div>
+
+    <!-- STEP 2: SHEET SELECTOR -->
+    <div id="import-step2" style="display:none;">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono);margin-bottom:8px;">Select Sheet</div>
+      <select class="form-input" id="import-sheet-select" style="margin-bottom:14px;" onchange="loadSheet(this.value)"></select>
+
+      <!-- COLUMN MAPPER -->
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono);margin-bottom:8px;">Map Your Columns → CVR Fields</div>
+      <div style="background:var(--gold-dim);border:1px solid var(--gold-border);border-radius:var(--r);padding:10px 14px;font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:14px;line-height:1.6;">
+        💡 Tell AURUM which column in your BOQ contains what. Leave blank to skip. AURUM will try to detect them automatically.
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;" id="columnMapperGrid"></div>
+
+      <!-- PREVIEW -->
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono);margin-bottom:8px;">Preview — First 5 Rows</div>
+      <div style="overflow-x:auto;max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--r);" id="import-preview"></div>
+    </div>
+
+    <!-- STEP 3: OPTIONS -->
+    <div id="import-step3" style="display:none;">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono);margin-bottom:12px;">Import Options</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;"><input type="checkbox" id="opt-value" checked style="accent-color:var(--gold);width:15px;height:15px;"> <div><strong>Value section</strong> — import as Measured Works (contract sums)</div></label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;"><input type="checkbox" id="opt-cost" checked style="accent-color:var(--gold);width:15px;height:15px;"> <div><strong>Cost section</strong> — import as Budget (actuals = 0, fill in later)</div></label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;"><input type="checkbox" id="opt-ps" checked style="accent-color:var(--gold);width:15px;height:15px;"> <div><strong>Provisional Sums</strong> — import as CE candidates (highlighted)</div></label>
+        <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;"><input type="checkbox" id="opt-clear" style="accent-color:var(--gold);width:15px;height:15px;"> <div><strong>Clear existing CVR data</strong> before import</div></label>
+      </div>
+      <div id="import-summary" style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;font-size:12px;font-family:var(--mono);line-height:1.8;margin-bottom:4px;"></div>
+    </div>
+
+    <div class="modal-btns" style="margin-top:16px;">
+      <button class="btn" onclick="document.getElementById('boqImportModal').style.display='none';resetImport()">Cancel</button>
+      <button class="btn" id="import-prev-btn" onclick="importPrevStep()" style="display:none;">← Back</button>
+      <button class="btn primary" id="import-next-btn" onclick="importNextStep()" style="display:none;">Map Columns →</button>
+      <button class="btn success" id="import-go-btn" onclick="runImport()" style="display:none;">✅ Import to CVR</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// BOQ IMPORT ENGINE
+// ══════════════════════════════════════════════════════
+let importWB = null;
+let importSheet = null;
+let importHeaders = [];
+let importRows = [];
+let importStep = 1;
+
+const IMPORT_FIELDS = [
+  {id:'col-desc',    label:'Description / Item Name',  hint:'The column with work descriptions',        auto:['description','item','desc','work','trade','section','name']},
+  {id:'col-ref',     label:'Reference / Item No.',     hint:'Section reference e.g. A.1.1',             auto:['ref','reference','item no','no.','clause','code']},
+  {id:'col-unit',    label:'Unit (m², nr, ml, item)',  hint:'Unit of measurement',                      auto:['unit','uom','u/m']},
+  {id:'col-qty',     label:'Quantity',                 hint:'Measured quantities',                      auto:['qty','quantity','quant']},
+  {id:'col-rate',    label:'Rate / Unit Rate £',       hint:'Rate per unit',                            auto:['rate','unit rate','price','urate','unit cost']},
+  {id:'col-total',   label:'Total / Amount £',         hint:'Line total = qty × rate',                  auto:['total','amount','value','sum','line total','net']},
+  {id:'col-budget',  label:'Budget / Allowance £',     hint:'Budget column if different from total',    auto:['budget','allow','allowance','budget amount']},
+  {id:'col-trade',   label:'Trade / Category',         hint:'Trade or work section heading',            auto:['trade','category','section','heading','type','work type']},
+  {id:'col-ps',      label:'PS / Provisional Sum flag',hint:'Column marking provisional sums',         auto:['ps','provisional','prov','provisional sum','flag']},
+];
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').style.borderColor='var(--border)';
+  document.getElementById('dropZone').style.background='';
+  const f = e.dataTransfer.files[0];
+  if(f) readBOQFile(f);
+}
+
+function readBOQFile(file) {
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      importWB = XLSX.read(e.target.result, {type:'array'});
+      const sheets = importWB.SheetNames;
+      document.getElementById('import-file-info').style.display='block';
+      document.getElementById('import-file-info').textContent = `✅ Loaded: ${file.name} · ${sheets.length} sheet${sheets.length!==1?'s':''}: ${sheets.join(', ')}`;
+      // Populate sheet selector
+      const sel = document.getElementById('import-sheet-select');
+      sel.innerHTML = sheets.map(s=>`<option value="${s}">${s}</option>`).join('');
+      loadSheet(sheets[0]);
+      document.getElementById('import-step2').style.display='block';
+      document.getElementById('import-next-btn').style.display='';
+    } catch(err) {
+      alert('Could not read file: '+err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function loadSheet(sheetName) {
+  if(!importWB) return;
+  const ws = importWB.Sheets[sheetName];
+  const data = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+  if(!data.length) return;
+
+  // Find header row — look for row with most non-empty cells
+  let headerRowIdx = 0;
+  let maxCells = 0;
+  data.slice(0,10).forEach((row,i) => {
+    const filled = row.filter(c=>c!==''&&c!==null&&c!==undefined).length;
+    if(filled > maxCells) { maxCells=filled; headerRowIdx=i; }
+  });
+
+  importHeaders = data[headerRowIdx].map((h,i) => ({ idx:i, label: String(h||'Col '+(i+1)).trim() }));
+  importRows = data.slice(headerRowIdx+1).filter(r => r.some(c=>c!==''&&c!==null));
+  importSheet = sheetName;
+
+  buildColumnMapper();
+  buildPreview(data.slice(headerRowIdx, headerRowIdx+6));
+}
+
+function buildColumnMapper() {
+  const grid = document.getElementById('columnMapperGrid');
+  grid.innerHTML = IMPORT_FIELDS.map(f => {
+    // Try to auto-detect
+    const autoIdx = importHeaders.findIndex(h =>
+      f.auto.some(a => h.label.toLowerCase().includes(a))
+    );
+    return `<div style="display:flex;flex-direction:column;gap:4px;">
+      <label style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;font-family:var(--mono);">${f.label}</label>
+      <select class="form-input" id="${f.id}" style="font-size:12px;">
+        <option value="">— Skip —</option>
+        ${importHeaders.map((h,i)=>`<option value="${i}" ${autoIdx===i?'selected':''}>${h.label}</option>`).join('')}
+      </select>
+      <div style="font-size:9px;color:var(--dim);font-family:var(--mono);">${f.hint}</div>
+    </div>`;
+  }).join('');
+}
+
+function buildPreview(rows) {
+  const el = document.getElementById('import-preview');
+  if(!rows.length) {el.innerHTML='';return;}
+  const maxCols = Math.max(...rows.map(r=>r.length));
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:10px;font-family:var(--mono);">
+    ${rows.map((row,ri)=>`<tr style="border-bottom:1px solid var(--border);background:${ri===0?'var(--s2)':''};">
+      ${Array.from({length:Math.min(maxCols,10)},(_,ci)=>`<td style="padding:5px 8px;border-right:1px solid var(--border);white-space:nowrap;max-width:140px;overflow:hidden;text-overflow:ellipsis;${ri===0?'font-weight:700;':''}">${String(row[ci]||'').slice(0,40)}</td>`).join('')}
+    </tr>`).join('')}
+  </table>`;
+}
+
+function importNextStep() {
+  // Move from step 2 to step 3 — build summary
+  const getCol = id => {
+    const v = document.getElementById(id)?.value;
+    return v!==''&&v!==undefined ? +v : null;
+  };
+
+  // Count what we'll import
+  const descCol = getCol('col-desc');
+  const totalCol = getCol('col-total');
+  const psCol = getCol('col-ps');
+
+  let countItems=0, countPS=0, totalValue=0;
+  importRows.forEach(row => {
+    const desc = descCol!==null ? String(row[descCol]||'').trim() : '';
+    if(!desc) return;
+    countItems++;
+    const val = totalCol!==null ? +String(row[totalCol]||'0').replace(/[£,]/g,'') : 0;
+    totalValue += isNaN(val)?0:val;
+    if(psCol!==null && String(row[psCol]||'').toLowerCase().includes('ps')) countPS++;
+  });
+
+  document.getElementById('import-summary').innerHTML =
+    `📊 <strong>${countItems}</strong> line items found\n` +
+    `💰 Total value: <strong>${'£'+(totalValue).toLocaleString('en-GB')}</strong>\n` +
+    `⚡ Provisional Sums detected: <strong>${countPS}</strong>\n` +
+    `📋 Sheet: <strong>${importSheet}</strong>`;
+
+  document.getElementById('import-step3').style.display='block';
+  document.getElementById('import-next-btn').style.display='none';
+  document.getElementById('import-prev-btn').style.display='';
+  document.getElementById('import-go-btn').style.display='';
+  importStep=3;
+}
+
+function importPrevStep() {
+  document.getElementById('import-step3').style.display='none';
+  document.getElementById('import-next-btn').style.display='';
+  document.getElementById('import-prev-btn').style.display='none';
+  document.getElementById('import-go-btn').style.display='none';
+  importStep=2;
+}
+
+function runImport() {
+  const getCol = id => {
+    const v = document.getElementById(id)?.value;
+    return v!==''&&v!==undefined ? +v : null;
+  };
+  const descCol  = getCol('col-desc');
+  const refCol   = getCol('col-ref');
+  const unitCol  = getCol('col-unit');
+  const qtyCol   = getCol('col-qty');
+  const rateCol  = getCol('col-rate');
+  const totalCol = getCol('col-total');
+  const budgetCol= getCol('col-budget');
+  const tradeCol = getCol('col-trade');
+  const psCol    = getCol('col-ps');
+
+  const optValue = document.getElementById('opt-value')?.checked;
+  const optCost  = document.getElementById('opt-cost')?.checked;
+  const optPS    = document.getElementById('opt-ps')?.checked;
+  const optClear = document.getElementById('opt-clear')?.checked;
+
+  if(optClear) { state.valueRows=[]; state.costRows=[]; }
+
+  // Group by trade/section
+  const groups = {};
+  let currentGroup = 'Measured Works';
+
+  importRows.forEach(row => {
+    const desc = descCol!==null ? String(row[descCol]||'').trim() : '';
+    if(!desc) return;
+
+    // Detect section headers — short text, no value
+    const total = totalCol!==null ? +String(row[totalCol]||'0').replace(/[£,]/g,'') : 0;
+    const qty   = qtyCol!==null   ? +String(row[qtyCol]  ||'0').replace(/,/g,'')    : 0;
+    const isSectionHeader = desc.length < 60 && !total && !qty && !/£/.test(desc);
+
+    if(isSectionHeader && tradeCol===null) {
+      currentGroup = desc; return;
+    }
+    if(tradeCol!==null) currentGroup = String(row[tradeCol]||'General').trim()||'General';
+
+    if(!groups[currentGroup]) groups[currentGroup] = [];
+
+    const isPS = optPS && (
+      (psCol!==null && String(row[psCol]||'').toUpperCase().includes('PS')) ||
+      desc.toUpperCase().includes('PROVISIONAL') ||
+      desc.toUpperCase().includes('P.SUM') ||
+      desc.toUpperCase().includes('P/SUM')
+    );
+
+    const lineTotal = total || (qty * (rateCol!==null?+String(row[rateCol]||'0').replace(/[£,]/g,''):0));
+
+    groups[currentGroup].push({
+      desc,
+      ref:   refCol!==null  ? String(row[refCol]||'')  : '',
+      unit:  unitCol!==null ? String(row[unitCol]||'') : '',
+      qty:   qtyCol!==null  ? qty : 1,
+      rate:  rateCol!==null ? +String(row[rateCol]||'0').replace(/[£,]/g,'') : lineTotal,
+      total: lineTotal,
+      budget:budgetCol!==null ? +String(row[budgetCol]||'0').replace(/[£,]/g,'') : lineTotal,
+      isPS,
+    });
+  });
+
+  // Import to VALUE section (Measured Works)
+  if(optValue) {
+    Object.entries(groups).forEach(([groupName, items]) => {
+      const groupTotal = items.reduce((s,i)=>s+i.total,0);
+      if(groupTotal<=0 && !items.length) return;
+      state.valueRows.push({
+        id: uid(),
+        desc: groupName,
+        contractSum: groupTotal,
+        previous: 0,
+        thisPeriod: 0,
+      });
+    });
+  }
+
+  // Import to COST section (Budget)
+  if(optCost) {
+    Object.entries(groups).forEach(([groupName, items]) => {
+      const groupBudget = items.reduce((s,i)=>s+(i.budget||i.total),0);
+      if(!groupBudget) return;
+      state.costRows.push({
+        id: uid(),
+        desc: groupName,
+        budget: groupBudget,
+        actual: 0,
+        accrual: 0,
+        eac: groupBudget,
+      });
+    });
+  }
+
+  // Import PS items to CE log
+  if(optPS) {
+    let psCount=0;
+    Object.values(groups).forEach(items => {
+      items.filter(i=>i.isPS).forEach(ps => {
+        psCount++;
+        state.ceRows.push({
+          id: uid(),
+          ref: 'PS-'+String(psCount).padStart(3,'0'),
+          type: 'NEC — Compensation Event',
+          desc: ps.desc + (ps.total?' (PS value: £'+ps.total.toLocaleString()+')':''),
+          notifiedBy: 'Contractor (cl.61.3)',
+          dateNotified: new Date().toISOString().slice(0,10),
+          valueQuoted: ps.total||0,
+          status: 'Notified — awaiting PM instruction (cl.61.1)',
+          quotItems: [{desc:'Provisional Sum',val:ps.total||0},{desc:'Fee',val:0}],
+        });
+      });
+    });
+  }
+
+  saveState();
+  renderAll();
+  document.getElementById('boqImportModal').style.display='none';
+  resetImport();
+
+  // Show success
+  const totalImported = state.valueRows.length + state.costRows.length;
+  setTimeout(()=>{
+    alert(`✅ Import complete!\n\n• ${state.valueRows.length} value rows imported\n• ${state.costRows.length} cost budget rows imported\n• ${state.ceRows.filter(c=>c.ref?.startsWith('PS-')).length} Provisional Sums added to CE log\n\nReview and fill in actual costs in the CVR.`);
+  },300);
+}
+
+function resetImport() {
+  importWB=null; importSheet=null; importHeaders=[]; importRows=[]; importStep=1;
+  document.getElementById('import-step2').style.display='none';
+  document.getElementById('import-step3').style.display='none';
+  document.getElementById('import-next-btn').style.display='none';
+  document.getElementById('import-prev-btn').style.display='none';
+  document.getElementById('import-go-btn').style.display='none';
+  document.getElementById('import-file-info').style.display='none';
+  document.getElementById('boqFileInput').value='';
+}
+
+// Show next button once file loaded
+document.getElementById('import-sheet-select')?.addEventListener('change', ()=>{
+  document.getElementById('import-next-btn').style.display='';
+});
 </script>
 </body>
 </html>
